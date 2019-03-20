@@ -43,6 +43,7 @@ pages:
     paths:
       - public
 
+# executed only when receives 'git tag' command
 registry_deploy:
   tags:
     - docker-executor
