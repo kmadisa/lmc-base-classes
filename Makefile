@@ -56,7 +56,7 @@ else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		DISPLAY ?= :0.0
-		NETWORK_MODE ?= host
+		NETWORK_MODE ?= tangonet
 		XAUTHORITY_MOUNT := /tmp/.X11-unix:/tmp/.X11-unix
 		XAUTHORITY ?= /hosthome/.Xauthority
 		# /bin/sh (=dash) does not evaluate 'docker network' conditionals correctly
