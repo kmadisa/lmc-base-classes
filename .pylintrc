@@ -72,15 +72,15 @@ disable=C,
 # either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once). See also the "--disable" option for examples.
-#enable=unreachable,
-#       duplicate-key,
-#       unnecessary-semicolon,
-#       global-variable-not-assigned,
-#       unused-variable,
-#       binary-op-exception,
-#       bad-format-string,
-#       anomalous-backslash-in-string,
-#       bad-open-mode
+enable=unreachable,
+       duplicate-key,
+       unnecessary-semicolon,
+       global-variable-not-assigned,
+       unused-variable,
+       binary-op-exception,
+       bad-format-string,
+       anomalous-backslash-in-string,
+       bad-open-mode
 
 
 [REPORTS]
