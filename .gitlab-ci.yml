@@ -23,6 +23,7 @@ cache:
 stages:
   - build
   - test
+  - badges
   - publish
   - pages
 
@@ -64,6 +65,20 @@ run tests:
     - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - make test
     - scripts/validate-metadata.sh
+
+Create badges:
+  stage: badges
+  tags:
+    - docker-executor
+  script:
+    - apt install -y bc
+    - pip install anybadge
+    - echo "Creating pylint badge"
+    - LINT_SCORE=`grep -oP 'Your code has been rated at \K.*' /build/lmcbaseclasses_code_analysis.stdout | tail -1`
+    - anybadge --suffix='%' -o --value=`bc <<< ${LINT_SCORE}*100` --file=/build/pylint.svg pylint 
+    - echo "Creating coverage badge"
+    - COVERAGE_SCORE=`awk '/TOTAL\s+/{ print $4  }' /build/lmcbaseclasses_setup_py_test.stdout`
+    - anybadge -o --value=${COVERAGE_SCORE} --file=/build/coverage.svg coverage
 
 publish to nexus:
   stage: publish
