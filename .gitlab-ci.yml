@@ -67,13 +67,11 @@ run tests:
     - make test
     - scripts/validate-metadata.sh
     - echo "Creating badges"
-    - ls -l
-    - pwd
-    - ls /app
-    - LINT_SCORE=`grep -oP 'Your code has been rated at \K.*' /build/lmcbaseclasses_code_analysis.stdout | tail -1`
-    - anybadge --suffix='%' -o --value=`bc <<< ${LINT_SCORE}*100` --file=/build/pylint.svg pylint 
-    - COVERAGE_SCORE=`awk '/TOTAL\s+/{ print $4  }' /build/lmcbaseclasses_setup_py_test.stdout`
-    - anybadge -o --value=${COVERAGE_SCORE} --file=/build/coverage.svg coverage
+    - ls -l ./build
+    - LINT_SCORE=`grep -oP 'Your code has been rated at \K.*' ./build/lmcbaseclasses_code_analysis.stdout | tail -1`
+    - anybadge --suffix='%' -o --value=`bc <<< ${LINT_SCORE}*100` --file=./build/pylint.svg pylint
+    - COVERAGE_SCORE=`awk '/TOTAL\s+/{ print $4  }' ./build/lmcbaseclasses_setup_py_test.stdout`
+    - anybadge -o --value=${COVERAGE_SCORE} --file=./build/coverage.svg coverage
 
 publish to nexus:
   stage: publish
