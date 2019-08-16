@@ -60,6 +60,7 @@ run tests:
   script:
     - apt-get -y update
     - apt install -y bc
+    - apt install -y jq
     - apt install -y python3-pip
     - pip install anybadge
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
@@ -67,10 +68,16 @@ run tests:
     - make test
     - scripts/validate-metadata.sh
     - echo "Creating badges"
+    - echo "Creating lint badge"
     - LINT_SCORE=`grep -oP 'Your code has been rated at \K.*' ./build/lmcbaseclasses_code_analysis.stdout | tail -1`
     - anybadge --suffix='%' -o --value=`bc <<< ${LINT_SCORE}*100` --file=./build/pylint.svg pylint
-    - COVERAGE_SCORE=`awk '/TOTAL\s*/{ print $4  }' ./build/lmcbaseclasses_setup_py_test.stdout`
-    - anybadge -o --value=${COVERAGE_SCORE} --file=./build/coverage.svg --label=coverage
+    - echo "Creating coverage badge"
+    - COVERAGE_SCORE=`awk '$1 == "TOTAL" { print $4}' ./build/lmcbaseclasses_setup_py_test.stdout | sed 's/%//g'`
+    - anybadge -o --value=${COVERAGE_SCORE} --file=./build/coverage.svg coverage
+    - echo "Creating tests badge"
+    - TESTS_TOTAL=`cat ./build/lmcbaseclasses_htmlcov/report.json | jq '.summary.total'`
+    - TESTS_PASSED=`cat ./build/lmcbaseclasses_htmlcov/report.json | jq '.summary.passed'`
+    - anybadge --value=`bc <<< ${TESTS_PASSED}/${TESTS_TOTAL}*100` --file=tests.svg --label=tests coverage
 
 publish to nexus:
   stage: publish
