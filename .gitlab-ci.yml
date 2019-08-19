@@ -23,7 +23,6 @@ cache:
 stages:
   - build
   - test
-  - badges
   - publish
   - pages
 
@@ -60,36 +59,25 @@ run tests:
     - docker-executor
   script:
     - apt-get -y update
-    - apt install -y jq jo bc python3-pip
+    - apt install -y bc
+    - apt install -y jq
+    - apt install -y python3-pip
+    - pip install anybadge
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - make test
     - scripts/validate-metadata.sh
-    - echo "Saving test results into JSON format"
+    - echo "Creating badges"
+    - echo "Creating lint badge"
     - LINT_SCORE=`grep -oP 'Your code has been rated at \K.*' ./build/lmcbaseclasses_code_analysis.stdout | tail -1`
+    - anybadge --suffix='%' -o --value=`bc <<< ${LINT_SCORE}*100` --file=./build/lint.svg pylint
+    - echo "Creating coverage badge"
     - COVERAGE_SCORE=`awk '$1 == "TOTAL" { print $4}' ./build/lmcbaseclasses_setup_py_test.stdout | sed 's/%//g'`
+    - anybadge -o --value=${COVERAGE_SCORE} --file=./build/coverage.svg coverage
+    - echo "Creating tests badge"
     - TESTS_TOTAL=`cat ./build/lmcbaseclasses_htmlcov/report.json | jq '.summary.total'`
     - TESTS_PASSED=`cat ./build/lmcbaseclasses_htmlcov/report.json | jq '.summary.passed'`
-    - jo tests_score=`bc <<< ${TESTS_PASSED}/${TESTS_TOTAL}*100` coverage_score=$COVERAGE_SCORE lint_score=`bc <<< ${LINT_SCORE}*100` > ./build/test_summary.json
-  artifacts:
-    paths:
-      - build/test_summary.json
-
-create badges:
-  stage: badges
-  image: nexus.engageska-portugal.pt/ska-docker/ska-python-buildenv:latest
-  script:
-    - apt-get -y update
-    - apt install -y jq python3-pip
-    - pip install anybadge
-    - anybadge --suffix='%' -o --value=`jq '.lint_score' ./build/test_summary.json` --file=./build/lint.svg pylint
-    - anybadge -o --value=`jq '.coverage_score' ./build/test_summary.json` --file=./build/coverage.svg coverage
-    - anybadge --value=`jq '.tests_score' ./build/test_summary.json` --file=./build/tests.svg --label=tests coverage
-  artifacts:
-    paths:
-      - build/lint.svg
-      - build/coverage.svg
-      - build/tests.svg
+    - anybadge --value=`bc <<< ${TESTS_PASSED}/${TESTS_TOTAL}*100` --file=./build/tests.svg --label=tests coverage
 
 publish to nexus:
   stage: publish
