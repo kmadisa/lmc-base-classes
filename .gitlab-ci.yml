@@ -23,6 +23,7 @@ cache:
 stages:
   - build
   - test
+  - badges
   - publish
   - pages
 
@@ -75,7 +76,7 @@ run tests:
       - build/test_summary.json
 
 create badges:
-  stage: test
+  stage: badges
   image: nexus.engageska-portugal.pt/ska-docker/ska-python-buildenv:latest
   script:
     - apt-get -y update
