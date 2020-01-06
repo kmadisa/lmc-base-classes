@@ -31,7 +31,7 @@ from tango import AttrQuality, AttrWriteType
 from tango import DeviceProxy, DevFailed
 
 # SKA specific imports
-from ska_logging import configure_logging
+from ska_logging import configure_logging, configuration
 from skabase import release
 file_path = os.path.dirname(os.path.abspath(__file__))
 auxiliary_path = os.path.abspath(os.path.join(file_path, os.pardir)) + "/auxiliary"
@@ -46,6 +46,8 @@ from faults import (GroupDefinitionsError,
                     LoggingLevelError)
 
 LOG_FILE_SIZE = 1024 * 1024  # Log file size 1MB.
+LOG_TARGETS = ["console::cout"]
+LOGGING_CONFIG = configuration._LOGGING_CONFIG
 
 
 class TangoLoggingLevel(enum.IntEnum):
@@ -155,18 +157,29 @@ def _create_logging_handler(target):
 
 
 def _update_logging_handlers(targets, logger, device_name):
-    old_targets = [handler.name for handler in logger.handlers]
+    global LOGGING_CONFIG
+    old_targets = LOG_TARGETS
     added_targets = set(targets) - set(old_targets)
     removed_targets = set(old_targets) - set(targets)
 
-    for handler in list(logger.handlers):
-        if handler.name in removed_targets:
-            logger.removeHandler(handler)
+    for target in LOG_TARGETS:
+        if target in removed_targets:
+            LOG_TARGETS.remove(target)
+            del LOGGING_CONFIG["handlers"][target]
+            LOGGING_CONFIG["root"]["handlers"].remove(target)
     for target in targets:
         if target in added_targets:
-            handler = _create_logging_handler(target, device_name)
-            logger.addHandler(handler)
+            LOG_TARGETS.append(target)
+            additional_config = _create_logging_handler(target)
+            LOGGING_CONFIG = configuration._override(LOGGING_CONFIG, additional_config)
+            LOGGING_CONFIG["root"]["handlers"] =  LOG_TARGETS[:]
 
+    class TangoDeviceTagsFilter(logging.Filter):
+        def filter(self, record):
+            record.tags = "tango-device:{}".format(device_name)
+            return True
+
+    configure_logging(tags_filter=TangoDeviceTagsFilter, overrides=LOGGING_CONFIG)
     logger.info('Logging targets set to %s', targets)
 
 # PROTECTED REGION END #    //  SKABaseDevice.additionnal_import
@@ -191,9 +204,6 @@ class SKABaseDevice(with_metaclass(DeviceMeta, Device)):
         """
         self.logger = logging.getLogger(__name__)
         configure_logging()
-        # device may be reinitialised, so remove existing handlers
-        for handler in list(self.logger.handlers):
-            self.logger.removeHandler(handler)
         # initialise using defaults in device properties
         self._logging_level = None
         self.write_loggingLevel(self.LoggingLevelDefault)
