@@ -31,6 +31,7 @@ from tango import AttrQuality, AttrWriteType
 from tango import DeviceProxy, DevFailed
 
 # SKA specific imports
+from ska_logging import configure_logging
 from skabase import release
 file_path = os.path.dirname(os.path.abspath(__file__))
 auxiliary_path = os.path.abspath(os.path.join(file_path, os.pardir)) + "/auxiliary"
@@ -113,24 +114,6 @@ def _create_logging_handler(target, device_name):
     """
     target_type, target_name = target.split("::", 1)
 
-    class UTCFormatter(logging.Formatter):
-        converter = time.gmtime
-
-    # Format defined here:
-    #   https://developer.skatelescope.org/en/latest/development/logging-format.html
-    # VERSION "|" TIMESTAMP "|" SEVERITY "|" [THREAD-ID] "|" [FUNCTION] "|" [LINE-LOC] "|"
-    #   [TAGS] "|" MESSAGE LF
-    formatter = UTCFormatter(
-        fmt="1|"
-            "%(asctime)s.%(msecs)03dZ|"
-            "%(levelname)s|"
-            "%(threadName)s|"
-            "%(funcName)s|"
-            "%(filename)s#%(lineno)d|"
-            "tango-device:{}|"
-            "%(message)s".format(device_name),
-        datefmt='%Y-%m-%dT%H:%M:%S')
-
     if target_type == "console":
         handler = StreamHandler(sys.stdout)
     elif target_type == "file":
@@ -138,7 +121,6 @@ def _create_logging_handler(target, device_name):
         handler = RotatingFileHandler(log_file_name, 'a', LOG_FILE_SIZE, 2, None, False)
     elif target_type == "syslog":
         handler = SysLogHandler(address=target_name, facility='syslog')
-    handler.setFormatter(formatter)
     handler.name = target
     return handler
 
@@ -179,6 +161,7 @@ class SKABaseDevice(with_metaclass(DeviceMeta, Device)):
         :return: None.
         """
         self.logger = logging.getLogger(__name__)
+        configure_logging()
         # device may be reinitialised, so remove existing handlers
         for handler in list(self.logger.handlers):
             self.logger.removeHandler(handler)
