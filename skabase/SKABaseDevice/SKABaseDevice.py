@@ -103,26 +103,55 @@ def _sanitise_logging_targets(targets, device_name):
     return valid_targets
 
 
-def _create_logging_handler(target, device_name):
-    """Create a Python log handler based on the target type (console, file, syslog)
+def _create_logging_handler(target):
+    """Create a config dict defining a Python log handler based on the target type (console, file, syslog)
 
     :param target: Logging target for logger, <type>::<name>
 
-    :param device_name: TANGO device name
-
-    :return: StreamHandler, RotatingFileHandler, or SysLogHandler
+    :return: config dict for either StreamHandler, RotatingFileHandler, or SysLogHandler
     """
     target_type, target_name = target.split("::", 1)
 
     if target_type == "console":
-        handler = StreamHandler(sys.stdout)
+        additional_config = {
+            "handlers": {
+                target: {
+                    "class": "logging.StreamHandler",
+                    "formatter": "default",
+                    "stream": "ext://sys.stdout",
+                }
+            }
+        }
+
     elif target_type == "file":
         log_file_name = target_name
-        handler = RotatingFileHandler(log_file_name, 'a', LOG_FILE_SIZE, 2, None, False)
+        # handler = RotatingFileHandler(log_file_name, 'a', LOG_FILE_SIZE, 2, None, False)
+        additional_config = {
+            "handlers": {
+                target: {
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": log_file_name,
+                    "mode": "a",
+                    "formatter": "default",
+                    "maxBytes": LOG_FILE_SIZE,
+                    "backupCount": 2,
+                }
+            }
+        }
+
     elif target_type == "syslog":
-        handler = SysLogHandler(address=target_name, facility='syslog')
-    handler.name = target
-    return handler
+        additional_config = {
+            "handlers": {
+                target: {
+                    "class": "logging.handlers.SysLogHandler",
+                    "address": target_name,
+                    "formatter": "default",
+                    "facility": "syslog",
+                }
+            }
+        }
+
+    return additional_config
 
 
 def _update_logging_handlers(targets, logger, device_name):
