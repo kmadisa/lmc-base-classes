@@ -68,7 +68,8 @@ unit tests:
     - apt-get -y update
     - apt-get install -y python3-pip python3-setuptools python3-wheel --no-install-recommends
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA) --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
+    - pip3 install ska-logging --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
+    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - make test
     - scripts/validate-metadata.sh
   artifacts:
@@ -86,7 +87,8 @@ linting:
     - apt-get -y update
     - apt-get install -y python3-pip python3-setuptools python3-wheel --no-install-recommends
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA) --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
+    - pip3 install ska-logging --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
+    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - make lint
   artifacts:
     paths:
