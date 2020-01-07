@@ -46,7 +46,7 @@ from faults import (GroupDefinitionsError,
                     LoggingLevelError)
 
 LOG_FILE_SIZE = 1024 * 1024  # Log file size 1MB.
-LOG_TARGETS = ["console::cout"]
+LOG_TARGETS = ["console"]
 LOGGING_CONFIG = configuration._LOGGING_CONFIG
 
 
@@ -106,7 +106,8 @@ def _sanitise_logging_targets(targets, device_name):
 
 
 def _create_logging_handler(target):
-    """Create a config dict defining a Python log handler based on the target type (console, file, syslog)
+    """Create a config dict defining a Python log handler based on the
+    target type (console, file, syslog)
 
     :param target: Logging target for logger, <type>::<name>
 
@@ -127,7 +128,6 @@ def _create_logging_handler(target):
 
     elif target_type == "file":
         log_file_name = target_name
-        # handler = RotatingFileHandler(log_file_name, 'a', LOG_FILE_SIZE, 2, None, False)
         additional_config = {
             "handlers": {
                 target: {
@@ -156,13 +156,13 @@ def _create_logging_handler(target):
     return additional_config
 
 
-def _update_logging_handlers(targets, logger, device_name):
+def _update_config_dict_handlers(targets, logger, device_name):
     global LOGGING_CONFIG
     old_targets = LOG_TARGETS
     added_targets = set(targets) - set(old_targets)
     removed_targets = set(old_targets) - set(targets)
 
-    for target in LOG_TARGETS:
+    for target in LOG_TARGETS[:]:
         if target in removed_targets:
             LOG_TARGETS.remove(target)
             del LOGGING_CONFIG["handlers"][target]
@@ -171,7 +171,9 @@ def _update_logging_handlers(targets, logger, device_name):
         if target in added_targets:
             LOG_TARGETS.append(target)
             additional_config = _create_logging_handler(target)
-            LOGGING_CONFIG = configuration._override(LOGGING_CONFIG, additional_config)
+            new_configuration = configuration._override(LOGGING_CONFIG, additional_config)
+            LOGGING_CONFIG.clear()
+            LOGGING_CONFIG.update(new_configuration)
             LOGGING_CONFIG["root"]["handlers"] =  LOG_TARGETS[:]
 
     class TangoDeviceTagsFilter(logging.Filter):
@@ -203,7 +205,6 @@ class SKABaseDevice(with_metaclass(DeviceMeta, Device)):
         :return: None.
         """
         self.logger = logging.getLogger(__name__)
-        configure_logging()
         # initialise using defaults in device properties
         self._logging_level = None
         self.write_loggingLevel(self.LoggingLevelDefault)
@@ -502,7 +503,7 @@ class SKABaseDevice(with_metaclass(DeviceMeta, Device)):
 
         :return:  Logging level of the device.
         """
-        return [str(handler.name) for handler in self.logger.handlers]
+        return [target for target in LOG_TARGETS]
         # PROTECTED REGION END #    //  SKABaseDevice.loggingTargets_read
 
     def write_loggingTargets(self, value):
@@ -516,7 +517,7 @@ class SKABaseDevice(with_metaclass(DeviceMeta, Device)):
         """
         device_name = self.get_name()
         valid_targets = _sanitise_logging_targets(value, device_name)
-        _update_logging_handlers(valid_targets, self.logger, device_name)
+        _update_config_dict_handlers(valid_targets, self.logger, device_name)
         # PROTECTED REGION END #    //  SKABaseDevice.loggingTargets_write
 
     def read_healthState(self):

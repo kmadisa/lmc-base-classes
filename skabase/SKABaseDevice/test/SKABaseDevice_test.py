@@ -28,9 +28,10 @@ import mock
 from tango import DevFailed
 from skabase.SKABaseDevice import TangoLoggingLevel
 from skabase.SKABaseDevice.SKABaseDevice import (
+    LOGGING_CONFIG,
     _create_logging_handler,
     _sanitise_logging_targets,
-    _update_logging_handlers,
+    _update_config_dict_handlers,
     LoggingTargetError,
 )
 # PROTECTED REGION END #    //  SKABaseDevice.test_additional_imports
@@ -46,7 +47,7 @@ from skabase.SKABaseDevice.SKABaseDevice import (
         (["file"], ["file::my_dev_name.log"]),
         (["file::"], ["file::my_dev_name.log"]),
         (["file::/tmp/dummy"], ["file::/tmp/dummy"]),
-        (["syslog::some/address"], ["syslog::some/address"]),
+        (["syslog::/tmp/address"], ["syslog::/tmp/address"]),
         (["console", "file"], ["console::cout", "file::my_dev_name.log"]),
     ])
 def good_logging_targets(request):
@@ -80,41 +81,35 @@ def test_sanitise_logging_targets_fail(bad_logging_targets):
         _sanitise_logging_targets(targets_in, dev_name)
 
 
-def test_update_logging_handlers():
-    logger = logging.Logger('testing')
+def test_update_config_dict_handlers():
+    logger = logging.getLogger('testing')
     dev_name = "my/dev/name"
-
     new_targets = ["console::cout"]
-    _update_logging_handlers(new_targets, logger, dev_name)
-    assert len(logger.handlers) == 1
-    assert isinstance(logger.handlers[0], logging.StreamHandler)
+
+    _update_config_dict_handlers(new_targets, logger, dev_name)
+    assert len(LOGGING_CONFIG["handlers"].keys())  == 1
+    assert logger.hasHandlers() == True
 
     # test same handler is retained for same request
-    old_handler = logger.handlers[0]
     new_targets = ["console::cout"]
-    _update_logging_handlers(new_targets, logger, dev_name)
-    assert len(logger.handlers) == 1
-    assert logger.handlers[0] is old_handler
+    _update_config_dict_handlers(new_targets, logger, dev_name)
+    assert len(LOGGING_CONFIG["handlers"].keys())  == 1
 
-    # test other valid target types
-    new_targets = ["console::cout", "file::/tmp/dummy", "syslog::some/address"]
-    _update_logging_handlers(new_targets, logger, dev_name)
-    assert len(logger.handlers) == 3
-    assert isinstance(logger.handlers[0], logging.StreamHandler)
-    assert isinstance(logger.handlers[1], logging.handlers.RotatingFileHandler)
-    assert isinstance(logger.handlers[2], logging.handlers.SysLogHandler)
+    # # test other valid target types
+    new_targets = ["console::cout", "file::/tmp/dummy", "syslog::/tmp/address"]
+    _update_config_dict_handlers(new_targets, logger, dev_name)
+    assert len(LOGGING_CONFIG["handlers"].keys())  == 3
 
     # test clearing of 1 handler
-    new_targets = ["console::cout", "syslog::some/address"]
-    _update_logging_handlers(new_targets, logger, dev_name)
-    assert len(logger.handlers) == 2
-    assert isinstance(logger.handlers[0], logging.StreamHandler)
-    assert isinstance(logger.handlers[1], logging.handlers.SysLogHandler)
+    new_targets = ["console::cout", "syslog::/tmp/address"]
+    _update_config_dict_handlers(new_targets, logger, dev_name)
+    assert len(LOGGING_CONFIG["handlers"].keys())  == 2
 
     # test clearing all handlers
     new_targets = []
-    _update_logging_handlers(new_targets, logger, dev_name)
-    assert len(logger.handlers) == 0
+    _update_config_dict_handlers(new_targets, logger, dev_name)
+    assert len(LOGGING_CONFIG["handlers"].keys())  == 0
+    assert logger.hasHandlers() == False
 
 
 @pytest.mark.usefixtures("tango_context", "initialize_device")
@@ -230,23 +225,17 @@ class TestSKABaseDevice(object):
 
         with mock.patch("SKABaseDevice._create_logging_handler") as mocked_creator:
 
-            def null_creator(target, device_name):
-                handler = logging.NullHandler()
-                handler.name = target
-                return handler
-
-            mocked_creator.side_effect = null_creator
-            device_fqdn = tango_context.get_device_access()
+            mocked_creator.side_effect = _create_logging_handler
 
             # test adding file and syslog targets (already have console)
             tango_context.device.loggingTargets = [
-                "console::cout", "file::/tmp/dummy", "syslog::some/address"]
+                "console::cout", "file::/tmp/dummy", "syslog::/tmp/address"]
             assert tango_context.device.loggingTargets == (
-                "console::cout", "file::/tmp/dummy", "syslog::some/address")
+                "console::cout", "file::/tmp/dummy", "syslog::/tmp/address")
             mocked_creator.call_count == 2
             mocked_creator.assert_has_calls(
-                [mock.call("file::/tmp/dummy", device_fqdn),
-                 mock.call("syslog::some/address", device_fqdn)],
+                [mock.call("file::/tmp/dummy"),
+                 mock.call("syslog::/tmp/address")],
                 any_order=True)
 
             mocked_creator.reset_mock()
