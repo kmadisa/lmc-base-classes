@@ -25,6 +25,9 @@ stages:
   - publish
   - pages
 
+variables:
+  PIP_EXTRA_INDEX_URL: https://nexus.engageska-portugal.pt/repository/pypi/simple
+
 clean shell runner:
   stage: .pre
   tags:
