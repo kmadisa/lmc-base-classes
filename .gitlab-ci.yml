@@ -25,9 +25,6 @@ stages:
   - publish
   - pages
 
-variables:
-  PIP_EXTRA_INDEX_URL: https://nexus.engageska-portugal.pt/repository/pypi/simple
-
 clean shell runner:
   stage: .pre
   tags:
@@ -71,7 +68,7 @@ unit tests:
     - apt-get -y update
     - apt-get install -y python3-pip python3-setuptools python3-wheel --no-install-recommends
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
+    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA) --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
     - make test
     - scripts/validate-metadata.sh
   artifacts:
@@ -89,7 +86,7 @@ linting:
     - apt-get -y update
     - apt-get install -y python3-pip python3-setuptools python3-wheel --no-install-recommends
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
+    - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA) --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
     - make lint
   artifacts:
     paths:
