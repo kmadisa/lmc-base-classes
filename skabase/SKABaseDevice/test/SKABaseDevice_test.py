@@ -28,7 +28,6 @@ import mock
 from tango import DevFailed
 from skabase.SKABaseDevice import TangoLoggingLevel
 from skabase.SKABaseDevice.SKABaseDevice import (
-    LOGGING_CONFIG,
     _create_logging_handler,
     _sanitise_logging_targets,
     _update_config_dict_handlers,
@@ -87,7 +86,7 @@ def test_update_config_dict_handlers():
     new_targets = ["console::cout"]
 
     _update_config_dict_handlers(new_targets, logger, dev_name)
-    assert len(LOGGING_CONFIG["handlers"].keys())  == 1
+    assert len(logger.root.handlers)  == 1
     assert isinstance(logger.root.handlers[0], logging.StreamHandler)
 
     # test same handler is retained for same request
@@ -99,7 +98,7 @@ def test_update_config_dict_handlers():
     # # test other valid target types
     new_targets = ["console::cout", "file::/tmp/dummy", "syslog::/tmp/address"]
     _update_config_dict_handlers(new_targets, logger, dev_name)
-    assert len(LOGGING_CONFIG["handlers"].keys())  == 3
+    assert len(logger.root.handlers)  == 3
     assert isinstance(logger.root.handlers[0], logging.StreamHandler)
     assert isinstance(logger.root.handlers[1], logging.handlers.RotatingFileHandler)
     assert isinstance(logger.root.handlers[2], logging.handlers.SysLogHandler)
@@ -108,12 +107,12 @@ def test_update_config_dict_handlers():
     # test clearing of 1 handler
     new_targets = ["console::cout", "syslog::/tmp/address"]
     _update_config_dict_handlers(new_targets, logger, dev_name)
-    assert len(LOGGING_CONFIG["handlers"].keys())  == 2
+    assert len(logger.root.handlers)  == 2
 
     # test clearing all handlers
     new_targets = []
     _update_config_dict_handlers(new_targets, logger, dev_name)
-    assert len(LOGGING_CONFIG["handlers"].keys())  == 0
+    assert len(logger.root.handlers)  == 0
 
 
 @pytest.mark.usefixtures("tango_context", "initialize_device")
