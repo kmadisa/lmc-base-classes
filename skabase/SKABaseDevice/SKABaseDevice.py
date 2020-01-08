@@ -162,27 +162,28 @@ def _update_config_dict_handlers(targets, logger, device_name):
     added_targets = set(targets) - set(old_targets)
     removed_targets = set(old_targets) - set(targets)
 
-    for target in LOG_TARGETS[:]:
-        if target in removed_targets:
-            LOG_TARGETS.remove(target)
-            del LOGGING_CONFIG["handlers"][target]
-            LOGGING_CONFIG["root"]["handlers"].remove(target)
-    for target in targets:
-        if target in added_targets:
-            LOG_TARGETS.append(target)
-            additional_config = _create_logging_handler(target)
-            new_configuration = configuration._override(LOGGING_CONFIG, additional_config)
-            LOGGING_CONFIG.clear()
-            LOGGING_CONFIG.update(new_configuration)
-            LOGGING_CONFIG["root"]["handlers"] =  LOG_TARGETS[:]
+    if added_targets or removed_targets:
+        for target in LOG_TARGETS[:]:
+            if target in removed_targets:
+                LOG_TARGETS.remove(target)
+                del LOGGING_CONFIG["handlers"][target]
+                LOGGING_CONFIG["root"]["handlers"].remove(target)
+        for target in targets:
+            if target in added_targets:
+                LOG_TARGETS.append(target)
+                additional_config = _create_logging_handler(target)
+                new_configuration = configuration._override(LOGGING_CONFIG, additional_config)
+                LOGGING_CONFIG.clear()
+                LOGGING_CONFIG.update(new_configuration)
+                LOGGING_CONFIG["root"]["handlers"] =  LOG_TARGETS[:]
 
-    class TangoDeviceTagsFilter(logging.Filter):
-        def filter(self, record):
-            record.tags = "tango-device:{}".format(device_name)
-            return True
+        class TangoDeviceTagsFilter(logging.Filter):
+            def filter(self, record):
+                record.tags = "tango-device:{}".format(device_name)
+                return True
 
-    configure_logging(tags_filter=TangoDeviceTagsFilter, overrides=LOGGING_CONFIG)
-    logger.info('Logging targets set to %s', targets)
+        configure_logging(tags_filter=TangoDeviceTagsFilter, overrides=LOGGING_CONFIG)
+        logger.info('Logging targets set to %s', targets)
 
 # PROTECTED REGION END #    //  SKABaseDevice.additionnal_import
 
