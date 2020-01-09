@@ -33,7 +33,7 @@ clean shell runner:
     # Gitlab CI badges creation
     - rm -rf build/*
 
-preflight checks:
+.preflight checks:
   stage: .pre
   tags:
     - docker-executor
@@ -41,7 +41,7 @@ preflight checks:
     - apt-get install -yq iputils-ping curl
     - cat /etc/hosts
     - ping -c 3 deb.debian.org
-    - ping -c 3 pypi.org \
+    - ping -c 3 pypi.python.org \
         && curl -w %{http_code} -sSL https://pypi.org/simple -o /dev/null | grep -q ^2
     - ping -c 3 nexus.engageska-portugal.pt \
         && curl -w %{http_code} -sSL https://nexus.engageska-portugal.pt/repository/pypisdf -o /dev/null | grep -q ^2
@@ -81,6 +81,7 @@ unit tests:
     - apt-get -y update
     - apt-get install -y python3-pip python3-setuptools python3-wheel --no-install-recommends
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
+    - pip3 install -U pip
     - pip3 install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA) --index-url=https://pypi.python.org --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
     - make test
     - scripts/validate-metadata.sh
