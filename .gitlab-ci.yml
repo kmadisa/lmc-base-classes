@@ -33,6 +33,17 @@ clean shell runner:
     # Gitlab CI badges creation
     - rm -rf build/*
 
+preflight checks:
+  stage: .pre
+  tags:
+    - docker-executor
+  script:
+    - apt-get install -yq iputils-ping curl
+    - ping pypi.org \
+        && curl -w %{http_code} -sSL https://pypi.org/simple -o /dev/null | grep -q ^2
+    - ping nexus.engageska-portugal.pt \
+        && curl -w %{http_code} -sSL https://nexus.engageska-portugal.pt/repository/pypisdf -o /dev/null | grep -q ^2
+
 build wheel for publication: # Executed on a tag
   stage: build
   tags:
