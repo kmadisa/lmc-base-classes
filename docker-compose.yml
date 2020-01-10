@@ -24,7 +24,7 @@ volumes:
 
 services:
   tangodb:
-    image: nexus.engageska-portugal.pt/ska-docker/tango-db:0.3.0
+    image: nexus.engageska-portugal.pt/ska-docker/tango-db:latest
     restart: unless-stopped
     network_mode: ${NETWORK_MODE}
     container_name: ${CONTAINER_NAME_PREFIX}tangodb
@@ -37,7 +37,7 @@ services:
       - tangodb:/var/lib/mysql
 
   databaseds:
-    image: nexus.engageska-portugal.pt/ska-docker/tango-cpp:0.3.0
+    image: nexus.engageska-portugal.pt/ska-docker/tango-cpp:latest
     restart: unless-stopped
     depends_on:
       - tangodb
@@ -61,7 +61,7 @@ services:
       - giop:tcp::10000
 
   basedevice:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -75,7 +75,7 @@ services:
              /venv/bin/python /app/skabase/SKABaseDevice/SKABaseDevice.py 01"
 
   alarmhandler:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -89,7 +89,7 @@ services:
              /venv/bin/python /app/skabase/SKAAlarmHandler/SKAAlarmHandler.py 01"
 
   capability:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -103,7 +103,7 @@ services:
              /venv/bin/python /app/skabase/SKACapability/SKACapability.py 01"
 
   logger:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -117,7 +117,7 @@ services:
              /venv/bin/python /app/skabase/SKALogger/SKALogger.py 01"
 
   master:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -131,7 +131,7 @@ services:
              /venv/bin/python /app/skabase/SKAMaster/SKAMaster.py 01"
 
   obsdevice:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -145,7 +145,7 @@ services:
              /venv/bin/python /app/skabase/SKAObsDevice/SKAObsDevice.py 01"
 
   subarray:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -159,7 +159,7 @@ services:
              /venv/bin/python /app/skabase/SKASubarray/SKASubarray.py 01"
 
   telstate:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
@@ -173,7 +173,7 @@ services:
             /venv/bin/python /app/skabase/SKATelState/SKATelState.py 01"
 
   testdevice:
-    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:0.3.0
+    image: ${DOCKER_REGISTRY_HOST}/${DOCKER_REGISTRY_USER}/lmcbaseclasses:latest
     restart: unless-stopped
     depends_on:
       - databaseds
