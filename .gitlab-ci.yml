@@ -24,6 +24,7 @@ stages:
   - linting
   - publish
   - pages
+  - release
 
 
 .install_pip: &install_pip |-
@@ -115,7 +116,7 @@ publish to nexus:
       - $CI_COMMIT_TAG =~ /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$/
 
 release docker image:
-  stage: publish
+  stage: release
   image: nexus.engageska-portugal.pt/ska-docker/tango-builder:latest
   before_script:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
@@ -124,6 +125,10 @@ release docker image:
   script:
     - make build
     - make push
+  when: manual
+  only:
+    refs:
+      - master
 
 
 pages:
