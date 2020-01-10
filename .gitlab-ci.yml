@@ -114,6 +114,17 @@ publish to nexus:
       # Confirm semantic versioning of tag
       - $CI_COMMIT_TAG =~ /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$/
 
+tag and release docker image:
+  stage: publish
+  image: nexus.engageska-portugal.pt/ska-docker/tango-builder:latest
+  before_script:
+  - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
+  tags:
+    - docker-executor
+  script:
+    - make push
+
+
 pages:
   stage: pages
   image: nexus.engageska-portugal.pt/ska-docker/tango-builder:latest
@@ -124,7 +135,6 @@ pages:
   script:
     - cp -R build public
     - mv public/lmcbaseclasses_htmlcov/* public
-    - make push
   artifacts:
     paths:
       - public
