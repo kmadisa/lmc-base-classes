@@ -69,7 +69,8 @@ def initialize_device(tango_context):
     tango_context: tango.test_context.DeviceTestContext
         Context to run a device without a database.
     """
-    yield tango_context.device.Init()
+    pass
+    #yield tango_context.device.Init()
 
 @pytest.fixture(scope="class")
 def setup_log_test_device():
