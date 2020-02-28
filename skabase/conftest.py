@@ -55,7 +55,7 @@ def tango_context(request):
         tango_context = DeviceTestContext(klass)
 
     tango_context.start()
-    klass.get_name = mock.Mock(side_effect=tango_context.get_device_access)
+    #klass.get_name = mock.Mock(side_effect=tango_context.get_device_access)
 
     yield tango_context
     tango_context.stop()
