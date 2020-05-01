@@ -34,7 +34,9 @@ from tango import DeviceProxy, DevFailed
 import ska.logging as ska_logging
 from . import release
 from .control_model import (
-    AdminMode, ControlMode, HealthState, LoggingLevel, SimulationMode, TestMode
+    AdminMode, ControlMode, SimulationMode, TestMode,
+    HealthState, LoggingLevel,
+    device_check
 )
 
 from .utils import (get_dp_command,
@@ -317,6 +319,18 @@ class SKABaseDevice(Device):
     A generic base device for SKA.
     """
     # PROTECTED REGION ID(SKABaseDevice.class_variable) ENABLED START #
+    device_check.register(
+        "state",
+        lambda device, state: device.get_state() == state
+    )
+    device_check.register(
+        "states",
+        lambda device, states: device.get_state() in states
+    )
+    device_check.register(
+        "admin_modes",
+        lambda device, admin_modes: device._admin_mode in admin_modes
+    )
 
     _logging_config_lock = threading.Lock()
     _logging_configured = False
