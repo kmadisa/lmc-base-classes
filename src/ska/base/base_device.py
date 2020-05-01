@@ -28,6 +28,7 @@ import tango
 from tango import DebugIt
 from tango.server import run, Device, attribute, command, device_property
 from tango import AttrQuality, AttrWriteType
+from tango import DevState
 from tango import DeviceProxy, DevFailed
 
 # SKA specific imports
@@ -510,7 +511,12 @@ class SKABaseDevice(Device):
                                                 release.description)
         self._version_id = release.version
         self._health_state = HealthState.OK
-        self._admin_mode = AdminMode.ONLINE
+
+        # The "factory default" for AdminMode is MAINTENANCE. But fear
+        # not, it is a memorized attribute and will soon be overwritten
+        # with its memorized value.
+        self._admin_mode = AdminMode.MAINTENANCE
+
         self._control_mode = ControlMode.REMOTE
         self._simulation_mode = SimulationMode.FALSE
         self._test_mode = TestMode.NONE
@@ -660,6 +666,19 @@ class SKABaseDevice(Device):
 
         :return: None
         """
+        enabling_modes = [AdminMode.ONLINE, AdminMode.MAINTENANCE]
+        disabling_modes = [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
+
+        state = self.get_state()
+        if state == DevState.DISABLE and value in enabling_modes:
+            # This write enables the subarray
+            self.set_state(DevState.OFF)
+        elif state in [DevState.OFF, DevState.ON] and value in disabling_modes:
+            # This write disables the subarray
+                if state == DevState.ON:
+                    self.Reset()
+                    self.ReleaseAllResources()
+                self.set_state(DevState.DISABLE)
         self._admin_mode = value
         # PROTECTED REGION END #    //  SKABaseDevice.adminMode_write
 

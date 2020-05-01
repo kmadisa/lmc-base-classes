@@ -27,7 +27,7 @@ def tango_context(request):
             },
 
         'SKASubarray': {
-            'CapabilityTypes': 'BAND1',
+            "CapabilityTypes": ["BAND1", "BAND2"],
             'LoggingTargetsDefault': '',
             'GroupDefinitions': '',
             'SkaLevel': '4',
