@@ -16,9 +16,9 @@ import sys
 
 # Tango imports
 from tango import DebugIt
+from tango import AttrWriteType, DevState, Except, ErrSeverity
 from tango.server import run, attribute, command
 from tango.server import device_property
-from tango import Except, ErrSeverity, DevState
 
 # SKA specific imports
 from . import SKAObsDevice, release
@@ -78,98 +78,6 @@ class SKASubarray(SKAObsDevice):
                                    command_name, ErrSeverity.ERR)
 
 
-    @device_check(
-        admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
-        obs_states=[ObsState.IDLE]
-    )
-    def is_AssignResources_allowed(self):
-        """
-        Check if command `AssignResources` is allowed in the current
-        device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return True  # but see decorator
-
-    @device_check(
-        admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
-        obs_states=[ObsState.IDLE]
-    )
-    def is_ReleaseResources_allowed(self):
-        """
-        Check if command `ReleaseResources` is allowed in the current
-        device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return True  # but see decorator
-
-    @device_check(
-        admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
-        obs_states=[ObsState.IDLE]
-    )
-    def is_ReleaseAllResources_allowed(self):
-        """
-        Check if command `ReleaseAllResources` is allowed in the current
-        device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return True  # but see decorator
-
-    @device_check(
-        states=[DevState.ON],
-        admin_modes=[AdminMode.ONLINE],
-        obs_states=[ObsState.IDLE, ObsState.READY]
-    )
-    def is_ConfigureCapability_allowed(self):
-        """
-        Check if command `ConfigureCapability` is allowed in the current
-        device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return True  # but see decorator
-
-    @device_check(
-        states=[DevState.ON],
-        admin_modes=[AdminMode.ONLINE],
-        obs_states=[ObsState.IDLE, ObsState.READY]
-    )
-    def is_DeconfigureCapability_allowed(self):
-        """
-        Check if command `DeconfigureCapability` is allowed in the
-        current device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return True  # but see decorator
-
-    @device_check(
-        states=[DevState.ON],
-        admin_modes=[AdminMode.ONLINE],
-        obs_states=[ObsState.IDLE, ObsState.READY]
-    )
-    def is_DeconfigureAllCapabilities_allowed(self):
-        """
-        Check if command `DeconfigureAllCapabilities` is allowed in the
-        current device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return True  # but see decorator
     # PROTECTED REGION END #    //  SKASubarray.class_variable
 
     # -----------------
@@ -187,6 +95,15 @@ class SKASubarray(SKAObsDevice):
     # ----------
     # Attributes
     # ----------
+
+    # overriding base class because this is not memorized for subarrays
+    adminMode = attribute(
+        dtype=AdminMode,
+        access=AttrWriteType.READ_WRITE,
+        doc="The admin mode reported for this device. It may interpret the current "
+            "device condition and condition of all managed devices to set this. "
+            "Most possibly an aggregate attribute.",
+    )
 
     activationTime = attribute(
         dtype='double',
@@ -218,6 +135,14 @@ class SKASubarray(SKAObsDevice):
     def init_device(self):
         SKAObsDevice.init_device(self)
         # PROTECTED REGION ID(SKASubarray.init_device) ENABLED START #
+
+        # Subarrays are logical devices, and a pool of them is created
+        # at start-up, to be put online and used as needed, Therefore
+        # the subarray adminMode is initialised into adminMode OFFLINE,
+        # and is NOT memorized.
+        self._admin_mode = AdminMode.OFFLINE
+        self.set_state(DevState.DISABLE)
+
         self._build_state = '{}, {}, {}'.format(release.name, release.version,
                                                 release.description)
         self._version_id = release.version
@@ -234,9 +159,6 @@ class SKASubarray(SKAObsDevice):
         except TypeError:
             # Might need to have the device property be mandatory in the database.
             self._configured_capabilities = {}
-
-        # When Subarray in not in use it reports:
-        self.set_state(DevState.DISABLE)
 
         # PROTECTED REGION END #    //  SKASubarray.init_device
 
@@ -291,13 +213,105 @@ class SKASubarray(SKAObsDevice):
     # Commands
     # --------
 
-    @command(
+    @device_check(
+        admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
+        states=[DevState.OFF, DevState.ON],
+        obs_states=[ObsState.IDLE]
     )
+    def is_AssignResources_allowed(self):
+        """
+        Check if command `AssignResources` is allowed in the current
+        device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
+
+    @command(dtype_in=('str',), doc_in="List of Resources to add to subarray.", dtype_out=('str',),
+             doc_out="A list of Resources added to the subarray.",)
     @DebugIt()
-    def Abort(self):
-        # PROTECTED REGION ID(SKASubarray.Abort) ENABLED START #
-        """Change obsState to ABORTED."""
-        # PROTECTED REGION END #    //  SKASubarray.Abort
+    def AssignResources(self, argin):
+        # PROTECTED REGION ID(SKASubarray.AssignResources) ENABLED START #
+        """Assign resources to a Subarray"""
+        argout = []
+        resources = self._assigned_resources[:]
+        for resource in argin:
+            if resource not in resources:
+                self._assigned_resources.append(resource)
+            argout.append(resource)
+
+        self.set_state(DevState.ON)
+        return argout
+
+    @device_check(is_obs=[ObsState.IDLE])
+    def is_ReleaseResources_allowed(self):
+        """
+        Check if command `ReleaseResources` is allowed in the current
+        device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
+
+    @command(dtype_in=('str',), doc_in="List of resources to remove from the subarray.", dtype_out=('str',),
+             doc_out="List of resources removed from the subarray.",)
+    @DebugIt()
+    def ReleaseResources(self, argin):
+        # PROTECTED REGION ID(SKASubarray.ReleaseResources) ENABLED START #
+        """Delta removal of assigned resources."""
+        argout = []
+        # Release resources...
+        resources = self._assigned_resources[:]
+        for resource in argin:
+            if resource in resources:
+                self._assigned_resources.remove(resource)
+            argout.append(resource)
+
+        if not self._assigned_resources:
+            self.set_state(DevState.OFF)
+
+        return argout
+        # PROTECTED REGION END #    //  SKASubarray.ReleaseResources
+
+    @device_check(is_obs=[ObsState.IDLE])
+    def is_ReleaseAllResources_allowed(self):
+        """
+        Check if command `ReleaseAllResources` is allowed in the current
+        device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
+
+    @command(dtype_out=('str',), doc_out="List of resources removed from the subarray.",)
+    @DebugIt()
+    def ReleaseAllResources(self):
+        # PROTECTED REGION ID(SKASubarray.ReleaseAllResources) ENABLED START #
+        """Remove all resources to tear down to an empty subarray."""
+        resources = self._assigned_resources[:]
+        released_resources = self.ReleaseResources(resources)
+
+        self.set_state(DevState.OFF)
+        return released_resources
+        # PROTECTED REGION END #    //  SKASubarray.ReleaseAllResources
+
+    @device_check(is_obs=[ObsState.IDLE, ObsState.READY])
+    def is_ConfigureCapability_allowed(self):
+        """
+        Check if command `ConfigureCapability` is allowed in the current
+        device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
 
     @command(dtype_in='DevVarLongStringArray', doc_in="[Number of instances to add][Capability types]",)
     @DebugIt()
@@ -325,6 +339,18 @@ class SKASubarray(SKAObsDevice):
         self._obs_state = ObsState.READY
         # PROTECTED REGION END #    //  SKASubarray.ConfigureCapability
 
+    @device_check(is_obs=[ObsState.READY])
+    def is_DeconfigureAllCapabilities_allowed(self):
+        """
+        Check if command `DeconfigureAllCapabilities` is allowed in the
+        current device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
+
     @command(dtype_in='str', doc_in="Capability type",)
     @DebugIt()
     def DeconfigureAllCapabilities(self, argin):
@@ -334,7 +360,22 @@ class SKASubarray(SKAObsDevice):
         configured instances for that capability type to zero."""
         self._validate_capability_types('DeconfigureAllCapabilities', [argin])
         self._configured_capabilities[argin] = 0
+
+        if not any(self._configured_capabilities.values()):  # subarray is empty
+            self._obs_state = ObsState.IDLE
         # PROTECTED REGION END #    //  SKASubarray.DeconfigureAllCapabilities
+
+    @device_check(is_obs=[ObsState.READY])
+    def is_DeconfigureCapability_allowed(self):
+        """
+        Check if command `DeconfigureCapability` is allowed in the
+        current device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
 
     @command(dtype_in='DevVarLongStringArray', doc_in="[Number of instances to remove][Capability types]",)
     @DebugIt()
@@ -360,47 +401,38 @@ class SKASubarray(SKAObsDevice):
             else:
                 self._configured_capabilities[capability_type] -= (
                     int(capability_instances))
+
+        if not any(self._configured_capabilities.values()):  # subarray is empty
+            self._obs_state = ObsState.IDLE
         # PROTECTED REGION END #    //  SKASubarray.DeconfigureCapability
 
-    @command(dtype_in=('str',), doc_in="List of Resources to add to subarray.", dtype_out=('str',),
-             doc_out="A list of Resources added to the subarray.",)
-    @DebugIt()
-    def AssignResources(self, argin):
-        # PROTECTED REGION ID(SKASubarray.AssignResources) ENABLED START #
-        """Assign resources to a Subarray"""
-        argout = []
-        resources = self._assigned_resources[:]
-        for resource in argin:
-            if resource not in resources:
-                self._assigned_resources.append(resource)
-            argout.append(resource)
+    @device_check(is_obs=[ObsState.READY])
+    def is_Scan_allowed(self):
+        """
+        Check if command `Scan` is allowed in the current device state.
 
-        self.set_state(DevState.ON)
-        return argout
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
 
-    @command(dtype_in=('str',), doc_in="List of resources to remove from the subarray.", dtype_out=('str',),
-             doc_out="List of resources removed from the subarray.",)
+    @command(dtype_in=('str',),)
     @DebugIt()
-    def ReleaseResources(self, argin):
-        # PROTECTED REGION ID(SKASubarray.ReleaseResources) ENABLED START #
-        """Delta removal of assigned resources."""
-        argout = []
-        # Release resources...
-        resources = self._assigned_resources[:]
-        for resource in argin:
-            if resource in resources:
-                self._assigned_resources.remove(resource)
-            argout.append(resource)
-        return argout
-        # PROTECTED REGION END #    //  SKASubarray.ReleaseResources
+    def Scan(self, argin):
+        """Starts the scan"""
+        self._obs_state = ObsState.SCANNING
 
-    @command(
-    )
-    @DebugIt()
-    def EndSB(self):
-        # PROTECTED REGION ID(SKASubarray.EndSB) ENABLED START #
-        """Change obsState to IDLE."""
-        # PROTECTED REGION END #    //  SKASubarray.EndSB
+    @device_check(is_obs=[ObsState.SCANNING])
+    def is_EndScan_allowed(self):
+        """
+        Check if command `EndScan` is allowed in the current device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
 
     @command(
     )
@@ -408,38 +440,95 @@ class SKASubarray(SKAObsDevice):
     def EndScan(self):
         # PROTECTED REGION ID(SKASubarray.EndScan) ENABLED START #
         """Ends the scan"""
+        self._obs_state = ObsState.READY
         # PROTECTED REGION END #    //  SKASubarray.EndScan
 
-    @command(
-    )
-    @DebugIt()
-    def Pause(self):
-        # PROTECTED REGION ID(SKASubarray.Pause) ENABLED START #
-        """Pauses the scan"""
-        # PROTECTED REGION END #    //  SKASubarray.Pause
+    @device_check(is_obs=[ObsState.READY])
+    def is_EndSB_allowed(self):
+        """
+        Check if command `EndSB` is allowed in the current device state.
 
-    @command(dtype_out=('str',), doc_out="List of resources removed from the subarray.",)
-    @DebugIt()
-    def ReleaseAllResources(self):
-        # PROTECTED REGION ID(SKASubarray.ReleaseAllResources) ENABLED START #
-        """Remove all resources to tear down to an empty subarray."""
-        resources = self._assigned_resources[:]
-        released_resources = self.ReleaseResources(resources)
-        return released_resources
-        # PROTECTED REGION END #    //  SKASubarray.ReleaseAllResources
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
 
     @command(
     )
     @DebugIt()
-    def Resume(self):
-        # PROTECTED REGION ID(SKASubarray.Resume) ENABLED START #
-        """Resumes the scan"""
-        # PROTECTED REGION END #    //  SKASubarray.Resume
+    def EndSB(self):
+        # PROTECTED REGION ID(SKASubarray.EndSB) ENABLED START #
+        """Change obsState to IDLE."""
+        self._obs_state = ObsState.IDLE
+        # PROTECTED REGION END #    //  SKASubarray.EndSB
 
-    @command(dtype_in=('str',),)
+    @device_check(
+        is_obs=[ObsState.CONFIGURING, ObsState.READY, ObsState.SCANNING]
+    )
+    def is_Abort_allowed(self):
+        """
+        Check if command `Abort` is allowed in the current device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
+
+    @command(
+    )
     @DebugIt()
-    def Scan(self, argin):
-        """Starts the scan"""
+    def Abort(self):
+        # PROTECTED REGION ID(SKASubarray.Abort) ENABLED START #
+        """Change obsState to ABORTED."""
+        self._obs_state = ObsState.ABORTED
+        # PROTECTED REGION END #    //  SKASubarray.Abort
+
+    @device_check(
+        is_obs=[ObsState.CONFIGURING, ObsState.READY, ObsState.SCANNING,
+                ObsState.ABORTED]
+    )
+    def is_Reset_allowed(self):
+        """
+        Check if command `Reset` is allowed in the current device state.
+
+        This isn't implemented in parent classes, which implies that it
+        may be called from any device state, which does make sense for a
+        reset. For subarrays, however, Reset() is defined as: "stop what
+        you're doing, deconfigure, but don't release resources." Thus
+        for subarrays the Reset() command only makes sense in ON states.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return True  # but see decorator
+
+    @command(
+    )
+    @DebugIt()
+    def Reset(self):
+        # PROTECTED REGION ID(SKASubarray.Abort) ENABLED START #
+        """
+        Reset the subarray.
+
+        This command has a special and unusual semantics for subarrays:
+        resetting a subarray causes it to stop what it is doing, and
+        deconfigure, but NOT to release its resources. Thus is only
+        makes sense for an enabled, online, resourced subarray.
+        """
+
+        if self.get_state() == DevState.ON:
+            # abort any configuring or running scan
+
+            # totally deconfigure
+            for capability_type in self._configured_capabilities:
+                self._configured_capabilities[capability_type] = 0
+
+            self._obs_state = ObsState.IDLE
+
+        # PROTECTED REGION END #    //  SKASubarray.Abort
 
 # ----------
 # Run server

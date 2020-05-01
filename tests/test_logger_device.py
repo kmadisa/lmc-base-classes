@@ -149,7 +149,7 @@ class TestSKALogger(object):
     def test_adminMode(self, tango_context):
         """Test for adminMode"""
         # PROTECTED REGION ID(SKALogger.test_adminMode) ENABLED START #
-        assert tango_context.device.adminMode == AdminMode.ONLINE
+        assert tango_context.device.adminMode == AdminMode.MAINTENANCE
         # PROTECTED REGION END #    //  SKALogger.test_adminMode
 
     # PROTECTED REGION ID(SKALogger.test_controlMode_decorators) ENABLED START #

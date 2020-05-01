@@ -151,7 +151,7 @@ class TestSKAObsDevice(object):
     def test_adminMode(self, tango_context):
         """Test for adminMode"""
         # PROTECTED REGION ID(SKAObsDevice.test_adminMode) ENABLED START #
-        assert tango_context.device.adminMode == AdminMode.ONLINE
+        assert tango_context.device.adminMode == AdminMode.MAINTENANCE
         # PROTECTED REGION END #    //  SKAObsDevice.test_adminMode
 
     # PROTECTED REGION ID(SKAObsDevice.test_controlMode_decorators) ENABLED START #
