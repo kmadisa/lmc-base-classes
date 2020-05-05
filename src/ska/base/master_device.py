@@ -19,8 +19,8 @@ from tango import DebugIt
 from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
-from . import SKABaseDevice, release
-from .utils import validate_capability_types, validate_input_sizes, convert_dict_to_list
+from ska.base import SKABaseDevice, release
+from ska.base.utils import validate_capability_types, validate_input_sizes, convert_dict_to_list
 
 
 # PROTECTED REGION END #    //  SKAMaster.additionnal_imports
@@ -87,12 +87,20 @@ class SKAMaster(SKABaseDevice):
     # General methods
     # ---------------
 
-    def init_device(self):
-        SKABaseDevice.init_device(self)
-        # PROTECTED REGION ID(SKAMaster.init_device) ENABLED START #
+    def do_init_device(self):
+        """
+        Method that initialises device attribute and other internal
+        values. This method is called, possibly asynchronously, by
+        ``init_device``. Subclasses that have no need to override the
+        default implementation of state management and asynchrony may
+        leave ``init_device`` alone and override this method instead.
+        """
+        super().do_init_device()
+
         self._build_state = '{}, {}, {}'.format(release.name, release.version,
                                                 release.description)
         self._version_id = release.version
+
         # Initialize attribute values.
         self._element_logger_address = ""
         self._element_alarm_address = ""
@@ -107,7 +115,6 @@ class SKAMaster(SKABaseDevice):
                 capability_type, max_capability_instances = max_capability.split(":")
                 self._max_capabilities[capability_type] = int(max_capability_instances)
         self._available_capabilities = self._max_capabilities.copy()
-        # PROTECTED REGION END #    //  SKAMaster.init_device
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKAMaster.always_executed_hook) ENABLED START #

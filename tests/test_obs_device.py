@@ -55,7 +55,7 @@ class TestSKAObsDevice(object):
     def test_State(self, tango_context):
         """Test for State"""
         # PROTECTED REGION ID(SKAObsDevice.test_State) ENABLED START #
-        assert tango_context.device.State() == DevState.UNKNOWN
+        assert tango_context.device.State() == DevState.OFF
         # PROTECTED REGION END #    //  SKAObsDevice.test_State
 
     # PROTECTED REGION ID(SKAObsDevice.test_Status_decorators) ENABLED START #
@@ -63,7 +63,7 @@ class TestSKAObsDevice(object):
     def test_Status(self, tango_context):
         """Test for Status"""
         # PROTECTED REGION ID(SKAObsDevice.test_Status) ENABLED START #
-        assert tango_context.device.Status() == "The device is in UNKNOWN state."
+        assert tango_context.device.Status() == "The device is in OFF state."
         # PROTECTED REGION END #    //  SKAObsDevice.test_Status
 
     # PROTECTED REGION ID(SKAObsDevice.test_GetVersionInfo_decorators) ENABLED START #
