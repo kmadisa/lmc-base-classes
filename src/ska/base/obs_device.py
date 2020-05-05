@@ -21,8 +21,8 @@ from tango import DevState
 from tango.server import run, attribute
 
 # SKA specific imports
-from . import SKABaseDevice, release
-from .control_model import AdminMode, ObsMode, ObsState, device_check
+from ska.base import SKABaseDevice, release
+from ska.base.control_model import AdminMode, ObsMode, ObsState, device_check
 # PROTECTED REGION END #    //  SKAObsDevice.additionnal_imports
 
 __all__ = ["SKAObsDevice", "main"]
@@ -89,18 +89,25 @@ class SKAObsDevice(SKABaseDevice):
     # General methods
     # ---------------
 
-    def init_device(self):
-        SKABaseDevice.init_device(self)
-        # PROTECTED REGION ID(SKAObsDevice.init_device) ENABLED START #
+    def do_init_device(self):
+        """
+        Method that initialises device attribute and other internal
+        values. This method is called, possibly asynchronously, by
+        ``init_device``. Subclasses that have no need to override the
+        default implementation of state management and asynchrony may
+        leave ``init_device`` alone and override this method instead.
+        """
+        super().do_init_device()
+
         self._build_state = '{}, {}, {}'.format(release.name, release.version,
                                                 release.description)
         self._version_id = release.version
+
         # Initialize attribute values.
         self._obs_state = ObsState.IDLE
         self._obs_mode = ObsMode.IDLE
         self._config_progress = 0
         self._config_delay_expected = 0
-        # PROTECTED REGION END #    //  SKAObsDevice.init_device
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKAObsDevice.always_executed_hook) ENABLED START #

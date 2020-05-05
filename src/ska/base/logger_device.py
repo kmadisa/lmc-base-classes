@@ -19,8 +19,8 @@ from tango import DebugIt, DeviceProxy, DevFailed
 from tango.server import run, command
 
 # SKA specific imports
-from . import SKABaseDevice, release
-from .control_model import LoggingLevel
+from ska.base import SKABaseDevice, release
+from ska.base.control_model import LoggingLevel
 # PROTECTED REGION END #    //  SKALogger.additionnal_import
 
 __all__ = ["SKALogger", "main"]
@@ -45,13 +45,19 @@ class SKALogger(SKABaseDevice):
     # General methods
     # ---------------
 
-    def init_device(self):
-        SKABaseDevice.init_device(self)
-        # PROTECTED REGION ID(SKALogger.init_device) ENABLED START #
+    def do_init_device(self):
+        """
+        Method that initialises device attribute and other internal
+        values. This method is called, possibly asynchronously, by
+        ``init_device``. Subclasses that have no need to override the
+        default implementation of state management and asynchrony may
+        leave ``init_device`` alone and override this method instead.
+        """
+        super().do_init_device()
+
         self._build_state = '{}, {}, {}'.format(release.name, release.version,
                                                 release.description)
         self._version_id = release.version
-        # PROTECTED REGION END #    //  SKALogger.init_device
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKALogger.always_executed_hook) ENABLED START #

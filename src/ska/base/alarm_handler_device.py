@@ -20,7 +20,7 @@ from tango import DebugIt
 from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
-from . import SKABaseDevice, release
+from ska.base import SKABaseDevice, release
 
 # PROTECTED REGION END #    //  SKAAlarmHandler.additionnal_import
 
@@ -91,13 +91,19 @@ class SKAAlarmHandler(SKABaseDevice):
     # General methods
     # ---------------
 
-    def init_device(self):
-        SKABaseDevice.init_device(self)
+    def do_init_device(self):
+        """
+        Method that initialises device attribute and other internal
+        values. This method is called, possibly asynchronously, by
+        ``init_device``. Subclasses that have no need to override the
+        default implementation of state management and asynchrony may
+        leave ``init_device`` alone and override this method instead.
+        """
+        super().do_init_device()
+
         self._build_state = '{}, {}, {}'.format(release.name, release.version,
                                                 release.description)
         self._version_id = release.version
-        # PROTECTED REGION ID(SKAAlarmHandler.init_device) ENABLED START #
-        # PROTECTED REGION END #    //  SKAAlarmHandler.init_device
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKAAlarmHandler.always_executed_hook) ENABLED START #

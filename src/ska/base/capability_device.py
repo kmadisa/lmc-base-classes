@@ -18,7 +18,7 @@ from tango import DebugIt
 from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
-from . import SKAObsDevice, release
+from ska.base import SKAObsDevice, release
 # PROTECTED REGION END #    //  SKACapability.additionnal_imports
 
 __all__ = ["SKACapability", "main"]
@@ -74,16 +74,22 @@ class SKACapability(SKAObsDevice):
     # General methods
     # ---------------
 
-    def init_device(self):
-        SKAObsDevice.init_device(self)
+    def do_init_device(self):
+        """
+        Method that initialises device attribute and other internal
+        values. This method is called, possibly asynchronously, by
+        ``init_device``. Subclasses that have no need to override the
+        default implementation of state management and asynchrony may
+        leave ``init_device`` alone and override this method instead.
+        """
+        super().do_init_device()
+
         self._build_state = '{}, {}, {}'.format(release.name, release.version,
                                                 release.description)
         self._version_id = release.version
-        # PROTECTED REGION ID(SKACapability.init_device) ENABLED START #
         self._activation_time = 0.0
         self._configured_instances = 0
         self._used_components = [""]
-        # PROTECTED REGION END #    //  SKACapability.init_device
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKACapability.always_executed_hook) ENABLED START #

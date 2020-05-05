@@ -28,8 +28,8 @@ from tango import DeviceProxy, DevFailed
 
 # SKA specific imports
 import ska.logging as ska_logging
-from . import release
-from .control_model import (
+from ska.base import release
+from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode,
     HealthState, LoggingLevel,
     device_check
@@ -352,14 +352,37 @@ class SKABaseDevice(Device):
     def init_device(self):
         """
         Method that initializes the tango device after startup.
+
         :return: None
         """
-        Device.init_device(self)
+        super().init_device()
         # PROTECTED REGION ID(SKABaseDevice.init_device) ENABLED START #
 
+        # Set state to transient INIT state.
+        self.set_state(DevState.INIT)
+
+        # Get logging working synchronously before we allow any
+        # asynchronous code that might attempt to log
         self._init_logging()
 
-        # Initialize attribute values.
+        # In future, this will be an async call
+        self.run_init_device()
+
+    def run_init_device(self):
+        """
+        Method containing the portion of ``init_device`` that should, and
+        eventually will, be run asynchronously.
+        """
+        self.do_init_device()
+        self.init_device_completed()
+
+    def do_init_device(self):
+        """
+        Method that initialises device attribute and other internal
+        values. Subclasses that have no need to override the default
+        implementation of state management and asynchrony may leave
+        ``init_device`` alone and override this method instead.
+        """
         self._build_state = '{}, {}, {}'.format(release.name, release.version,
                                                 release.description)
         self._version_id = release.version
@@ -384,6 +407,16 @@ class SKABaseDevice(Device):
 
         self.logger.info("Completed SKABaseDevice.init_device")
         # PROTECTED REGION END #    //  SKABaseDevice.init_device
+
+    @device_check(state=DevState.INIT)
+    def init_device_completed(self):
+        """
+        Updates device state on completion of initialisation.
+        """
+        if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
+            self.set_state(DevState.OFF)
+        else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
+            self.set_state(DevState.DISABLE)
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKABaseDevice.always_executed_hook) ENABLED START #
@@ -542,10 +575,10 @@ class SKABaseDevice(Device):
             self.set_state(DevState.OFF)
         elif state in [DevState.OFF, DevState.ON] and value in disabling_modes:
             # This write disables the subarray
-                if state == DevState.ON:
-                    self.Reset()
-                    self.ReleaseAllResources()
-                self.set_state(DevState.DISABLE)
+            if state == DevState.ON:
+                self.Reset()
+                self.ReleaseAllResources()
+            self.set_state(DevState.DISABLE)
         self._admin_mode = value
         # PROTECTED REGION END #    //  SKABaseDevice.adminMode_write
 

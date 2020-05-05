@@ -21,8 +21,8 @@ from tango.server import run, attribute, command
 from tango.server import device_property
 
 # SKA specific imports
-from . import SKAObsDevice, release
-from .control_model import AdminMode, ObsState, device_check
+from ska.base import SKAObsDevice, release
+from ska.base.control_model import AdminMode, ObsState, device_check
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 
 __all__ = ["SKASubarray", "main"]
@@ -132,20 +132,24 @@ class SKASubarray(SKAObsDevice):
     # General methods
     # ---------------
 
-    def init_device(self):
-        SKAObsDevice.init_device(self)
-        # PROTECTED REGION ID(SKASubarray.init_device) ENABLED START #
+    def do_init_device(self):
+        """
+        Method that initialises device attribute and other internal
+        values. Subclasses that have no need to override the default
+        implementation of state management and asynchrony may leave
+        ``init_device`` alone and override this method instead.
+        """
+        super().do_init_device()
+
+        self._build_state = '{}, {}, {}'.format(release.name, release.version,
+                                                release.description)
+        self._version_id = release.version
 
         # Subarrays are logical devices, and a pool of them is created
         # at start-up, to be put online and used as needed, Therefore
         # the subarray adminMode is initialised into adminMode OFFLINE,
         # and is NOT memorized.
         self._admin_mode = AdminMode.OFFLINE
-        self.set_state(DevState.DISABLE)
-
-        self._build_state = '{}, {}, {}'.format(release.name, release.version,
-                                                release.description)
-        self._version_id = release.version
 
         # Initialize attribute values.
         self._activation_time = 0.0
@@ -159,8 +163,6 @@ class SKASubarray(SKAObsDevice):
         except TypeError:
             # Might need to have the device property be mandatory in the database.
             self._configured_capabilities = {}
-
-        # PROTECTED REGION END #    //  SKASubarray.init_device
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKASubarray.always_executed_hook) ENABLED START #
@@ -180,6 +182,7 @@ class SKASubarray(SKAObsDevice):
         # PROTECTED REGION ID(SKASubarray.activationTime_read) ENABLED START #
         """
         Reads the time since device is activated.
+
         :return: Time of activation in seconds since Unix epoch.
         """
         return self._activation_time
@@ -189,6 +192,7 @@ class SKASubarray(SKAObsDevice):
         # PROTECTED REGION ID(SKASubarray.assignedResources_read) ENABLED START #
         """
         Reads the resources assigned to the device.
+
         :return: Resources assigned to the device.
         """
         return self._assigned_resources
@@ -198,6 +202,7 @@ class SKASubarray(SKAObsDevice):
         # PROTECTED REGION ID(SKASubarray.configuredCapabilities_read) ENABLED START #
         """
         Reads capabilities configured in the Subarray.
+
         :return: A list of capability types with no. of instances
         used in the Subarray
         """
@@ -316,28 +321,61 @@ class SKASubarray(SKAObsDevice):
     @command(dtype_in='DevVarLongStringArray', doc_in="[Number of instances to add][Capability types]",)
     @DebugIt()
     def ConfigureCapability(self, argin):
-        # PROTECTED REGION ID(SKASubarray.ConfigureCapability) ENABLED START #
-        """Configures number of instances for each capability. If the capability exists,
+        """
+        Configures the capabilities of this subarray
+
+        :param argin: configuration specification
+        :type argin: string
+        """
+        self._obs_state = ObsState.CONFIGURING
+        self.run_configure_capability(argin)
+
+    def run_configure_capability(self, argin):
+        """
+        Performs and monitors the configuring. Then, if the configuring
+        completed successfully, updates the obsState from CONFIGURING to
+        READY. If the configuring does not complete successfully, the
+        state is not updated, because it is assumed that this will be
+        handled by whatever has interrupted it e.g. an Abort().
+
+        This functionality is enclosed in its own method as a hook for
+        future implementation of asynchrony.
+
+        :param argin: configuration specification
+        :type argin: string
+        """
+        if self.do_configure_capability(argin):
+            self.configure_capability_completed()
+
+    def do_configure_capability(self, argin):
+        """
+        Configures number of instances for each capability. If the capability exists,
         it increments the configured instances by the number of instances requested,
         otherwise an exception will be raised.
-        Note: The two lists arguments must be of equal length or an exception will be raised."""
+        Note: The two lists arguments must be of equal length or an exception will be raised.
+
+        :return: whether the configuration completed successfully
+        :rtype: boolean
+        """
         command_name = 'ConfigureCapability'
 
         capabilities_instances, capability_types = argin
         self._validate_capability_types(command_name, capability_types)
         self._validate_input_sizes(command_name, argin)
 
-        # Set obsState to 'CONFIGURING'.
-        self._obs_state = ObsState.CONFIGURING
-
         # Perform the configuration.
         for capability_instances, capability_type in zip(
                 capabilities_instances, capability_types):
             self._configured_capabilities[capability_type] += capability_instances
 
-        # Change the obsState to 'READY'.
+        return True
+
+    @device_check(is_obs=[ObsState.CONFIGURING])
+    def configure_capability_completed(self):
+        """
+        Updates device state following successful configuration.
+        """
         self._obs_state = ObsState.READY
-        # PROTECTED REGION END #    //  SKASubarray.ConfigureCapability
 
     @device_check(is_obs=[ObsState.READY])
     def is_DeconfigureAllCapabilities_allowed(self):
@@ -420,8 +458,50 @@ class SKASubarray(SKAObsDevice):
     @command(dtype_in=('str',),)
     @DebugIt()
     def Scan(self, argin):
-        """Starts the scan"""
+        """
+        Starts the scan
+        """
         self._obs_state = ObsState.SCANNING
+        self.run_scan(argin)
+
+    def run_scan(self, argin):
+        """
+        Performs and monitors the scan. Then, if the scan completed
+        successfully, updates the obsState from SCANNING to READY. If
+        the scan does not complete successfully, the state is not
+        updated, because it is assumed that this will be handled by
+        whatever has interrupted the scan e.g. an Abort() or EndScan()
+        call.
+
+        This functionality is enclosed in its own method as a hook for
+        future implementation of asynchrony.
+
+        :param argin: scan arg
+        :type argin: string
+        """
+        if self.do_scan(argin):
+            self.scan_completed()
+
+    def do_scan(self, argin):
+        """
+        Hook for the asynchronous scan code. At present this is an empty
+        stub that returns False.
+
+        :return: Whether the scan completed successfully.
+        :rtype: boolean
+        """
+        # For this synchronous version of the code, we won't let the
+        # scan complete; we'll force the device to remain in SCANNING
+        # mode until we interrupt it e.g. with EndScan() or Abort().
+        return False
+
+    @device_check(is_obs=[ObsState.SCANNING])
+    def scan_completed(self):
+        """
+        Updates device state following the successful completion of a
+        scan.
+        """
+        self._obs_state = READY
 
     @device_check(is_obs=[ObsState.SCANNING])
     def is_EndScan_allowed(self):
