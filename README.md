@@ -25,6 +25,24 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
 
 ## Version History
 
+#### 0.6.0
+- Breaking change: State management
+  - Introduction of `control_model.device_check` decorator to simplify
+    command gatekeeping
+  - Classes provide subclassing code hooks that separate management of
+    device state and (eventually) asynchrony from other device
+    functionality. Thus, subclasses that prefer not to have to manage
+    their own state etc may:
+    - leave `init_device()` alone and place their initialisation code in
+      `do_init_device` instead.
+    - leave `ConfigureCapability()` alone and place their configuration
+      code in `do_configure_capability()` instead.
+    - And so on for `AssignResources()`, `Scan()`, `Reset()`, `Abort()
+      instead.
+    In each of these cases, the base class will call any subclass code
+    but manage state and asynchrony itself.
+  - SKASubarray implements full (synchronous) subarray state machine
+
 #### 0.5.2
 - Change ska_logger dependency to use ska-namespaced package (v0.3.0).  No change to usage.
 
