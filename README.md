@@ -43,6 +43,11 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
     but manage state and asynchrony itself.
   - SKASubarray implements full (synchronous) subarray state machine
 
+#### (unreleased)
+- Remove `ObsState` command from SKACapability, SKAObsDevice and SKASubarray Pogo XMI files.  It should not
+  have been included - the `obsState` attribute provides this information. The command was not in the Python
+  files, so no change to usage.  It only affects future Pogo code generation. 
+
 #### 0.5.3
 - Setting `loggingTargets` attribute to empty list no longer raises exception.
 - Change syslog targets in `loggingTargets` attribute to a full URL so that remote syslog servers can be specified.
