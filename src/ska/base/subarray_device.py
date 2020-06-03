@@ -248,7 +248,7 @@ class SKASubarray(SKAObsDevice):
             ``do_assign_resources()`` in which case this class will
             continue to manage state in accordance with the subarray
             control model.
-        :return: list of resources removed
+        :return: list of resources added
         :rtype: list of string
         """
         assigned = self.do_assign_resources(argin)
