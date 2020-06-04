@@ -40,13 +40,13 @@ from ska.base.control_model import (
     device_check
 )
 
-from .utils import (get_dp_command,
-                    coerce_value,
-                    get_groups_from_json,
-                    get_tango_device_type_id)
-from .faults import (GroupDefinitionsError,
-                     LoggingTargetError,
-                     LoggingLevelError)
+from ska.base.utils import (get_dp_command,
+                            coerce_value,
+                            get_groups_from_json,
+                            get_tango_device_type_id)
+from ska.base.faults import (GroupDefinitionsError,
+                             LoggingTargetError,
+                             LoggingLevelError)
 
 LOG_FILE_SIZE = 1024 * 1024  # Log file size 1MB.
 
