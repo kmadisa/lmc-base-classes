@@ -430,7 +430,7 @@ class SKASubarray(SKAObsDevice):
         :type argin: string
         """
         if self.do_configure_capability(argin):
-            self.configure_capability_completed()
+            self.post_configure_capability()
 
     def do_configure_capability(self, argin):
         """
@@ -463,7 +463,7 @@ class SKASubarray(SKAObsDevice):
         return True
 
     @device_check(is_obs=[ObsState.CONFIGURING])
-    def configure_capability_completed(self):
+    def post_configure_capability(self):
         """
         Updates device state following successful configuration.
         """
@@ -643,7 +643,7 @@ class SKASubarray(SKAObsDevice):
         :type argin: string
         """
         if self.do_scan(argin):
-            self.scan_completed()
+            self.post_scan()
 
     def do_scan(self, argin):
         """
@@ -666,7 +666,7 @@ class SKASubarray(SKAObsDevice):
         return False
 
     @device_check(is_obs=[ObsState.SCANNING])
-    def scan_completed(self):
+    def post_scan(self):
         """
         Updates device state following the successful completion of a
         scan.

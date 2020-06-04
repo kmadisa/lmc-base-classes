@@ -521,7 +521,7 @@ class SKABaseDevice(Device):
         eventually will, be run asynchronously.
         """
         self.do_init_device()
-        self.init_device_completed()
+        self.post_init_device()
 
     def do_init_device(self):
         """
@@ -556,7 +556,7 @@ class SKABaseDevice(Device):
         # PROTECTED REGION END #    //  SKABaseDevice.init_device
 
     @device_check(state=DevState.INIT)
-    def init_device_completed(self):
+    def post_init_device(self):
         """
         Updates device state on completion of initialisation.
         """
