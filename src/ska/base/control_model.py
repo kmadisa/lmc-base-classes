@@ -42,9 +42,9 @@ class HealthState(enum.IntEnum):
     that belongs to a subarray is unresponsive, or may report healthState as ``FAILED``.
 
     Difference between ``DEGRADED`` and ``FAILED`` health shall be clearly identified
-    (quantified) and documented. For example, the difference between ``DEGRADED`` and ``FAILED`` 
-    subarray can be defined as the number or percent of the dishes available, the number or 
-    percent of the baselines available,   sensitivity, or some other criterion. More than one 
+    (quantified) and documented. For example, the difference between ``DEGRADED`` and ``FAILED``
+    subarray can be defined as the number or percent of the dishes available, the number or
+    percent of the baselines available,   sensitivity, or some other criterion. More than one
     criteria may be defined for a TANGO Device.
     """
 
@@ -73,8 +73,8 @@ class AdminMode(enum.IntEnum):
     """
 
     OFFLINE = 1
-    """SKA operations declared that the entity is not used for observing or other function it 
-    provides. A subset of the monitor and control functionality may be supported in this mode. 
+    """SKA operations declared that the entity is not used for observing or other function it
+    provides. A subset of the monitor and control functionality may be supported in this mode.
     ``adminMode=OFFLINE`` is also used to indicate unused Subarrays and unused Capabilities.
     TANGO devices report ``state=DISABLED`` when ``adminMode=OFFLINE``.
     """
@@ -82,13 +82,13 @@ class AdminMode(enum.IntEnum):
     MAINTENANCE = 2
     """
     SKA operations declared that the entity is reserved for maintenance and cannot
-    be part of scientific observations, but can be used for observing in a ‘Maintenance Subarray’. 
-    
+    be part of scientific observations, but can be used for observing in a ‘Maintenance Subarray’.
+
     ``MAINTENANCE`` mode has different meaning for different entities, depending on the context
     and functionality. Some entities may implement different behaviour when in ``MAINTENANCE``
     mode.
-    
-    For each TANGO Device, the difference in behaviour and functionality in ``MAINTENANCE`` mode 
+
+    For each TANGO Device, the difference in behaviour and functionality in ``MAINTENANCE`` mode
     shall be documented. ``MAINTENANCE`` is the factory default for ``adminMode``. Transition
     out of ``adminMode=NOT_FITTED`` is always via ``MAINTENANCE``; an engineer/operator has to
     verify that the  entity is operational as expected before it is set to ``ONLINE``
@@ -97,28 +97,28 @@ class AdminMode(enum.IntEnum):
 
     NOT_FITTED = 3
     """
-    SKA operations declared the entity as ``NOT_FITTED`` (and therefore cannot be used for 
-    observing or other function it provides). TM shall not send commands or queries to the 
+    SKA operations declared the entity as ``NOT_FITTED`` (and therefore cannot be used for
+    observing or other function it provides). TM shall not send commands or queries to the
     Element (entity) while in this mode.
-    
-    TANGO devices shall report ``state=DISABLE`` when ``adminMode=NOT_FITTED``; higher level 
-    entities (Element, Sub-element, component, Subarray and/or Capability) which ‘use’ 
-    ``NOT_FITTED`` equipment shall report operational ``state`` as ``DISABLE``.  If only a subset 
-    of higher-level functionality is affected, overall ``state`` of the higher-level entity that 
-    uses ``NOT_FITTED`` equipment may be reported as ``ON``, but with ``healthState=DEGRADED``. 
-    Additional queries may be necessary to identify which functionality and capabilities are 
-    available. 
-    
-    Higher-level entities shall intelligently exclude ``NOT_FITTED`` items from ``healthState`` and 
-    Element Alerts/Telescope Alarms; e.g. if a receiver band in DSH is ``NOT_FITTED`` and there 
-    is no communication to that receiver band, then DSH shall not raise Element Alerts for that 
-    entity and it should not report ``healthState=FAILED`` because of an entity that is 
+
+    TANGO devices shall report ``state=DISABLE`` when ``adminMode=NOT_FITTED``; higher level
+    entities (Element, Sub-element, component, Subarray and/or Capability) which ‘use’
+    ``NOT_FITTED`` equipment shall report operational ``state`` as ``DISABLE``.  If only a subset
+    of higher-level functionality is affected, overall ``state`` of the higher-level entity that
+    uses ``NOT_FITTED`` equipment may be reported as ``ON``, but with ``healthState=DEGRADED``.
+    Additional queries may be necessary to identify which functionality and capabilities are
+    available.
+
+    Higher-level entities shall intelligently exclude ``NOT_FITTED`` items from ``healthState`` and
+    Element Alerts/Telescope Alarms; e.g. if a receiver band in DSH is ``NOT_FITTED`` and there
+    is no communication to that receiver band, then DSH shall not raise Element Alerts for that
+    entity and it should not report ``healthState=FAILED`` because of an entity that is
     ``NOT_FITTED``.
     """
 
     RESERVED = 4
-    """This mode is used to identify additional equipment that is ready to take over when the 
-    operational equipment fails. This equipment does not take part in the operations at this 
+    """This mode is used to identify additional equipment that is ready to take over when the
+    operational equipment fails. This equipment does not take part in the operations at this
     point in time. TANGO devices report ``state=DISABLED`` when ``adminMode=RESERVED``.
     """
 
@@ -139,7 +139,7 @@ class ObsState(enum.IntEnum):
     can be made about the previous conditions. This is a transient state. Subarray/Capability
     are supposed to automatically transitions to ``obsState=READY`` when configuration is
     successfully completed. If an error is encountered, TANGO Device may:
-    
+
     * report failure and abort the configuration, waiting for additional input;
     * proceed with reconfiguration, transition to ``obsState=READY`` and set
       ``healthState=DEGRADED`` (if possible notify the originator of the request that
@@ -152,7 +152,7 @@ class ObsState(enum.IntEnum):
     """
     Subarray is fully prepared for the next scan, but not actually taking data or moving
     in the observed coordinate system (i.e. it may be tracking, but not moving relative
-    to the coordinate system). 
+    to the coordinate system).
     """
 
     SCANNING = 3
@@ -169,7 +169,7 @@ class ObsState(enum.IntEnum):
     not actually taking data or moving in the observed system. Similar to ``READY`` state.
     If required, then functionality required by DISHes, LFAA, CSP is [TBD5]
     (do they keep signal processing and stop transmitting output data? What happens to
-    observations that are time/position sensitive and cannot resume after a pause?) 
+    observations that are time/position sensitive and cannot resume after a pause?)
     """
 
     ABORTED = 5
@@ -182,7 +182,7 @@ class ObsState(enum.IntEnum):
     """
     Subarray has detected an internal error making it impossible to remain in the previous
     state.
- 
+
     **Note:** This shall trigger a ``healthState`` update of the Subarray/Capability.
     """
 
@@ -248,13 +248,13 @@ class ControlMode(enum.IntEnum):
 
     LOCAL = 1
     """
-    TANGO Device accepts only from a ‘local’ client and ignores commands and queries received 
-    from TM or any other ‘remote’ clients. This is typically activated by a switch, 
+    TANGO Device accepts only from a ‘local’ client and ignores commands and queries received
+    from TM or any other ‘remote’ clients. This is typically activated by a switch,
     or a connection on the local control interface. The intention is to support early
     integration of DISHes and stations. The equipment has to be put back in ``REMOTE``
     before clients can take  control again. ``controlMode`` may be removed from the
     SCM if unused/not needed.
-    
+
     **Note:** Setting `controlMode` to `LOCAL` **is not a safety feature**, but rather a
     usability feature.  Safety has to be implemented separately to the control paths.
     """
@@ -291,8 +291,8 @@ class TestMode(enum.IntEnum):
 
     TEST = 1
     """
-    Element (entity) behaviour and/or set of commands differ for the normal operating mode. To 
-    be implemented only by devices that implement one or more test modes. The Element 
+    Element (entity) behaviour and/or set of commands differ for the normal operating mode. To
+    be implemented only by devices that implement one or more test modes. The Element
     documentation shall provide detailed description.
     """
 
@@ -313,16 +313,11 @@ class LoggingLevel(enum.IntEnum):
     DEBUG = 5
 
 
-
-# -----------------------
-# Control model decorator
-# -----------------------
-
-class device_check:
+class guard:
     """
     Method decorator that only permits a device method to be run if the
-    device passes the given checks, otherwise raising a
-    ``tango.DevFailed`` exception.
+    device meets certain guard conditions on device state, otherwise
+    raising a ``tango.DevFailed`` exception.
 
     It can be used on a command itself (e.g. `Scan()`), or, to conform
     to Tango subsystem expectations, as the implementation of the
@@ -331,9 +326,12 @@ class device_check:
     also be used on asynchronous callbacks, to check that the state is
     what the asynchronous context expected it to be.
 
-    Since this decorator knows nothing of the implementation details
-    of any device, the device class must register the checks that it may
-    want to perform, before making use of the decorator.
+    Additionally, it provides a boolean classmethod `allows` which can
+    be used to perform inline checks i.e. with `if guard.allows(...)`.
+
+    Since this guard knows nothing of the implementation details of any
+    device, the device class must register the checks that it may want
+    to perform, before making use of the decorator.
 
     :example: `FooDevice` has a `state` attribute, the current value of
         which is stored in `self._state`. The device command `Foo()` is
@@ -342,19 +340,27 @@ class device_check:
 
         ::
 
-            device_check.register(
+            guard.register(
                 "state",
                 lambda device, value: device._state == value
             )
 
-        and then it can use the ``@device_check`` decorator to ensure
+        and then it can use the ``@guard`` decorator to ensure
         that the state is checked before `Foo()` is run:
 
         ::
 
-            @device_check(state=READY)
+            @guard(state=READY)
             def Foo(self):
                 pass
+
+        It can also use the `allows` classmethod to perform inline
+        checks:
+
+        ::
+
+            def is_Foo_allowed(self):
+                return guard.allows(self, state=READY)
 
         A device that subclasses `FooDevice` will inherit the checks
         `FooDevice` has registered, but can register new checks of its
@@ -366,31 +372,135 @@ class device_check:
     @classmethod
     def register(cls, name, func):
         """
-        Registers a device check with the ``@device_check`` decorator.
+        Registers a device state guard with the ``@guard`` decorator.
 
         :param name: the name of the check. Once registered, this check
             may be invoked by using the name as an argument to the
-            decorator.
+            decorator or `allows` classmethod.
         :type name: string
         :param func: a function that takes two arguments: the device to
-            checked, and a comparison value to be passed into the check.
+            be checked, and a comparison value to be passed into the
+            check.
         :type func: function
         """
         cls.checks[name] = func
 
-    def __init__(self, **kwargs):
+    @classmethod
+    def _check(cls, device, check, value):
         """
-        Initialises a callable device_check object, to function as a
+        Checks to see whether a single device state check passed.
+
+        :param device: the device that the checks are to be performed
+            against. Since it will usually be the device itself that
+            invokes this method, this argument will usually be passed
+            `self`
+        :type device: A tango device, normally the `self` of the device
+            invoking the check
+        :param check: the name of the check to be performed. The check
+            must already have been registered using `guard.register`.
+        :type check: str
+        :param value: an argument to the named check; this will ypically
+            be the value that the named check must take in order for the
+            check to pass
+        """
+        return guard.checks[check](device, value)
+
+    @classmethod
+    def _throw(cls, origin, check):
+        """
+        Helper classmethod that constructs and throws a
+        ``Tango.DevFailed`` exception.
+
+        :param origin: the origin of the check; typically the name of
+            the command that the check was being conducted for.
+        :type origin: string
+        :param check: the name of the check that failed.
+        :type check: string
+
+        """
+        Except.throw_exception(
+            "API_CommandFailed",
+            "{}: disallowed on check '{}'".format(origin, check),
+            origin,
+            ErrSeverity.ERR
+        )
+
+    @classmethod
+    def allows(cls, device, **checks):
+        """
+        Performs the provided device state checks against the device,
+        and returns a boolean advising whether all checks pass.
+
+        :param device: the device that the checks are to be performed
+            against. Since it will usually be the device itself that
+            invokes this method, this argument will usually be passed
+            `self`
+        :type device: A tango device, normally the `self` of the device
+            invoking the check
+        :param checks: kwargs or a dictionary where keys are names of
+            checks to be performed, and values are values that the
+            checks are supposed to check for.
+        :example: A Tango device has an `On()` command that is only allowed
+            to run when the device is in OFF state:
+
+            ::
+
+                def is_On_allowed(self):
+                    return guard.allows(self, state=OFF)
+        """
+        for check in checks:
+            if not guard._check(device, check, checks[check]):
+                return False
+        return True
+
+    @classmethod
+    def require(cls, device, origin, **checks):
+        """
+        Performs the provided device state checks against the device,
+        and raises a tango.DevFailed exception if any check does not
+        pass
+
+        :param device: the device that the checks are to be performed
+            against. Since it will usually be the device itself that
+            invokes this method, this argument will usually be passed
+            `self`
+        :type device: A tango device, normally the `self` of the device
+            invoking the check
+        :param origin: the origin of this check; used to construct a
+            helpful DevFailed exception.
+        :type origin: string
+        :param checks: kwargs or a dictionary where keys are names of
+            checks to be performed, and values are values that the
+            checks are supposed to check for.
+        :return: True
+        :rtype: boolean
+        :example: A Tango device has an `On()` command that is only allowed
+            to run when the device is in OFF state:
+
+            ::
+
+                def is_Simulate_allowed(self):
+                    guard.require(self, "is_Simulate_allowed", mode=SIMULATION)
+        """
+        for check in checks:
+            if not guard._check(device, check, checks[check]):
+                guard._throw(origin, check)
+        return True
+
+    def __init__(self, **checks):
+        """
+        Initialises a callable guard object, to function as a
         device method generator.
 
-        :param kwargs: a dictionary where the keys are the names of the
-            checks to be run, and the values are passed into the check.
-            Each key must have been registered by the device class, or a
-            KeyError will occur when the decorator is called.
-        :type kwargs: dict
-
+        :param checks: a dictionary (typically kwargs) where the keys
+            are the names of the checks to be run, and the values are
+            passed into the check (typically the value that the check
+            will have to take in order to pass). Each check must first
+            have been registered by the device class, or a KeyError will
+            occur when the decorator is called.
+        :type checks: dict (typically kwargs)
         """
-        self.kwargs = kwargs
+        self.checks = checks
 
     def __call__(self, func):
         """
@@ -404,51 +514,6 @@ class device_check:
         """
         @wraps(func)
         def wrapped(device, *args, **kwargs):
-            self._check(device, func.__name__)
+            guard.require(device, func.__name__, **self.checks)
             return func(device, *args, **kwargs)
         return wrapped
-
-    def _check(self, device, origin, throw=True):
-        """
-        Performs the requested device checks.
-
-        :param device: the device on which the checks are performed.
-        :type device: by intent, a Tango device; however it could be
-            any object really
-        :param origin: the origin of this check; used to construct a
-            helpful DevFailed exception.
-        :type origin: string
-        :param throw: What to do if a check fails. If ``True``, raise a
-            ``Tango.DevFailed`` exception; if ``False``, return
-            ``False``.
-        :type throw: boolean (default ``True``)
-        :raises Tango.DevFailed: if the ``throw`` argument is ``True``
-            and a check fails.
-
-        """
-        for key in self.kwargs:
-            if not device_check.checks[key](device, self.kwargs[key]):
-                if throw:
-                    self._throw(origin, key)
-                else:
-                    return False
-        return True
-
-    def _throw(self, origin, check):
-        """
-        Helper method that constructs and throws a ``Tango.DevFailed``
-        exception.
-
-        :param origin: the origin of the check; typically the name of
-            the command that the check was being conducted for.
-        :type origin: string
-        :param check: the name of the check that failed.
-        :type check: string
-
-        """
-        Except.throw_exception(
-            "API_CommandFailed",
-            "{}: Command disallowed on check '{}'".format(origin, check),
-            origin,
-            ErrSeverity.ERR
-        )

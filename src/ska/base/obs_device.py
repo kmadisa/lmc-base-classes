@@ -22,7 +22,7 @@ from tango.server import run, attribute
 
 # SKA specific imports
 from ska.base import SKABaseDevice, release
-from ska.base.control_model import AdminMode, ObsMode, ObsState, device_check
+from ska.base.control_model import AdminMode, ObsMode, ObsState, guard
 # PROTECTED REGION END #    //  SKAObsDevice.additionnal_imports
 
 __all__ = ["SKAObsDevice", "main"]
@@ -33,15 +33,15 @@ class SKAObsDevice(SKABaseDevice):
     A generic base device for Observations for SKA.
     """
     # PROTECTED REGION ID(SKAObsDevice.class_variable) ENABLED START #
-    device_check.register(
+    guard.register(
         "obs_state",
         lambda device, obs_state: device._obs_state == obs_state
     )
-    device_check.register(
+    guard.register(
         "obs_states",
         lambda device, obs_states: device._obs_state in obs_states
     )
-    device_check.register(
+    guard.register(
         "is_obs",  # shortcut for very common use case
         lambda device, obs_states:
             device.get_state() == DevState.ON and

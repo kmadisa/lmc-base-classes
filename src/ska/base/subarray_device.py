@@ -22,7 +22,7 @@ from tango.server import device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice, release
-from ska.base.control_model import AdminMode, ObsState, device_check
+from ska.base.control_model import AdminMode, ObsState, guard
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 
 __all__ = ["SKASubarray", "main"]
@@ -218,11 +218,6 @@ class SKASubarray(SKAObsDevice):
     # Commands
     # --------
 
-    @device_check(
-        admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
-        states=[DevState.OFF, DevState.ON],
-        obs_states=[ObsState.IDLE]
-    )
     def is_AssignResources_allowed(self):
         """
         Check if command `AssignResources` is allowed in the current
@@ -232,7 +227,11 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_AssignResources_allowed",
+            admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
+            states=[DevState.OFF, DevState.ON],
+            obs_states=[ObsState.IDLE]
+        )
 
     @command(dtype_in=('str',), doc_in="List of Resources to add to subarray.", dtype_out=('str',),
              doc_out="A list of Resources added to the subarray.",)
@@ -276,7 +275,6 @@ class SKASubarray(SKAObsDevice):
             argout.append(resource)
         return argout
 
-    @device_check(is_obs=[ObsState.IDLE])
     def is_ReleaseResources_allowed(self):
         """
         Check if command `ReleaseResources` is allowed in the current
@@ -286,7 +284,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_ReleaseResources_allowed",
+                             is_obs=[ObsState.IDLE])
 
     @command(dtype_in=('str',), doc_in="List of resources to remove from the subarray.", dtype_out=('str',),
              doc_out="List of resources removed from the subarray.",)
@@ -335,7 +334,6 @@ class SKASubarray(SKAObsDevice):
         return argout
         # PROTECTED REGION END #    //  SKASubarray.ReleaseResources
 
-    @device_check(is_obs=[ObsState.IDLE])
     def is_ReleaseAllResources_allowed(self):
         """
         Check if command `ReleaseAllResources` is allowed in the current
@@ -345,7 +343,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_ReleaseAllResources_allowed",
+                             is_obs=[ObsState.IDLE])
 
     @command(dtype_out=('str',), doc_out="List of resources removed from the subarray.",)
     @DebugIt()
@@ -385,7 +384,6 @@ class SKASubarray(SKAObsDevice):
         resources = self._assigned_resources[:]
         return self.do_release_resources(resources)
 
-    @device_check(is_obs=[ObsState.IDLE, ObsState.READY])
     def is_ConfigureCapability_allowed(self):
         """
         Check if command `ConfigureCapability` is allowed in the current
@@ -395,7 +393,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_ConfigureCapability_allowed",
+                             is_obs=[ObsState.IDLE, ObsState.READY])
 
     @command(dtype_in='DevVarLongStringArray', doc_in="[Number of instances to add][Capability types]",)
     @DebugIt()
@@ -462,7 +461,7 @@ class SKASubarray(SKAObsDevice):
 
         return True
 
-    @device_check(is_obs=[ObsState.CONFIGURING])
+    @guard(is_obs=[ObsState.CONFIGURING])
     def post_configure_capability(self):
         """
         Updates device state following successful configuration.
@@ -481,7 +480,6 @@ class SKASubarray(SKAObsDevice):
         """
         return any(self._configured_capabilities.values())
 
-    @device_check(is_obs=[ObsState.READY])
     def is_DeconfigureAllCapabilities_allowed(self):
         """
         Check if command `DeconfigureAllCapabilities` is allowed in the
@@ -491,7 +489,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_DeconfigureAllCapabilities_allowed",
+                             is_obs=[ObsState.READY])
 
     @command(dtype_in='str', doc_in="Capability type",)
     @DebugIt()
@@ -535,7 +534,6 @@ class SKASubarray(SKAObsDevice):
         self._validate_capability_types('DeconfigureAllCapabilities', [argin])
         self._configured_capabilities[argin] = 0
 
-    @device_check(is_obs=[ObsState.READY])
     def is_DeconfigureCapability_allowed(self):
         """
         Check if command `DeconfigureCapability` is allowed in the
@@ -545,7 +543,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_DeconfigureCapability_allowed",
+                             is_obs=[ObsState.READY])
 
     @command(dtype_in='DevVarLongStringArray', doc_in="[Number of instances to remove][Capability types]",)
     @DebugIt()
@@ -601,7 +600,6 @@ class SKASubarray(SKAObsDevice):
                 self._configured_capabilities[capability_type] -= (
                     int(capability_instances))
 
-    @device_check(is_obs=[ObsState.READY])
     def is_Scan_allowed(self):
         """
         Check if command `Scan` is allowed in the current device state.
@@ -610,7 +608,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_Scan_allowed",
+                             is_obs=[ObsState.READY])
 
     @command(dtype_in=('str',),)
     @DebugIt()
@@ -665,7 +664,7 @@ class SKASubarray(SKAObsDevice):
         # mode until we interrupt it e.g. with EndScan() or Abort().
         return False
 
-    @device_check(is_obs=[ObsState.SCANNING])
+    @guard(is_obs=[ObsState.SCANNING])
     def post_scan(self):
         """
         Updates device state following the successful completion of a
@@ -673,7 +672,6 @@ class SKASubarray(SKAObsDevice):
         """
         self._obs_state = ObsState.READY
 
-    @device_check(is_obs=[ObsState.SCANNING])
     def is_EndScan_allowed(self):
         """
         Check if command `EndScan` is allowed in the current device state.
@@ -682,7 +680,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_EndScan_allowed",
+                             is_obs=[ObsState.SCANNING])
 
     @command(
     )
@@ -716,7 +715,6 @@ class SKASubarray(SKAObsDevice):
         """
         return True
 
-    @device_check(is_obs=[ObsState.READY])
     def is_EndSB_allowed(self):
         """
         Check if command `EndSB` is allowed in the current device state.
@@ -725,7 +723,8 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(self, "is_EndSB_allowed",
+                             is_obs=[ObsState.READY])
 
     @command(
     )
@@ -759,9 +758,6 @@ class SKASubarray(SKAObsDevice):
         """
         return True
 
-    @device_check(
-        is_obs=[ObsState.CONFIGURING, ObsState.READY, ObsState.SCANNING]
-    )
     def is_Abort_allowed(self):
         """
         Check if command `Abort` is allowed in the current device state.
@@ -770,7 +766,11 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(
+            self,
+            "is_Abort_allowed",
+            is_obs=[ObsState.CONFIGURING, ObsState.READY, ObsState.SCANNING]
+        )
 
     @command(
     )
@@ -806,10 +806,6 @@ class SKASubarray(SKAObsDevice):
         # Here we should stop any current running configuring or scan.
         return True
 
-    @device_check(
-        is_obs=[ObsState.CONFIGURING, ObsState.READY, ObsState.SCANNING,
-                ObsState.ABORTED]
-    )
     def is_Reset_allowed(self):
         """
         Check if command `Reset` is allowed in the current device state.
@@ -826,7 +822,12 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return True  # but see decorator
+        return guard.require(
+            self,
+            "is_Reset_allowed",
+            is_obs=[ObsState.CONFIGURING, ObsState.READY, ObsState.SCANNING,
+                    ObsState.ABORTED]
+        )
 
     @command(
     )

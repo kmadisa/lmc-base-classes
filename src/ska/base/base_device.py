@@ -37,7 +37,7 @@ from ska.base import release
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode,
     HealthState, LoggingLevel,
-    device_check
+    guard
 )
 
 from ska.base.utils import (get_dp_command,
@@ -320,15 +320,15 @@ class SKABaseDevice(Device):
     A generic base device for SKA.
     """
     # PROTECTED REGION ID(SKABaseDevice.class_variable) ENABLED START #
-    device_check.register(
+    guard.register(
         "state",
         lambda device, state: device.get_state() == state
     )
-    device_check.register(
+    guard.register(
         "states",
         lambda device, states: device.get_state() in states
     )
-    device_check.register(
+    guard.register(
         "admin_modes",
         lambda device, admin_modes: device._admin_mode in admin_modes
     )
@@ -555,7 +555,7 @@ class SKABaseDevice(Device):
         self.logger.info("Completed SKABaseDevice.init_device")
         # PROTECTED REGION END #    //  SKABaseDevice.init_device
 
-    @device_check(state=DevState.INIT)
+    @guard(state=DevState.INIT)
     def post_init_device(self):
         """
         Updates device state on completion of initialisation.
