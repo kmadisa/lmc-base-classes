@@ -383,6 +383,12 @@ class guard:
             check.
         :type func: function
         """
+        if name in cls.checks:
+            raise LookupError(
+                "Cannot register guard: name '{}' is already registered.".format(
+                    name
+                )
+            )
         cls.checks[name] = func
 
     @classmethod
