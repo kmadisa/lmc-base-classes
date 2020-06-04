@@ -287,8 +287,11 @@ class SKASubarray(SKAObsDevice):
         return guard.require(self, "is_ReleaseResources_allowed",
                              is_obs=[ObsState.IDLE])
 
-    @command(dtype_in=('str',), doc_in="List of resources to remove from the subarray.", dtype_out=('str',),
-             doc_out="List of resources removed from the subarray.",)
+    @command(
+        dtype_in=('str',),
+        doc_in="List of resources to remove from the subarray.", dtype_out=('str',),
+        doc_out="List of resources removed from the subarray.",
+    )
     @DebugIt()
     def ReleaseResources(self, argin):
         """
