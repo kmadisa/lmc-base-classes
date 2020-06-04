@@ -569,6 +569,8 @@ class TestSKASubarray(object):
             perform_action(action_under_test)
             assert_state(transitions[(state_under_test, action_under_test)])
         else:
-            # Action should fail
+            # Action should fail and the state should not change
             with pytest.raises(DevFailed):
                 perform_action(action_under_test)
+            assert_state(state_under_test)
+       
