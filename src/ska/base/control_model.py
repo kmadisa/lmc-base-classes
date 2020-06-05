@@ -12,6 +12,7 @@ other useful enumerations.
 
 import enum
 from functools import wraps
+import inspect
 from tango import Except, ErrSeverity
 
 # ---------------------------------
@@ -430,7 +431,7 @@ class guard:
 
         """
         Except.throw_exception(
-            "API_CommandFailed",
+            "OPERATION_NOT_ALLOWED",
             "{}: disallowed on check '{}'".format(origin, check),
             origin,
             ErrSeverity.ERR
@@ -469,7 +470,7 @@ class guard:
         return True
 
     @classmethod
-    def require(cls, device, origin, **checks):
+    def require(cls, device, origin=None, **checks):
         """
         Performs the provided device state checks against the device,
         and raises a tango.DevFailed exception if any check does not
@@ -481,8 +482,11 @@ class guard:
             `self`
         :type device: A tango device, normally the `self` of the device
             invoking the check
-        :param origin: the origin of this check; used to construct a
-            helpful DevFailed exception.
+        :param origin: (optional) the origin of this check; used to
+            construct a helpful DevFailed exception. If omitted, the
+            origin will be extracted from the calling frame. That won't
+            work though if this classmethod is called from within a
+            decorator, so in that case the origin must be passed.
         :type origin: string
         :param checks: kwargs or a dictionary where keys are names of
             checks to be performed, and values are values that the
@@ -495,8 +499,14 @@ class guard:
             ::
 
                 def is_Simulate_allowed(self):
-                    guard.require(self, "is_Simulate_allowed", mode=SIMULATION)
+                    guard.require(self, mode=SIMULATION)
         """
+        if origin is None:
+            frame = inspect.currentframe().f_back
+            calling_method = frame.f_code.co_name
+            calling_object = frame.f_locals["self"]
+            origin = getattr(calling_object, calling_method).__qualname__
+
         for check in checks:
             if not guard._check(device, check, checks[check]):
                 guard._throw(origin, check)
@@ -529,6 +539,6 @@ class guard:
         """
         @wraps(func)
         def wrapped(device, *args, **kwargs):
-            guard.require(device, func.__name__, **self.checks)
+            guard.require(device, **self.checks, origin=func.__name__)
             return func(device, *args, **kwargs)
         return wrapped
