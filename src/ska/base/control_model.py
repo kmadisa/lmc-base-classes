@@ -457,12 +457,11 @@ class guard:
 
             ::
 
-                def post_scan(self):
-                    # Race-condition check: don't update state if some
-                    # other command has already done so.
-                    # e.g. Abort() is called just as the scan finishes.
-                    if guard.allows(is_obs=SCANNING):
-                        self.state=IDLE
+                def foo(self):
+                    if guard.allows(self, state=ON):
+                        do_foo()
+                    else:
+                        self.logger.warning("Sorry, you can't do_foo now!") 
         """
         for check in checks:
             if not guard._check(device, check, checks[check]):
