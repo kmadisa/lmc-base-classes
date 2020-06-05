@@ -323,15 +323,17 @@ class guard:
     to Tango subsystem expectations, as the implementation of the
     `is_[Command]_allowed` method (e.g. `is_Scan_allowed()`) that the
     Tango subsystem calls prior to calling the command itself. It can
-    also be used on asynchronous callbacks, to check that the state is
-    what the asynchronous context expected it to be.
+    also be used on callbacks, to check that the state is still what the
+    callback expected it to be.
 
-    Additionally, it provides a boolean classmethod `allows` which can
-    be used to perform inline checks i.e. with `if guard.allows(...)`.
+    Additionally, it provides an equivalent classmethod `requires` for
+    inline checking; and `allows`, which checks but returns a boolean
+    rather than raising an exception.
 
     Since this guard knows nothing of the implementation details of any
-    device, the device class must register the checks that it may want
-    to perform, before making use of the decorator.
+    device, the device class must use `guard.register` to register the
+    checks that it may want to perform, before making use of the
+    decorator.
 
     :example: `FooDevice` has a `state` attribute, the current value of
         which is stored in `self._state`. The device command `Foo()` is
@@ -354,17 +356,16 @@ class guard:
             def Foo(self):
                 pass
 
-        It can also use the `allows` classmethod to perform inline
+        It can also use the `requires` classmethod to perform inline
         checks:
 
         ::
 
             def is_Foo_allowed(self):
-                return guard.allows(self, state=READY)
+                return guard.requires(self, state=READY)
 
-        A device that subclasses `FooDevice` will inherit the checks
-        `FooDevice` has registered, but can register new checks of its
-        own.
+        All devices in the runtime have access to registered checks, so
+        subclasses have access to checks registered by base classes.
     """
 
     checks = {}
@@ -374,6 +375,10 @@ class guard:
         """
         Registers a device state guard with the ``@guard`` decorator.
 
+        :note: Registered guards are available to all devices in the
+            runtime. This was not the design intent and the behaviour
+            may change in future. Meanwhile, for safety, guards must be
+            registered under unique names and cannot be replaced.
         :param name: the name of the check. Once registered, this check
             may be invoked by using the name as an argument to the
             decorator or `allows` classmethod.
@@ -451,8 +456,12 @@ class guard:
 
             ::
 
-                def is_On_allowed(self):
-                    return guard.allows(self, state=OFF)
+                def post_scan(self):
+                    # Race-condition check: don't update state if some
+                    # other command has already done so.
+                    # e.g. Abort() is called just as the scan finishes.
+                    if guard.allows(is_obs=SCANNING):
+                        self.state=IDLE
         """
         for check in checks:
             if not guard._check(device, check, checks[check]):

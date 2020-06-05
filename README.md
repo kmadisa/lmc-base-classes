@@ -27,8 +27,8 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
 
 #### 0.6.0
 - Breaking change: State management
-  - Introduction of `control_model.device_check` decorator to simplify
-    command gatekeeping
+  - Introduction of `@control_model.guard` decorator and related methods
+    methods to simplify command gatekeeping
   - Classes provide subclassing code hooks that separate management of
     device state and (eventually) asynchrony from other device
     functionality. Thus, subclasses that prefer not to have to manage
