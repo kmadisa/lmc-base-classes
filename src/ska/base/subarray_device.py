@@ -283,8 +283,10 @@ class SKASubarray(SKAObsDevice):
         """
         if self.is_resourced():
             self.set_state(DevState.ON)
+            self.set_status("The device is in ON state.")
         else:
             self.set_state(DevState.OFF)
+            self.set_status("The device is in OFF state.")
 
     def is_resourced(self):
         return self._assigned_resources
@@ -353,8 +355,10 @@ class SKASubarray(SKAObsDevice):
         """
         if self.is_resourced():
             self.set_state(DevState.ON)
+            self.set_status("The device is in ON state.")
         else:
             self.set_state(DevState.OFF)
+            self.set_status("The device is in OFF state.")
 
     def is_ReleaseAllResources_allowed(self):
         """
@@ -411,6 +415,7 @@ class SKASubarray(SKAObsDevice):
         the `ReleaseAllResources` command.
         """
         self.set_state(DevState.OFF)
+        self.set_status("The device is in OFF state.")
 
     def is_ConfigureCapability_allowed(self):
         """
