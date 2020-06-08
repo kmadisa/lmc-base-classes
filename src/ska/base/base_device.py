@@ -516,7 +516,7 @@ class SKABaseDevice(Device):
         :return: a ResultCode and descriptive message
         :rtype: tango.DevVarLongStringArray
         """
-        command_name = inspect.stack()[1].function
+        command_name = inspect.currentframe().f_back.f_code.co_name
         requested_name = "{}_requested".format(command_name)
         do_name = "do_{}".format(command_name)
         completed_name = "{}_completed".format(command_name)
@@ -525,22 +525,29 @@ class SKABaseDevice(Device):
         do_command = getattr(self, do_name, None)
         command_completed = getattr(self, completed_name, None)
 
-        if command_requested is not None:
-            command_requested()  # pylint: disable=not-callable
-
         try:
+            if command_requested is not None:
+                command_requested()  # pylint: disable=not-callable
+
             if argin is None:
                 (return_code, message) = do_command()  # pylint: disable=not-callable
             else:
                 (return_code, message) = do_command(argin)  # pylint: disable=not-callable
+
+            if return_code in [ReturnCode.OK, ReturnCode.FAILED]:
+                command_completed(return_code)  # pylint: disable=not-callable
         except Exception:
             self.set_state(DevState.FAULT)
+            self.set_status("The device is in FAULT state.")
             raise
 
-        if return_code in [ReturnCode.OK, ReturnCode.FAILED]:
-            command_completed(return_code)  # pylint: disable=not-callable
-
-        self.logger.info(message)
+        self.logger.info(
+            "Exiting {} with return code {}, message '{}'".format(
+                command_name,
+                return_code,
+                message
+            )
+        )
         return (return_code, message)
 
     def init_device(self):
@@ -550,7 +557,11 @@ class SKABaseDevice(Device):
         :return: None
         """
         super().init_device()
-        self._call_with_pattern()
+        try:
+            self._call_with_pattern()
+        except Exception:
+            self.set_state(DevState.FAULT)
+            self.set_status("The device is in FAULT state")
 
     def init_device_requested(self):
         """
@@ -558,6 +569,7 @@ class SKABaseDevice(Device):
         being invoked.
         """
         self.set_state(DevState.INIT)
+        self.set_status("The device is in INIT state.")
 
         # The "factory default" for AdminMode is MAINTENANCE. But fear
         # not, it is a memorized attribute and will soon be overwritten
@@ -603,8 +615,10 @@ class SKABaseDevice(Device):
         """
         if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
             self.set_state(DevState.OFF)
+            self.set_status("The device is in OFF state.")
         else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
             self.set_state(DevState.DISABLE)
+            self.set_status("The device is in DISABLE state.")
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKABaseDevice.always_executed_hook) ENABLED START #
@@ -747,12 +761,14 @@ class SKABaseDevice(Device):
         if state == DevState.DISABLE and value in enabling_modes:
             # This write enables the subarray
             self.set_state(DevState.OFF)
+            self.set_status("The device is in OFF state.")
         elif state in [DevState.OFF, DevState.ON] and value in disabling_modes:
             # This write disables the subarray
             if state == DevState.ON:
                 self.Reset()
                 self.ReleaseAllResources()
             self.set_state(DevState.DISABLE)
+            self.set_status("The device is in DISABLE state.")
         self._admin_mode = value
         # PROTECTED REGION END #    //  SKABaseDevice.adminMode_write
 
@@ -880,8 +896,11 @@ class SKABaseDevice(Device):
 
         if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
             self.set_state(DevState.OFF)
+            self.set_status("The device is in OFF state.")
+
         else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
             self.set_state(DevState.DISABLE)
+            self.set_status("The device is in DISABLE state.")
 
 # ----------
 # Run server
