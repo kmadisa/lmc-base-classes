@@ -82,14 +82,13 @@ class SKACapability(SKAObsDevice):
         default implementation of state management and asynchrony may
         leave ``init_device`` alone and override this method instead.
         """
-        super().do_init_device()
+        (return_code, message) = super().do_init_device()
 
-        self._build_state = '{}, {}, {}'.format(release.name, release.version,
-                                                release.description)
-        self._version_id = release.version
         self._activation_time = 0.0
         self._configured_instances = 0
         self._used_components = [""]
+
+        return (return_code, message)
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKACapability.always_executed_hook) ENABLED START #

@@ -11,10 +11,9 @@ properties and commands of an SKA device.
 # PROTECTED REGION ID(SKABaseDevice.additionnal_import) ENABLED START #
 # Standard imports
 import enum
-import json
+import inspect
 import logging
 import logging.handlers
-import os
 import socket
 import sys
 import threading
@@ -24,26 +23,21 @@ from urllib.parse import urlparse
 from urllib.request import url2pathname
 
 # Tango imports
-import tango
 from tango import DebugIt
 from tango.server import run, Device, attribute, command, device_property
-from tango import AttrQuality, AttrWriteType
+from tango import AttrWriteType
 from tango import DevState
-from tango import DeviceProxy, DevFailed
 
 # SKA specific imports
 import ska.logging as ska_logging
 from ska.base import release
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode,
-    HealthState, LoggingLevel,
+    HealthState, LoggingLevel, ReturnCode,
     guard
 )
 
-from ska.base.utils import (get_dp_command,
-                            coerce_value,
-                            get_groups_from_json,
-                            get_tango_device_type_id)
+from ska.base.utils import get_groups_from_json
 from ska.base.faults import (GroupDefinitionsError,
                              LoggingTargetError,
                              LoggingLevelError)
@@ -318,6 +312,27 @@ __all__ = ["SKABaseDevice", "main"]
 class SKABaseDevice(Device):
     """
     A generic base device for SKA.
+
+    Advice for subclassers:
+
+    * This device implements the SKA control model so that you don't
+      have to. Instead of subclassing commands and `init_device`
+      directly, you are highly recommended to subclass the stateless
+      hooks commencing with `do_`; for example, `do_init_device`,
+      `do_Scan`, etc.
+    * You `do_` hooks must return a `(return_code, message)` tuple, e.g.
+      `return (ReturnCode.OK, "Scan command executed")
+    * Synchronous `do_` hooks must return a return code of OK or FAILED.
+      This will ensure that state is updated upon completion.
+    * Asynchronous `do_` hooks must return a return code of STARTED or
+      QUEUED; and it is your responsibility to ensure that your
+      asynchronous work finishes by calling `[Command]_completed` with a
+      return code of OK or FAILED.
+    * If your `do_` hooks raises an uncaught exception, the device will
+      be put into state FAULT.
+    * If you must modify the handling of device, you may do so by
+      subclassing the `[Command]_requested` and `[Command]_completed`
+      methods.
     """
     # PROTECTED REGION ID(SKABaseDevice.class_variable) ENABLED START #
     guard.register(
@@ -339,10 +354,6 @@ class SKABaseDevice(Device):
     def _init_logging(self):
         """
         This method initializes the logging mechanism, based on default properties.
-
-        :param: None.
-
-        :return: None.
         """
 
         class EnsureTagsFilter(logging.Filter):
@@ -496,6 +507,42 @@ class SKABaseDevice(Device):
     # General methods
     # ---------------
 
+    def _call_with_pattern(self, argin=None):
+        """
+        Implements the common calling pattern for all commands.
+
+        :param argin: the argument provided to the Command, if any
+        :type argin: any tango argument type
+        :return: a ResultCode and descriptive message
+        :rtype: tango.DevVarLongStringArray
+        """
+        command_name = inspect.stack()[1].function
+        requested_name = "{}_requested".format(command_name)
+        do_name = "do_{}".format(command_name)
+        completed_name = "{}_completed".format(command_name)
+
+        command_requested = getattr(self, requested_name, None)
+        do_command = getattr(self, do_name, None)
+        command_completed = getattr(self, completed_name, None)
+
+        if command_requested is not None:
+            command_requested()  # pylint: disable=not-callable
+
+        try:
+            if argin is None:
+                (return_code, message) = do_command()  # pylint: disable=not-callable
+            else:
+                (return_code, message) = do_command(argin)  # pylint: disable=not-callable
+        except Exception:
+            self.set_state(DevState.FAULT)
+            raise
+
+        if return_code in [ReturnCode.OK, ReturnCode.FAILED]:
+            command_completed(return_code)  # pylint: disable=not-callable
+
+        self.logger.info(message)
+        return (return_code, message)
+
     def init_device(self):
         """
         Method that initializes the tango device after startup.
@@ -503,47 +550,42 @@ class SKABaseDevice(Device):
         :return: None
         """
         super().init_device()
-        # PROTECTED REGION ID(SKABaseDevice.init_device) ENABLED START #
+        self._call_with_pattern()
 
-        # Set state to transient INIT state.
+    def init_device_requested(self):
+        """
+        Method that manages device state in response to `init_device`
+        being invoked.
+        """
         self.set_state(DevState.INIT)
-
-        # Get logging working synchronously before we allow any
-        # asynchronous code that might attempt to log
-        self._init_logging()
-
-        # In future, this will be an async call
-        self.run_init_device()
-
-    def run_init_device(self):
-        """
-        Method containing the portion of ``init_device`` that should, and
-        eventually will, be run asynchronously.
-        """
-        self.do_init_device()
-        self.post_init_device()
-
-    def do_init_device(self):
-        """
-        Method that initialises device attribute and other internal
-        values. Subclasses that have no need to override the default
-        implementation of state management and asynchrony may leave
-        ``init_device`` alone and override this method instead.
-        """
-        self._build_state = '{}, {}, {}'.format(release.name, release.version,
-                                                release.description)
-        self._version_id = release.version
-        self._health_state = HealthState.OK
 
         # The "factory default" for AdminMode is MAINTENANCE. But fear
         # not, it is a memorized attribute and will soon be overwritten
         # with its memorized value.
         self._admin_mode = AdminMode.MAINTENANCE
 
+    def do_init_device(self):
+        """
+        Stateless hook for initialisation of device attributes and other
+        internal values. Subclasses that have no need to override the
+        default implementation of state management may leave
+        ``init_device`` alone and override this method instead.
+
+        :return: A tuple containing a return code and a string message
+            indicating status. The message is for information purpose
+            only.
+        :rtype: (ReturnCode, str)
+        """
+        self._health_state = HealthState.OK
         self._control_mode = ControlMode.REMOTE
         self._simulation_mode = SimulationMode.FALSE
         self._test_mode = TestMode.NONE
 
+        self._build_state = '{}, {}, {}'.format(release.name, release.version,
+                                                release.description)
+        self._version_id = release.version
+
+        self._init_logging()
         try:
             # create TANGO Groups objects dict, according to property
             self.logger.debug("Groups definitions: {}".format(self.GroupDefinitions))
@@ -552,11 +594,10 @@ class SKABaseDevice(Device):
         except GroupDefinitionsError:
             self.logger.info("No Groups loaded for device: {}".format(self.get_name()))
 
-        self.logger.info("Completed SKABaseDevice.init_device")
-        # PROTECTED REGION END #    //  SKABaseDevice.init_device
+        return (ReturnCode.OK, "init_device executed")
 
     @guard(state=DevState.INIT)
-    def post_init_device(self):
+    def init_device_completed(self, return_code):
         """
         Updates device state on completion of initialisation.
         """
@@ -801,13 +842,46 @@ class SKABaseDevice(Device):
     )
     @DebugIt()
     def Reset(self):
-        # PROTECTED REGION ID(SKABaseDevice.Reset) ENABLED START #
         """
-        Reset device to its default state.
+        Command to reset the device to its default state.
+        """
+        self._call_with_pattern()
 
-        :return: None
+    def Reset_requested(self):
         """
-        # PROTECTED REGION END #    //  SKABaseDevice.Reset
+        Method that manages device state in response to `Reset` command
+        being invoked.
+        """
+        pass
+
+    def do_Reset(self):
+        """
+        Stateless hook for implementation of ``Reset()`` command.
+        Subclasses that have no need to override the default
+        implementation of state management may leave ``Reset()`` alone
+        and override this method instead.
+
+        :return: A tuple containing a return code and a string message
+            indicating status. The message is for information purpose
+            only.
+        :rtype: (ReturnCode, str)
+        """
+        return (ReturnCode.OK, "Device reset")
+
+    def Reset_completed(self, return_code):
+        """
+        Method that manages device state in response to completion of
+        the `Reset` command.
+        """
+        self._health_state = HealthState.OK
+        self._control_mode = ControlMode.REMOTE
+        self._simulation_mode = SimulationMode.FALSE
+        self._test_mode = TestMode.NONE
+
+        if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
+            self.set_state(DevState.OFF)
+        else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
+            self.set_state(DevState.DISABLE)
 
 # ----------
 # Run server

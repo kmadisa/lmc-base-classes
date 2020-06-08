@@ -89,6 +89,12 @@ class SKAObsDevice(SKABaseDevice):
     # General methods
     # ---------------
 
+    def init_device_requested(self):
+        super().init_device_requested()
+
+        self._obs_state = ObsState.IDLE
+        self._obs_mode = ObsMode.IDLE
+
     def do_init_device(self):
         """
         Method that initialises device attribute and other internal
@@ -97,17 +103,12 @@ class SKAObsDevice(SKABaseDevice):
         default implementation of state management and asynchrony may
         leave ``init_device`` alone and override this method instead.
         """
-        super().do_init_device()
+        (return_code, message) = super().do_init_device()
 
-        self._build_state = '{}, {}, {}'.format(release.name, release.version,
-                                                release.description)
-        self._version_id = release.version
-
-        # Initialize attribute values.
-        self._obs_state = ObsState.IDLE
-        self._obs_mode = ObsMode.IDLE
         self._config_progress = 0
         self._config_delay_expected = 0
+
+        return (return_code, message)
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKAObsDevice.always_executed_hook) ENABLED START #

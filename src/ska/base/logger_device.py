@@ -45,20 +45,6 @@ class SKALogger(SKABaseDevice):
     # General methods
     # ---------------
 
-    def do_init_device(self):
-        """
-        Method that initialises device attribute and other internal
-        values. This method is called, possibly asynchronously, by
-        ``init_device``. Subclasses that have no need to override the
-        default implementation of state management and asynchrony may
-        leave ``init_device`` alone and override this method instead.
-        """
-        super().do_init_device()
-
-        self._build_state = '{}, {}, {}'.format(release.name, release.version,
-                                                release.description)
-        self._version_id = release.version
-
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKALogger.always_executed_hook) ENABLED START #
         pass

@@ -95,11 +95,7 @@ class SKAMaster(SKABaseDevice):
         default implementation of state management and asynchrony may
         leave ``init_device`` alone and override this method instead.
         """
-        super().do_init_device()
-
-        self._build_state = '{}, {}, {}'.format(release.name, release.version,
-                                                release.description)
-        self._version_id = release.version
+        (return_code, message) = super().do_init_device()
 
         # Initialize attribute values.
         self._element_logger_address = ""
@@ -115,6 +111,8 @@ class SKAMaster(SKABaseDevice):
                 capability_type, max_capability_instances = max_capability.split(":")
                 self._max_capabilities[capability_type] = int(max_capability_instances)
         self._available_capabilities = self._max_capabilities.copy()
+
+        return (return_code, message)
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKAMaster.always_executed_hook) ENABLED START #

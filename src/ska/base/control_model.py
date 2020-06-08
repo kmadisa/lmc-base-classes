@@ -314,6 +314,37 @@ class LoggingLevel(enum.IntEnum):
     DEBUG = 5
 
 
+class ReturnCode(enum.IntEnum):
+    """
+    Python enumerated type for command return codes.
+    """
+
+    OK = 0
+    """
+    The command was executed successfully.
+    """
+
+    STARTED = 1
+    """
+    The command has been accepted and will start immediately.
+    """
+
+    QUEUED = 2
+    """
+    The command has been accepted and will be executed at a future time
+    """
+
+    FAILED = 3
+    """
+    The command could not be executed.
+    """
+
+    UNKNOWN = 4
+    """
+    The status of the command is not known.
+    """
+
+
 class guard:
     """
     Method decorator that only permits a device method to be run if the
