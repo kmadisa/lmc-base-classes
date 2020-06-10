@@ -127,64 +127,73 @@ class AdminMode(enum.IntEnum):
 class ObsState(enum.IntEnum):
     """Python enumerated type for ``obsState`` attribute - the observing state."""
 
-    IDLE = 0
+    EMPTY = 0
     """
-    Subarray, resource, Capability is not used for observing, it does not produce output
-    products.  The exact implementation is [TBD4] for each Element/Sub-element that
-    implements subarrays.
-    """
-
-    CONFIGURING = 1
-    """
-    Subarray is being prepared for a specific scan. On entry to the state no assumptions
-    can be made about the previous conditions. This is a transient state. Subarray/Capability
-    are supposed to automatically transitions to ``obsState=READY`` when configuration is
-    successfully completed. If an error is encountered, TANGO Device may:
-
-    * report failure and abort the configuration, waiting for additional input;
-    * proceed with reconfiguration, transition to ``obsState=READY`` and set
-      ``healthState=DEGRADED`` (if possible notify the originator of the request that
-      configuration is not 100% successful);
-    * if serious failure is encountered, transition to ``obsState=FAULT``,
-      ``healthState=FAILED``.
+    The sub-array is ready to observe, but is in an undefined
+    configuration and has no resources allocated.
     """
 
-    READY = 2
+    RESOURCING = 1
     """
-    Subarray is fully prepared for the next scan, but not actually taking data or moving
-    in the observed coordinate system (i.e. it may be tracking, but not moving relative
-    to the coordinate system).
-    """
-
-    SCANNING = 3
-    """
-    Subarray is taking data and, if needed, all components are synchronously moving in the
-    observed coordinate system. All the M&C flows to the sub-systems are happening
-    automatically (e.g. DISHes are receiving pointing updates, CSP is receiving updates for
-    delay tracking).
+    The system is allocating resources to, or deallocating resources
+    from, the subarray. This may be a complete de/allocation, or it may
+    be incremental. In both cases it is a transient state and will
+    automatically transition to IDLE when complete. For some subsystems
+    this may be a very brief state if resourcing is a quick activity.
     """
 
-    PAUSED = 4
+    IDLE = 2
     """
-    [TBC11 by SKAO SW Architects] Subarray is fully prepared for the next observation, but
-    not actually taking data or moving in the observed system. Similar to ``READY`` state.
-    If required, then functionality required by DISHes, LFAA, CSP is [TBD5]
-    (do they keep signal processing and stop transmitting output data? What happens to
-    observations that are time/position sensitive and cannot resume after a pause?)
+    The subarray has resources allocated and is ready to be used for
+    observing. In normal science operations these will be the resources
+    required for the upcoming SBI execution.
     """
 
-    ABORTED = 5
+    CONFIGURING = 3
     """
-    The subarray has had its previous state interrupted by the controller. Exit from
-    the ``ABORTED`` state requires the ``Reset`` command.
+    The subarray is being configured ready to scan. On entry to the
+    state no assumptions can be made about the previous conditions. It
+    is a transient state and will automatically transition to READY when
+    it completes normally.
     """
 
-    FAULT = 6
+    READY = 4
     """
-    Subarray has detected an internal error making it impossible to remain in the previous
-    state.
+    The subarray is fully prepared to scan, but is not actually taking
+    data or moving in the observed coordinate system (it may be
+    tracking, but not moving relative to the coordinate system).
+    """
 
-    **Note:** This shall trigger a ``healthState`` update of the Subarray/Capability.
+    SCANNING = 5
+    """
+    The subarray is taking data and, if needed, all components are
+    synchronously moving in the observed coordinate system. Any changes
+    to the sub-systems are happening automatically (this allows for a
+    scan to cover the case where the phase centre is moved in a
+    pre-defined pattern).
+    """
+
+    ABORTED = 6
+    """
+    The subarray has had its previous state interrupted by the
+    controller.
+    """
+
+    RESETTING = 7
+    """
+    The subarray device is resetting to the IDLE state.
+    """
+
+    FAULT = 8
+    """
+    The subarray has detected an error in its observing state making it
+    impossible to remain in the previous state.
+    """
+
+    RESTARTING = 9
+    """
+    The subarray device is restarting, as the last known stable state is
+    where no resources were allocated and the configuration undefined.
     """
 
 
@@ -492,7 +501,7 @@ class guard:
                     if guard.allows(self, state=ON):
                         do_foo()
                     else:
-                        self.logger.warning("Sorry, you can't do_foo now!") 
+                        self.logger.warning("Sorry, you can't do_foo now!")
         """
         for check in checks:
             if not guard._check(device, check, checks[check]):

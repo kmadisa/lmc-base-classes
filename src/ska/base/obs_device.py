@@ -6,22 +6,19 @@
 #
 """ SKAObsDevice
 
-A generic base device for Observations for SKA. It inherits SKABaseDevice class. Any device implementing
-an obsMode will inherit from SKAObsDevice instead of just SKABaseDevice.
+A generic base device for Observations for SKA. It inherits SKABaseDevice
+class. Any device implementing an obsMode will inherit from SKAObsDevice
+instead of just SKABaseDevice.
 """
 
 # Additional import
 # PROTECTED REGION ID(SKAObsDevice.additionnal_import) ENABLED START #
-# Standard imports
-import os
-import sys
-
 # Tango imports
 from tango import DevState
 from tango.server import run, attribute
 
 # SKA specific imports
-from ska.base import SKABaseDevice, release
+from ska.base import SKABaseDevice
 from ska.base.control_model import AdminMode, ObsMode, ObsState, guard
 # PROTECTED REGION END #    //  SKAObsDevice.additionnal_imports
 
@@ -92,7 +89,7 @@ class SKAObsDevice(SKABaseDevice):
     def init_device_requested(self):
         super().init_device_requested()
 
-        self._obs_state = ObsState.IDLE
+        self._obs_state = ObsState.EMPTY
         self._obs_mode = ObsMode.IDLE
 
     def do_init_device(self):
@@ -124,6 +121,19 @@ class SKAObsDevice(SKABaseDevice):
     # Attributes methods
     # ------------------
 
+    def write_adminMode(self, value):
+        """
+        Overrides base class adminMode to set obsState coherent with
+        adminMode
+
+        :param value: Admin Mode of the device.
+
+        :return: None
+        """
+        if value in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
+            self._obs_state = ObsState.EMPTY
+        super().write_adminMode(value)
+
     def read_obsState(self):
         # PROTECTED REGION ID(SKAObsDevice.obsState_read) ENABLED START #
         """Reads Observation State of the device"""
@@ -148,7 +158,6 @@ class SKAObsDevice(SKABaseDevice):
         return self._config_delay_expected
         # PROTECTED REGION END #    //  SKAObsDevice.configurationDelayExpected_read
 
-
     # --------
     # Commands
     # --------
@@ -157,10 +166,12 @@ class SKAObsDevice(SKABaseDevice):
 # Run server
 # ----------
 
+
 def main(args=None, **kwargs):
     # PROTECTED REGION ID(SKAObsDevice.main) ENABLED START #
     return run((SKAObsDevice,), args=args, **kwargs)
     # PROTECTED REGION END #    //  SKAObsDevice.main
+
 
 if __name__ == '__main__':
     main()

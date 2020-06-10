@@ -763,10 +763,6 @@ class SKABaseDevice(Device):
             self.set_state(DevState.OFF)
             self.set_status("The device is in OFF state.")
         elif state in [DevState.OFF, DevState.ON] and value in disabling_modes:
-            # This write disables the subarray
-            if state == DevState.ON:
-                self.Reset()
-                self.ReleaseAllResources()
             self.set_state(DevState.DISABLE)
             self.set_status("The device is in DISABLE state.")
         self._admin_mode = value

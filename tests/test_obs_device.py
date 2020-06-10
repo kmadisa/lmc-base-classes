@@ -8,10 +8,6 @@
 #########################################################################################
 """Contain the tests for the SKAObsDevice."""
 
-# Standard imports
-import sys
-import os
-
 # Imports
 import re
 import pytest
@@ -22,6 +18,7 @@ from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
 )
 # PROTECTED REGION END #    //  SKAObsDevice.test_additional_imports
+
 
 # Device test case
 # PROTECTED REGION ID(SKAObsDevice.test_SKAObsDevice_decorators) ENABLED START #
@@ -91,7 +88,7 @@ class TestSKAObsDevice(object):
     def test_obsState(self, tango_context):
         """Test for obsState"""
         # PROTECTED REGION ID(SKAObsDevice.test_obsState) ENABLED START #
-        assert tango_context.device.obsState == ObsState.IDLE
+        assert tango_context.device.obsState == ObsState.EMPTY
         # PROTECTED REGION END #    //  SKAObsDevice.test_obsState
 
     # PROTECTED REGION ID(SKAObsDevice.test_obsMode_decorators) ENABLED START #
@@ -126,7 +123,7 @@ class TestSKAObsDevice(object):
         buildPattern = re.compile(
             r'lmcbaseclasses, [0-9].[0-9].[0-9], '
             r'A set of generic base devices for SKA Telescope')
-        assert (re.match(buildPattern, tango_context.device.buildState)) != None
+        assert (re.match(buildPattern, tango_context.device.buildState)) is not None
         # PROTECTED REGION END #    //  SKAObsDevice.test_buildState
 
     # PROTECTED REGION ID(SKAObsDevice.test_versionId_decorators) ENABLED START #
@@ -135,7 +132,7 @@ class TestSKAObsDevice(object):
         """Test for versionId"""
         # PROTECTED REGION ID(SKAObsDevice.test_versionId) ENABLED START #
         versionIdPattern = re.compile(r'[0-9].[0-9].[0-9]')
-        assert (re.match(versionIdPattern, tango_context.device.versionId)) != None
+        assert (re.match(versionIdPattern, tango_context.device.versionId)) is not None
         # PROTECTED REGION END #    //  SKAObsDevice.test_versionId
 
     # PROTECTED REGION ID(SKAObsDevice.test_healthState_decorators) ENABLED START #

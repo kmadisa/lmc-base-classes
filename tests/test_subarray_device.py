@@ -8,14 +8,10 @@
 #########################################################################################
 """Contain the tests for the SKASubarray."""
 
-# Standard imports
 import itertools
-import sys
-import os
-
-# Imports
 import re
 import pytest
+
 from tango import DevState, DevSource, DevFailed
 
 # PROTECTED REGION ID(SKASubarray.test_additional_imports) ENABLED START #
@@ -23,6 +19,8 @@ from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
 )
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
+
+
 # Device test case
 # PROTECTED REGION ID(SKASubarray.test_SKASubarray_decorators) ENABLED START #
 @pytest.mark.usefixtures("tango_context", "initialize_device")
@@ -57,7 +55,7 @@ class TestSKASubarray(object):
     def test_Abort(self, tango_context):
         """Test for Abort"""
         # PROTECTED REGION ID(SKASubarray.test_Abort) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[2], ["BAND1"]])
         assert tango_context.device.Abort() is None
@@ -68,7 +66,7 @@ class TestSKASubarray(object):
     def test_ConfigureCapability(self, tango_context):
         """Test for ConfigureCapability"""
         # PROTECTED REGION ID(SKASubarray.test_ConfigureCapability) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[2], ["BAND1"]])
         # The obsState attribute is changed by ConfigureCapability, but
@@ -84,7 +82,7 @@ class TestSKASubarray(object):
     def test_DeconfigureAllCapabilities(self, tango_context):
         """Test for DeconfigureAllCapabilities"""
         # PROTECTED REGION ID(SKASubarray.test_DeconfigureAllCapabilities) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[3], ["BAND1"]])
         tango_context.device.DeconfigureAllCapabilities("BAND1")
@@ -97,7 +95,7 @@ class TestSKASubarray(object):
     def test_DeconfigureCapability(self, tango_context):
         """Test for DeconfigureCapability"""
         # PROTECTED REGION ID(SKASubarray.test_DeconfigureCapability) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[1], ["BAND1"]])
         tango_context.device.DeconfigureCapability([[1], ["BAND1"]])
@@ -121,7 +119,7 @@ class TestSKASubarray(object):
     def test_Status(self, tango_context):
         """Test for Status"""
         # PROTECTED REGION ID(SKASubarray.test_Status) ENABLED START #
-        assert tango_context.device.Status() == "The device is in DISABLE state."
+        assert tango_context.device.Status() == "The device is in OFF state."
         # PROTECTED REGION END #    //  SKASubarray.test_Status
 
     # PROTECTED REGION ID(SKASubarray.test_State_decorators) ENABLED START #
@@ -129,7 +127,7 @@ class TestSKASubarray(object):
     def test_State(self, tango_context):
         """Test for State"""
         # PROTECTED REGION ID(SKASubarray.test_State) ENABLED START #
-        assert tango_context.device.State() == DevState.DISABLE
+        assert tango_context.device.State() == DevState.OFF
         # PROTECTED REGION END #    //  SKASubarray.test_State
 
     # PROTECTED REGION ID(SKASubarray.test_AssignResources_decorators) ENABLED START #
@@ -137,7 +135,7 @@ class TestSKASubarray(object):
     def test_AssignResources(self, tango_context):
         """Test for AssignResources"""
         # PROTECTED REGION ID(SKASubarray.test_AssignResources) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(['BAND1', 'BAND2'])
         assert tango_context.device.State() == DevState.ON and \
                tango_context.device.assignedResources == ('BAND1', 'BAND2')
@@ -146,13 +144,13 @@ class TestSKASubarray(object):
 
     # PROTECTED REGION ID(SKASubarray.test_EndSB_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_EndSB_decorators
-    def test_EndSB(self, tango_context):
+    def test_End(self, tango_context):
         """Test for EndSB"""
         # PROTECTED REGION ID(SKASubarray.test_EndSB) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[2], ["BAND1"]])
-        assert tango_context.device.EndSB() is None
+        assert tango_context.device.End() is None
         # PROTECTED REGION END #    //  SKASubarray.test_EndSB
 
     # PROTECTED REGION ID(SKASubarray.test_EndScan_decorators) ENABLED START #
@@ -160,7 +158,7 @@ class TestSKASubarray(object):
     def test_EndScan(self, tango_context):
         """Test for EndScan"""
         # PROTECTED REGION ID(SKASubarray.test_EndScan) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[2], ["BAND1"]])
         tango_context.device.Scan([""])
@@ -173,7 +171,7 @@ class TestSKASubarray(object):
         """Test for ReleaseAllResources"""
         # PROTECTED REGION ID(SKASubarray.test_ReleaseAllResources) ENABLED START #
         # assert tango_context.device.ReleaseAllResources() == [""]
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(['BAND1', 'BAND2'])
         tango_context.device.ReleaseAllResources()
         assert tango_context.device.assignedResources is None
@@ -185,7 +183,7 @@ class TestSKASubarray(object):
         """Test for ReleaseResources"""
         # PROTECTED REGION ID(SKASubarray.test_ReleaseResources) ENABLED START #
         # assert tango_context.device.ReleaseResources([""]) == [""]
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(['BAND1', 'BAND2'])
         tango_context.device.ReleaseResources(['BAND1'])
         assert tango_context.device.State() == DevState.ON and\
@@ -198,9 +196,10 @@ class TestSKASubarray(object):
     def test_Reset(self, tango_context):
         """Test for Reset"""
         # PROTECTED REGION ID(SKASubarray.test_Reset) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[2], ["BAND1"]])
+        tango_context.device.Abort()
         assert tango_context.device.Reset() is None
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
 
@@ -209,7 +208,7 @@ class TestSKASubarray(object):
     def test_Scan(self, tango_context):
         """Test for Scan"""
         # PROTECTED REGION ID(SKASubarray.test_Scan) ENABLED START #
-        tango_context.device.adminMode = AdminMode.ONLINE
+        tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.ConfigureCapability([[2], ["BAND1"]])
         assert tango_context.device.Scan([""]) is None
@@ -228,7 +227,9 @@ class TestSKASubarray(object):
     def test_adminMode(self, tango_context):
         """Test for adminMode"""
         # PROTECTED REGION ID(SKASubarray.test_adminMode) ENABLED START #
-        assert tango_context.device.adminMode == AdminMode.OFFLINE
+        assert tango_context.device.adminMode == AdminMode.ONLINE
+        tango_context.device.adminMode = AdminMode.MAINTENANCE
+        assert tango_context.device.adminMode == AdminMode.MAINTENANCE
         # PROTECTED REGION END #    //  SKASubarray.test_adminMode
 
     # PROTECTED REGION ID(SKASubarray.test_buildState_decorators) ENABLED START #
@@ -287,7 +288,7 @@ class TestSKASubarray(object):
     def test_obsState(self, tango_context):
         """Test for obsState"""
         # PROTECTED REGION ID(SKASubarray.test_obsState) ENABLED START #
-        assert tango_context.device.obsState == ObsState.IDLE
+        assert tango_context.device.obsState == ObsState.EMPTY
         # PROTECTED REGION END #    //  SKASubarray.test_obsState
 
     # PROTECTED REGION ID(SKASubarray.test_simulationMode_decorators) ENABLED START #
@@ -320,7 +321,7 @@ class TestSKASubarray(object):
     def test_assignedResources(self, tango_context):
         """Test for assignedResources"""
         # PROTECTED REGION ID(SKASubarray.test_assignedResources) ENABLED START #
-        assert tango_context.device.assignedResources == None
+        assert tango_context.device.assignedResources is None
         # PROTECTED REGION END #    //  SKASubarray.test_assignedResources
 
     # PROTECTED REGION ID(SKASubarray.test_configuredCapabilities_decorators) ENABLED START #
@@ -334,16 +335,18 @@ class TestSKASubarray(object):
     @pytest.mark.parametrize(
         'state_under_test, action_under_test',
         itertools.product(
-            ["DISABLED (NOTFITTED)", "DISABLED (OFFLINE)", "OFF (ONLINE)",
-             "OFF (MAINTENANCE)", "ON (ONLINE)", "ON (MAINTENANCE)",
-             "READY (ONLINE)", "READY (MAINTENANCE)", "SCANNING (ONLINE)",
-             "SCANNING (MAINTENANCE)", "ABORTED (ONLINE)",
-             "ABORTED (MAINTENANCE)"],
-            ["notfitted", "offline", "online", "maintenance", "assign",
-             "release", "release (all)", "releaseall", "configure",
+            [
+                "DISABLED", "OFF",
+                # "FAULT",
+                "EMPTY", "IDLE", "READY", "SCANNING", "ABORTED",
+                # "OBSFAULT",
+            ],
+            ["notfitted", "offline", "online", "maintenance",
+             "on", "off", "assign", "release", "release (all)", "releaseall",
+             "configure",
              "deconfigure", "deconfigure (all)", "deconfigureall",
-             "deconfigureall (all)", "scan", "endscan", "endsb", "abort",
-             "reset"]
+             "deconfigureall (all)",
+             "scan", "endscan", "end", "abort", "reset", "restart"]
         )
     )
     def test_state_machine(self, tango_context,
@@ -358,36 +361,32 @@ class TestSKASubarray(object):
         """
 
         states = {
-            "DISABLED (NOTFITTED)":
-                (AdminMode.NOT_FITTED, DevState.DISABLE, ObsState.IDLE),
-            "DISABLED (OFFLINE)":
-                (AdminMode.OFFLINE, DevState.DISABLE, ObsState.IDLE),
-            "OFF (ONLINE)":
-                (AdminMode.ONLINE, DevState.OFF, ObsState.IDLE),
-            "OFF (MAINTENANCE)":
-                (AdminMode.MAINTENANCE, DevState.OFF, ObsState.IDLE),
-            "ON (ONLINE)":
-                (AdminMode.ONLINE, DevState.ON, ObsState.IDLE),
-            "ON (MAINTENANCE)":
-                (AdminMode.MAINTENANCE, DevState.ON, ObsState.IDLE),
-            "READY (ONLINE)":
-                (AdminMode.ONLINE, DevState.ON, ObsState.READY),
-            "READY (MAINTENANCE)":
-                (AdminMode.MAINTENANCE, DevState.ON, ObsState.READY),
-            "SCANNING (ONLINE)":
-                (AdminMode.ONLINE, DevState.ON, ObsState.SCANNING),
-            "SCANNING (MAINTENANCE)":
-                (AdminMode.MAINTENANCE, DevState.ON, ObsState.SCANNING),
-            "ABORTED (ONLINE)":
-                (AdminMode.ONLINE, DevState.ON, ObsState.ABORTED),
-            "ABORTED (MAINTENANCE)":
-                (AdminMode.MAINTENANCE, DevState.ON, ObsState.ABORTED),
+            "DISABLED":
+                ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.DISABLE, ObsState.EMPTY),
+            "FAULT":
+                ([AdminMode.NOT_FITTED, AdminMode.OFFLINE, AdminMode.ONLINE, AdminMode.MAINTENANCE],
+                 DevState.FAULT, ObsState.EMPTY),
+            "OFF":
+                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.OFF, ObsState.EMPTY),
+            "EMPTY":
+                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.EMPTY),
+            "IDLE":
+                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.IDLE),
+            "READY":
+                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.READY),
+            "SCANNING":
+                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.SCANNING),
+            "ABORTED":
+                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.ABORTED),
+            "OBSFAULT":
+                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.FAULT),
         }
 
         def assert_state(state):
-            assert states[state] == (tango_context.device.adminMode,
-                                     tango_context.device.state(),
-                                     tango_context.device.obsState)
+            (admin_modes, dev_state, obs_state) = states[state]
+            assert tango_context.device.adminMode in admin_modes
+            assert tango_context.device.state() == dev_state
+            assert tango_context.device.obsState == obs_state
 
         actions = {
             "notfitted":
@@ -398,6 +397,10 @@ class TestSKASubarray(object):
                 lambda d: d.write_attribute("adminMode", AdminMode.ONLINE),
             "maintenance":
                 lambda d: d.write_attribute("adminMode", AdminMode.MAINTENANCE),
+            "on":
+                lambda d: d.On(),
+            "off":
+                lambda d: d.Off(),
             "assign":
                 lambda d: d.AssignResources(
                     ["Dummy resource 1", "Dummy resource 2"]
@@ -425,131 +428,86 @@ class TestSKASubarray(object):
                 lambda d: d.Scan(["Dummy scan id"]),
             "endscan":
                 lambda d: d.EndScan(),
-            "endsb":
-                lambda d: d.EndSB(),
+            "end":
+                lambda d: d.End(),
             "abort":
                 lambda d: d.Abort(),
             "reset":
                 lambda d: d.Reset(),
+            "restart":
+                lambda d: d.Restart(),
         }
 
         def perform_action(action):
             actions[action](tango_context.device)
 
         transitions = {
-            ("DISABLED (NOTFITTED)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("DISABLED (NOTFITTED)", "offline"): "DISABLED (OFFLINE)",
-            ("DISABLED (NOTFITTED)", "online"): "OFF (ONLINE)",
-            ("DISABLED (NOTFITTED)", "maintenance"): "OFF (MAINTENANCE)",
-            ("DISABLED (OFFLINE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("DISABLED (OFFLINE)", "offline"): "DISABLED (OFFLINE)",
-            ("DISABLED (OFFLINE)", "online"): "OFF (ONLINE)",
-            ("DISABLED (OFFLINE)", "maintenance"): "OFF (MAINTENANCE)",
-            ("OFF (ONLINE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("OFF (ONLINE)", "offline"): "DISABLED (OFFLINE)",
-            ("OFF (ONLINE)", "online"): "OFF (ONLINE)",
-            ("OFF (ONLINE)", "maintenance"): "OFF (MAINTENANCE)",
-            ("OFF (ONLINE)", "assign"): "ON (ONLINE)",
-            ("OFF (MAINTENANCE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("OFF (MAINTENANCE)", "offline"): "DISABLED (OFFLINE)",
-            ("OFF (MAINTENANCE)", "online"): "OFF (ONLINE)",
-            ("OFF (MAINTENANCE)", "maintenance"): "OFF (MAINTENANCE)",
-            ("OFF (MAINTENANCE)", "assign"): "ON (MAINTENANCE)",
-            ("ON (ONLINE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("ON (ONLINE)", "offline"): "DISABLED (OFFLINE)",
-            ("ON (ONLINE)", "online"): "ON (ONLINE)",
-            ("ON (ONLINE)", "maintenance"): "ON (MAINTENANCE)",
-            ("ON (ONLINE)", "assign"): "ON (ONLINE)",
-            ("ON (ONLINE)", "release"): "ON (ONLINE)",
-            ("ON (ONLINE)", "release (all)"): "OFF (ONLINE)",
-            ("ON (ONLINE)", "releaseall"): "OFF (ONLINE)",
-            ("ON (ONLINE)", "configure"): "READY (ONLINE)",
-            ("ON (MAINTENANCE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("ON (MAINTENANCE)", "offline"): "DISABLED (OFFLINE)",
-            ("ON (MAINTENANCE)", "online"): "ON (ONLINE)",
-            ("ON (MAINTENANCE)", "maintenance"): "ON (MAINTENANCE)",
-            ("ON (MAINTENANCE)", "assign"): "ON (MAINTENANCE)",
-            ("ON (MAINTENANCE)", "release"): "ON (MAINTENANCE)",
-            ("ON (MAINTENANCE)", "release (all)"): "OFF (MAINTENANCE)",
-            ("ON (MAINTENANCE)", "releaseall"): "OFF (MAINTENANCE)",
-            ("ON (MAINTENANCE)", "configure"): "READY (MAINTENANCE)",
-            ("READY (ONLINE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("READY (ONLINE)", "offline"): "DISABLED (OFFLINE)",
-            ("READY (ONLINE)", "online"): "READY (ONLINE)",
-            ("READY (ONLINE)", "maintenance"): "READY (MAINTENANCE)",
-            ("READY (ONLINE)", "endsb"): "ON (ONLINE)",
-            ("READY (ONLINE)", "reset"): "ON (ONLINE)",
-            ("READY (ONLINE)", "configure"): "READY (ONLINE)",
-            ("READY (ONLINE)", "deconfigure"): "READY (ONLINE)",
-            ("READY (ONLINE)", "deconfigure (all)"): "ON (ONLINE)",
-            ("READY (ONLINE)", "deconfigureall"): "READY (ONLINE)",
-            ("READY (ONLINE)", "deconfigureall (all)"): "ON (ONLINE)",
-            ("READY (ONLINE)", "scan"): "SCANNING (ONLINE)",
-            ("READY (ONLINE)", "abort"): "ABORTED (ONLINE)",
-            ("READY (MAINTENANCE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("READY (MAINTENANCE)", "offline"): "DISABLED (OFFLINE)",
-            ("READY (MAINTENANCE)", "online"): "READY (ONLINE)",
-            ("READY (MAINTENANCE)", "maintenance"): "READY (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "endsb"): "ON (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "reset"): "ON (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "configure"): "READY (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "deconfigure"): "READY (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "deconfigure (all)"): "ON (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "deconfigureall"): "READY (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "deconfigureall (all)"): "ON (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "scan"): "SCANNING (MAINTENANCE)",
-            ("READY (MAINTENANCE)", "abort"): "ABORTED (MAINTENANCE)",
-            ("SCANNING (ONLINE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("SCANNING (ONLINE)", "offline"): "DISABLED (OFFLINE)",
-            ("SCANNING (ONLINE)", "online"): "SCANNING (ONLINE)",
-            ("SCANNING (ONLINE)", "maintenance"): "SCANNING (MAINTENANCE)",
-            ("SCANNING (ONLINE)", "endscan"): "READY (ONLINE)",
-            ("SCANNING (ONLINE)", "abort"): "ABORTED (ONLINE)",
-            ("SCANNING (ONLINE)", "reset"): "ON (ONLINE)",
-            ("SCANNING (MAINTENANCE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("SCANNING (MAINTENANCE)", "offline"): "DISABLED (OFFLINE)",
-            ("SCANNING (MAINTENANCE)", "online"): "SCANNING (ONLINE)",
-            ("SCANNING (MAINTENANCE)", "maintenance"): "SCANNING (MAINTENANCE)",
-            ("SCANNING (MAINTENANCE)", "endscan"): "READY (MAINTENANCE)",
-            ("SCANNING (MAINTENANCE)", "abort"): "ABORTED (MAINTENANCE)",
-            ("SCANNING (MAINTENANCE)", "reset"): "ON (MAINTENANCE)",
-            ("ABORTED (ONLINE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("ABORTED (ONLINE)", "offline"): "DISABLED (OFFLINE)",
-            ("ABORTED (ONLINE)", "online"): "ABORTED (ONLINE)",
-            ("ABORTED (ONLINE)", "maintenance"): "ABORTED (MAINTENANCE)",
-            ("ABORTED (ONLINE)", "reset"): "ON (ONLINE)",
-            ("ABORTED (MAINTENANCE)", "notfitted"): "DISABLED (NOTFITTED)",
-            ("ABORTED (MAINTENANCE)", "offline"): "DISABLED (OFFLINE)",
-            ("ABORTED (MAINTENANCE)", "online"): "ABORTED (ONLINE)",
-            ("ABORTED (MAINTENANCE)", "maintenance"): "ABORTED (MAINTENANCE)",
-            ("ABORTED (MAINTENANCE)", "reset"): "ON (MAINTENANCE)",
+            ("DISABLED", "notfitted"): "DISABLED",
+            ("DISABLED", "offline"): "DISABLED",
+            ("DISABLED", "online"): "OFF",
+            ("DISABLED", "maintenance"): "OFF",
+            ("OFF", "notfitted"): "DISABLED",
+            ("OFF", "offline"): "DISABLED",
+            ("OFF", "online"): "OFF",
+            ("OFF", "maintenance"): "OFF",
+            ("OFF", "on"): "EMPTY",
+            ("EMPTY", "notfitted"): "DISABLED",
+            ("EMPTY", "offline"): "DISABLED",
+            ("EMPTY", "online"): "EMPTY",
+            ("EMPTY", "maintenance"): "EMPTY",
+            ("EMPTY", "off"): "OFF",
+            ("EMPTY", "assign"): "IDLE",
+            ("IDLE", "notfitted"): "DISABLED",
+            ("IDLE", "offline"): "DISABLED",
+            ("IDLE", "online"): "IDLE",
+            ("IDLE", "maintenance"): "IDLE",
+            ("IDLE", "assign"): "IDLE",
+            ("IDLE", "release"): "IDLE",
+            ("IDLE", "release (all)"): "EMPTY",
+            ("IDLE", "releaseall"): "EMPTY",
+            ("IDLE", "configure"): "READY",
+            ("IDLE", "abort"): "ABORTED",
+            ("READY", "notfitted"): "DISABLED",
+            ("READY", "offline"): "DISABLED",
+            ("READY", "online"): "READY",
+            ("READY", "maintenance"): "READY",
+            ("READY", "configure"): "READY",
+            ("READY", "end"): "IDLE",
+            ("READY", "abort"): "ABORTED",
+            ("READY", "deconfigure"): "READY",
+            ("READY", "deconfigure (all)"): "IDLE",
+            ("READY", "deconfigureall"): "READY",
+            ("READY", "deconfigureall (all)"): "IDLE",
+            ("READY", "scan"): "SCANNING",
+            ("SCANNING", "notfitted"): "DISABLED",
+            ("SCANNING", "offline"): "DISABLED",
+            ("SCANNING", "online"): "SCANNING",
+            ("SCANNING", "maintenance"): "SCANNING",
+            ("SCANNING", "endscan"): "READY",
+            ("SCANNING", "abort"): "ABORTED",
+            ("ABORTED", "notfitted"): "DISABLED",
+            ("ABORTED", "offline"): "DISABLED",
+            ("ABORTED", "online"): "ABORTED",
+            ("ABORTED", "maintenance"): "ABORTED",
+            ("ABORTED", "reset"): "IDLE",
+            ("ABORTED", "restart"): "EMPTY",
         }
 
         setups = {
-            "DISABLED (NOTFITTED)":
-                ['notfitted'],
-            "DISABLED (OFFLINE)":
+            "DISABLED":
                 ['offline'],
-            "OFF (ONLINE)":
-                ['online'],
-            "OFF (MAINTENANCE)":
-                ['maintenance'],
-            "ON (ONLINE)":
-                ['online', 'assign'],
-            "ON (MAINTENANCE)":
-                ['maintenance', 'assign'],
-            "READY (ONLINE)":
-                ['online', 'assign', 'configure'],
-            "READY (MAINTENANCE)":
-                ['maintenance', 'assign', 'configure'],
-            "SCANNING (ONLINE)":
-                ['online', 'assign', 'configure', 'scan'],
-            "SCANNING (MAINTENANCE)":
-                ['maintenance', 'assign', 'configure', 'scan'],
-            "ABORTED (ONLINE)":
-                ['online', 'assign', 'configure', 'abort'],
-            "ABORTED (MAINTENANCE)":
-                ['maintenance', 'assign', 'configure', 'abort'],
+            "OFF":
+                [],
+            "EMPTY":
+                ['on'],
+            "IDLE":
+                ['on', 'assign'],
+            "READY":
+                ['on', 'assign', 'configure'],
+            "SCANNING":
+                ['on', 'assign', 'configure', 'scan'],
+            "ABORTED":
+                ['on', 'assign', 'abort'],
         }
 
         # bypass cache for this test because we are testing for a change
@@ -573,4 +531,3 @@ class TestSKASubarray(object):
             with pytest.raises(DevFailed):
                 perform_action(action_under_test)
             assert_state(state_under_test)
-       
