@@ -18,33 +18,78 @@ from tango import DevState
 from tango.server import run, attribute
 
 # SKA specific imports
-from ska.base import SKABaseDevice
+from ska.base import SKABaseDevice, SKABaseDeviceStateModel
 from ska.base.control_model import AdminMode, ObsMode, ObsState, guard
 # PROTECTED REGION END #    //  SKAObsDevice.additionnal_imports
 
 __all__ = ["SKAObsDevice", "main"]
 
 
+class SKAObsDeviceStateModel(SKABaseDeviceStateModel):
+    """
+    Implements the state model for the SKABaseDevice
+    """
+    guard.register(
+        "obs_state",
+        lambda model, obs_state: model._obs_state == obs_state
+    )
+    guard.register(
+        "obs_states",
+        lambda model, obs_states: model._obs_state in obs_states
+    )
+    guard.register(
+        "is_obs",  # shortcut for very common use case
+        lambda model, obs_states:
+            model._state == DevState.ON and
+            model._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE] and
+            model._obs_state in obs_states
+    )
+
+    def __init__(self):
+        """
+        Initialises the model. Note that this does not imply moving to
+        INIT state. The INIT state is managed by the model itself.
+        """
+        super().__init__()
+        self._obs_state = None
+
+    def set_admin_mode(self, value):
+        """
+        Setter for admin_mode. Ensures that the model remains consistent
+        following a change to admin_mode.
+
+        :param value: the new admin_mode value
+        :type value: AdminMode
+        """
+        if value in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
+            self._obs_state = ObsState.EMPTY
+        super().set_admin_mode(value)
+
+    def get_obs_state(self):
+        """
+        Getter for obs_state
+
+        :returns: the obs state
+        :rtype: ObsState
+        """
+        return self._obs_state
+
+    def init_device_called(self):
+        """
+        Call this method to let the model know that the device's
+        `init_device` method has been called.
+        """
+        super().init_device_called()
+        self._obs_state = ObsState.EMPTY
+
+
 class SKAObsDevice(SKABaseDevice):
     """
     A generic base device for Observations for SKA.
     """
+    state_model_class = SKAObsDeviceStateModel
+
     # PROTECTED REGION ID(SKAObsDevice.class_variable) ENABLED START #
-    guard.register(
-        "obs_state",
-        lambda device, obs_state: device._obs_state == obs_state
-    )
-    guard.register(
-        "obs_states",
-        lambda device, obs_states: device._obs_state in obs_states
-    )
-    guard.register(
-        "is_obs",  # shortcut for very common use case
-        lambda device, obs_states:
-            device.get_state() == DevState.ON and
-            device._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE] and
-            device._obs_state in obs_states
-    )
 
     # PROTECTED REGION END #    //  SKAObsDevice.class_variable
 
@@ -85,13 +130,6 @@ class SKAObsDevice(SKABaseDevice):
     # ---------------
     # General methods
     # ---------------
-
-    def init_device_requested(self):
-        super().init_device_requested()
-
-        self._obs_state = ObsState.EMPTY
-        self._obs_mode = ObsMode.IDLE
-
     def do_init_device(self):
         """
         Method that initialises device attribute and other internal
@@ -101,6 +139,7 @@ class SKAObsDevice(SKABaseDevice):
         leave ``init_device`` alone and override this method instead.
         """
         (return_code, message) = super().do_init_device()
+        self._obs_mode = ObsMode.IDLE
 
         self._config_progress = 0
         self._config_delay_expected = 0
@@ -121,23 +160,10 @@ class SKAObsDevice(SKABaseDevice):
     # Attributes methods
     # ------------------
 
-    def write_adminMode(self, value):
-        """
-        Overrides base class adminMode to set obsState coherent with
-        adminMode
-
-        :param value: Admin Mode of the device.
-
-        :return: None
-        """
-        if value in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
-            self._obs_state = ObsState.EMPTY
-        super().write_adminMode(value)
-
     def read_obsState(self):
         # PROTECTED REGION ID(SKAObsDevice.obsState_read) ENABLED START #
         """Reads Observation State of the device"""
-        return self._obs_state
+        return self.state_model.get_obs_state()
         # PROTECTED REGION END #    //  SKAObsDevice.obsState_read
 
     def read_obsMode(self):
