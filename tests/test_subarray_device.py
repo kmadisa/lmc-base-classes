@@ -57,50 +57,25 @@ class TestSKASubarray(object):
         # PROTECTED REGION ID(SKASubarray.test_Abort) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[2], ["BAND1"]])
+        tango_context.device.Configure([[2], ["BAND1"]])
         assert tango_context.device.Abort() is None
         # PROTECTED REGION END #    //  SKASubarray.test_Abort
 
-    # PROTECTED REGION ID(SKASubarray.test_ConfigureCapability_decorators) ENABLED START #
-    # PROTECTED REGION END #    //  SKASubarray.test_ConfigureCapability_decorators
-    def test_ConfigureCapability(self, tango_context):
-        """Test for ConfigureCapability"""
-        # PROTECTED REGION ID(SKASubarray.test_ConfigureCapability) ENABLED START #
+    # PROTECTED REGION ID(SKASubarray.test_Configure_decorators) ENABLED START #
+    # PROTECTED REGION END #    //  SKASubarray.test_Configure_decorators
+    def test_Configure(self, tango_context):
+        """Test for Configure"""
+        # PROTECTED REGION ID(SKASubarray.test_Configure) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[2], ["BAND1"]])
-        # The obsState attribute is changed by ConfigureCapability, but
+        tango_context.device.Configure([[2], ["BAND1"]])
+        # The obsState attribute is changed by Configure, but
         # as it is a polled attribute the value in the cache may be stale,
         # so change source to ensure we read directly from the device
         tango_context.device.set_source(DevSource.DEV)
         assert tango_context.device.obsState == ObsState.READY
         assert tango_context.device.configuredCapabilities == ("BAND1:2", "BAND2:0")
-        # PROTECTED REGION END #    //  SKASubarray.test_ConfigureCapability
-
-    # PROTECTED REGION ID(SKASubarray.test_DeconfigureAllCapabilities_decorators) ENABLED START #
-    # PROTECTED REGION END #    //  SKASubarray.test_DeconfigureAllCapabilities_decorators
-    def test_DeconfigureAllCapabilities(self, tango_context):
-        """Test for DeconfigureAllCapabilities"""
-        # PROTECTED REGION ID(SKASubarray.test_DeconfigureAllCapabilities) ENABLED START #
-        tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[3], ["BAND1"]])
-        tango_context.device.DeconfigureAllCapabilities("BAND1")
-        assert tango_context.device.configuredCapabilities == ("BAND1:0", "BAND2:0")
-        # PROTECTED REGION END #    //  SKASubarray.test_DeconfigureAllCapabilities
-
-    # TODO: Fix the test case.
-    # PROTECTED REGION ID(SKASubarray.test_DeconfigureCapability_decorators) ENABLED START #
-    # PROTECTED REGION END #    //  SKASubarray.test_DeconfigureCapability_decorators
-    def test_DeconfigureCapability(self, tango_context):
-        """Test for DeconfigureCapability"""
-        # PROTECTED REGION ID(SKASubarray.test_DeconfigureCapability) ENABLED START #
-        tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[1], ["BAND1"]])
-        tango_context.device.DeconfigureCapability([[1], ["BAND1"]])
-        assert tango_context.device.configuredCapabilities == ("BAND1:0", "BAND2:0")
-        # PROTECTED REGION END #    //  SKASubarray.test_DeconfigureCapability
+        # PROTECTED REGION END #    //  SKASubarray.test_Configure
 
     # PROTECTED REGION ID(SKASubarray.test_GetVersionInfo_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_GetVersionInfo_decorators
@@ -149,7 +124,7 @@ class TestSKASubarray(object):
         # PROTECTED REGION ID(SKASubarray.test_EndSB) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[2], ["BAND1"]])
+        tango_context.device.Configure([[2], ["BAND1"]])
         assert tango_context.device.End() is None
         # PROTECTED REGION END #    //  SKASubarray.test_EndSB
 
@@ -160,7 +135,7 @@ class TestSKASubarray(object):
         # PROTECTED REGION ID(SKASubarray.test_EndScan) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[2], ["BAND1"]])
+        tango_context.device.Configure([[2], ["BAND1"]])
         tango_context.device.Scan([""])
         assert tango_context.device.EndScan() is None
         # PROTECTED REGION END #    //  SKASubarray.test_EndScan
@@ -198,7 +173,7 @@ class TestSKASubarray(object):
         # PROTECTED REGION ID(SKASubarray.test_Reset) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[2], ["BAND1"]])
+        tango_context.device.Configure([[2], ["BAND1"]])
         tango_context.device.Abort()
         assert tango_context.device.Reset() is None
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
@@ -210,7 +185,7 @@ class TestSKASubarray(object):
         # PROTECTED REGION ID(SKASubarray.test_Scan) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.ConfigureCapability([[2], ["BAND1"]])
+        tango_context.device.Configure([[2], ["BAND1"]])
         assert tango_context.device.Scan([""]) is None
         # PROTECTED REGION END #    //  SKASubarray.test_Scan
 
@@ -341,11 +316,8 @@ class TestSKASubarray(object):
                 "EMPTY", "IDLE", "READY", "SCANNING", "ABORTED",
                 # "OBSFAULT",
             ],
-            ["notfitted", "offline", "online", "maintenance",
-             "on", "off", "assign", "release", "release (all)", "releaseall",
-             "configure",
-             "deconfigure", "deconfigure (all)", "deconfigureall",
-             "deconfigureall (all)",
+            ["notfitted", "offline", "online", "maintenance", "on", "off",
+             "assign", "release", "release (all)", "releaseall", "configure",
              "scan", "endscan", "end", "abort", "reset", "restart"]
         )
     )
@@ -414,16 +386,7 @@ class TestSKASubarray(object):
             "releaseall":
                 lambda d: d.ReleaseAllResources(),
             "configure":
-                lambda d: d.ConfigureCapability([[2, 2], ["BAND1", "BAND2"]]),
-            "deconfigure":
-                lambda d: d.DeconfigureCapability([[1], ["BAND1"]]),
-            "deconfigure (all)":
-                lambda d: d.DeconfigureCapability([[2, 2], ["BAND1", "BAND2"]]),
-            "deconfigureall":
-                lambda d: d.DeconfigureAllCapabilities("BAND1"),
-            "deconfigureall (all)":
-                lambda d: [d.DeconfigureAllCapabilities("BAND1"),
-                           d.DeconfigureAllCapabilities("BAND2")],
+                lambda d: d.Configure([[2, 2], ["BAND1", "BAND2"]]),
             "scan":
                 lambda d: d.Scan(["Dummy scan id"]),
             "endscan":
@@ -474,10 +437,6 @@ class TestSKASubarray(object):
             ("READY", "configure"): "READY",
             ("READY", "end"): "IDLE",
             ("READY", "abort"): "ABORTED",
-            ("READY", "deconfigure"): "READY",
-            ("READY", "deconfigure (all)"): "IDLE",
-            ("READY", "deconfigureall"): "READY",
-            ("READY", "deconfigureall (all)"): "IDLE",
             ("READY", "scan"): "SCANNING",
             ("SCANNING", "notfitted"): "DISABLED",
             ("SCANNING", "offline"): "DISABLED",

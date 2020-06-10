@@ -69,8 +69,10 @@ class SKASubarray(SKAObsDevice):
         """
         capabilities_instances, capability_types = argin
         if len(capabilities_instances) != len(capability_types):
-            Except.throw_exception("Command failed!", "Argin value lists size mismatch.",
-                                   command_name, ErrSeverity.ERR)
+            Except.throw_exception(
+                "Command failed!", "Argin value lists size mismatch.",
+                command_name, ErrSeverity.ERR
+            )
 
     # -----------------
     # Device Properties
@@ -522,16 +524,16 @@ class SKASubarray(SKAObsDevice):
         """
         self._obs_state = ObsState.EMPTY
 
-    def is_ConfigureCapability_allowed(self):
+    def is_Configure_allowed(self):
         """
-        Check if command `ConfigureCapability` is allowed in the current
+        Check if command `Configure` is allowed in the current
         device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(self, "is_ConfigureCapability_allowed",
+        return guard.require(self, "is_Configure_allowed",
                              is_obs=[ObsState.IDLE, ObsState.READY])
 
     @command(
@@ -539,32 +541,32 @@ class SKASubarray(SKAObsDevice):
         doc_in="[Number of instances to add][Capability types]",
     )
     @DebugIt()
-    def ConfigureCapability(self, argin):
+    def Configure(self, argin):
         """
         Configures the capabilities of this subarray
 
         :note: Subclasses that implement this functionality are
             recommended to leave this command as currently implemented,
             and instead override the stateless hook
-            ``do_ConfigureCapability()``.
+            ``do_Configure()``.
         :param argin: configuration specification
         :type argin: string
         """
         self._call_with_pattern(argin)
 
-    def ConfigureCapability_requested(self):
+    def Configure_requested(self):
         """
-        Method that manages device state in response to
-        `ConfigureCapability` command being invoked.
+        Method that manages device state in response to `Configure`
+        command being invoked.
         """
         self._obs_state = ObsState.CONFIGURING
 
-    def do_ConfigureCapability(self, argin):
+    def do_Configure(self, argin):
         """
-        Stateless hook for implementation of ``ConfigureCapability()``
-        command. Subclasses that have no need to override the default
-        implementation of state management may leave
-        ``ConfigureCapability()`` alone and override this method instead.
+        Stateless hook for implementation of ``Configure()`` command.
+        Subclasses that have no need to override the default
+        implementation of state management may leave ``Configure()``
+        alone and override this method instead.
 
         :param argin: configuration specification
         :type argin: str
@@ -573,8 +575,7 @@ class SKASubarray(SKAObsDevice):
             only.
         :rtype: (ReturnCode, str)
         """
-        command_name = 'ConfigureCapability'
-
+        command_name="Configure"
         capabilities_instances, capability_types = argin
         self._validate_capability_types(command_name, capability_types)
         self._validate_input_sizes(command_name, argin)
@@ -587,10 +588,10 @@ class SKASubarray(SKAObsDevice):
         return (ReturnCode.OK, "Capability configured")
 
     @guard(is_obs=[ObsState.CONFIGURING])
-    def ConfigureCapability_completed(self, return_code):
+    def Configure_completed(self, return_code):
         """
         Method that manages device state in response to completion of
-        the `ConfigureCapability` command.
+        the `Configure` command.
         """
         if self.is_configured():
             self._obs_state = ObsState.READY
@@ -606,150 +607,8 @@ class SKASubarray(SKAObsDevice):
         """
         return any(self._configured_capabilities.values())
 
-    def is_DeconfigureAllCapabilities_allowed(self):
-        """
-        Check if command `DeconfigureAllCapabilities` is allowed in the
-        current device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return guard.require(self, "is_DeconfigureAllCapabilities_allowed",
-                             is_obs=[ObsState.READY])
-
-    @command(dtype_in='str', doc_in="Capability type",)
-    @DebugIt()
-    def DeconfigureAllCapabilities(self, argin):
-        """
-        Deconfigure all instances of the given Capability type.
-
-        :param argin: the name of the capability type, all instances of
-            which are to be deconfigured
-        :type argin: str
-        :note: Subclasses that implement this functionality are
-            recommended to leave this command as currently implemented,
-            and instead override the stateless hook
-            ``do_DeconfigureAllCapabilities()``.
-        """
-        self._call_with_pattern(argin)
-
-    def DeconfigureAllCapabilities_requested(self):
-        """
-        Method that manages device state in response to
-        `DeconfigureAllCapabilities` command being invoked.
-        """
-        self._obs_state = ObsState.CONFIGURING
-
-    def do_DeconfigureAllCapabilities(self, argin):
-        """
-        Stateless hook for implementation of
-        ``DeconfigureAllCapabilities()`` command. Subclasses that have
-        no need to override the default implementation of state
-        management may leave ``DeconfigureAllCapabilities()`` alone and
-        override this method instead.
-
-        :param argin: the name of the capability type, all instances of
-            which are to be deconfigured
-        :type argin: str
-        :return: A tuple containing a return code and a string message
-            indicating status. The message is for information purpose
-            only.
-        :rtype: (ReturnCode, str)
-        """
-        self._validate_capability_types('DeconfigureAllCapabilities', [argin])
-        self._configured_capabilities[argin] = 0
-        return (ReturnCode.OK, "Deconfiguration successful.")
-
-    def DeconfigureAllCapabilities_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `DeconfigureAllCapabilities` command.
-        """
-        if self.is_configured():
-            self._obs_state = ObsState.READY
-        else:
-            self._obs_state = ObsState.IDLE
-
-    def is_DeconfigureCapability_allowed(self):
-        """
-        Check if command `DeconfigureCapability` is allowed in the
-        current device state.
-
-        :raises ``tango.DevFailed``: if the command is not allowed
-        :return: ``True`` if the command is allowed
-        :rtype: boolean
-        """
-        return guard.require(self, "is_DeconfigureCapability_allowed",
-                             is_obs=[ObsState.READY])
-
-    @command(
-        dtype_in='DevVarLongStringArray',
-        doc_in="[Number of instances to remove][Capability types]",
-    )
-    @DebugIt()
-    def DeconfigureCapability(self, argin):
-        """
-        Deconfigure some instances of a Capability type.
-
-        :param argin: the capability type and the number of instances of
-            that type to be removed, in array form: [no_instances][type]
-        :type argin: DevVarLongStringArray
-        :note: Subclasses that implement this functionality are
-            recommended to leave this command as currently implemented,
-            and instead override the stateless hook
-            ``do_DeconfigureCapabilities()``.
-        """
-        self._call_with_pattern(argin)
-
-    def DeconfigureCapability_requested(self):
-        """
-        Method that manages device state in response to
-        `DeconfigureCapability` command being invoked.
-        """
-        self._obs_state = ObsState.CONFIGURING
-
-    def do_DeconfigureCapability(self, argin):
-        """
-        Stateless hook for implementation of
-        ``DeconfigureCapability()`` command. Subclasses that have no
-        need to override the default implementation of state
-        management may leave ``DeconfigureCapability()`` alone and
-        override this method instead.
-
-        :param argin: the name of the capability type, all instances of
-            which are to be deconfigured
-        :type argin: str
-        :return: A tuple containing a return code and a string message
-            indicating status. The message is for information purpose
-            only.
-        :rtype: (ReturnCode, str)
-        """
-        command_name = 'DeconfigureCapability'
-        capabilities_instances, capability_types = argin
-
-        self._validate_capability_types(command_name, capability_types)
-        self._validate_input_sizes(command_name, argin)
-
-        # Perform the deconfiguration
-        for capability_instances, capability_type in zip(
-                capabilities_instances, capability_types):
-            if self._configured_capabilities[capability_type] < int(capability_instances):
-                self._configured_capabilities[capability_type] = 0
-            else:
-                self._configured_capabilities[capability_type] -= (
-                    int(capability_instances))
-        return (ReturnCode.OK, "DeconfigureCapability command successful")
-
-    def DeconfigureCapability_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `DeconfigureCapability` command.
-        """
-        if self.is_configured():
-            self._obs_state = ObsState.READY
-        else:
-            self._obs_state = ObsState.IDLE
+    def _deconfigure(self):
+        self._configured_capabilities = {k:0 for k in self._configured_capabilities}
 
     def is_Scan_allowed(self):
         """
@@ -895,6 +754,7 @@ class SKASubarray(SKAObsDevice):
             only.
         :rtype: (ReturnCode, str)
         """
+        self._deconfigure()
         return (ReturnCode.OK, "End successful")
 
     def End_completed(self, return_code):
@@ -1013,9 +873,7 @@ class SKASubarray(SKAObsDevice):
         pass
 
         # Now totally deconfigure
-        for capability_type in self._configured_capabilities:
-            self._configured_capabilities[capability_type] = 0
-
+        self._deconfigure()
         return (ReturnCode.OK, "Reset successful")
 
     def Reset_completed(self, return_code):
@@ -1070,8 +928,7 @@ class SKASubarray(SKAObsDevice):
         pass
 
         # Now totally deconfigure
-        for capability_type in self._configured_capabilities:
-            self._configured_capabilities[capability_type] = 0
+        self._deconfigure()
 
         # and release all resources
         self.do_ReleaseAllResources()
