@@ -390,13 +390,14 @@ class check_first:
         def wrapper(model, *args, **kwargs):
             action = self.hook or func.__name__
             is_allowed = getattr(model, f"is_{action}_allowed", None)
-            if is_allowed is not None:
+            if callable(is_allowed):
                 if not is_allowed():
                     raise ValueError(
                         f"Action '{action}' not allowed in current state."
                     )
             return func(model, *args, **kwargs)
         return wrapper
+
 
 class guard:
     """

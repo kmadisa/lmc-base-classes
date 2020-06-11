@@ -49,7 +49,7 @@ class TestSKASubarrayStateModel():
              "abort_succeeded", "abort_failed", "reset_started",
              "reset_succeeded", "reset_failed", "restart_started",
              "restart_succeeded", "restart_failed"
-             # go_to_fault? obsfault?
+             # to_fault? obsfault?
              ]
         )
     )
@@ -134,7 +134,7 @@ class TestSKASubarrayStateModel():
             ('EMPTY', 'off_succeeded'): "OFF",
             ('EMPTY', 'off_failed'): "FAULT",
             ('EMPTY', 'assign_started'): "RESOURCING",
-            ("EMPTY", 'go_to_fault'): "OBSFAULT",
+            ("EMPTY", 'to_fault'): "OBSFAULT",
             ('RESOURCING', 'assign_succeeded_some_resources'): "IDLE",
             ('RESOURCING', 'assign_succeeded_no_resources'): "EMPTY",
             ('RESOURCING', 'assign_failed'): "OBSFAULT",
@@ -202,7 +202,7 @@ class TestSKASubarrayStateModel():
                 'abort_succeeded'
             ],
             "OBSFAULT": [
-                'init_started', 'init_succeeded', 'on_succeeded', 'go_to_fault'
+                'init_started', 'init_succeeded', 'on_succeeded', 'to_fault'
             ],
             "RESETTING": [
                 'init_started', 'init_succeeded', 'on_succeeded',

@@ -420,11 +420,11 @@ class SKABaseDeviceStateModel(object):
     def init_failed(self):
         self._set_state(DevState.FAULT)
 
-    def is_go_to_fault_allowed(self):
+    def is_to_fault_allowed(self):
         return True
 
     @check_first()
-    def go_to_fault(self):
+    def to_fault(self):
         """
         Call this method to tell the state model to go to FAULT state.
         """
@@ -674,9 +674,9 @@ class SKABaseDevice(Device):
                 if failed_action is not None:
                     failed_action()
                 else:
-                    self.state_model.go_to_fault()
+                    self.state_model.to_fault()
         except Exception:
-            self.state_model.go_to_fault()
+            self.state_model.to_fault()
             raise
 
         self.logger.info(

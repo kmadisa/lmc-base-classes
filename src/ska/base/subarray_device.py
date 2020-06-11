@@ -256,7 +256,7 @@ class SKASubarrayStateModel(SKAObsDeviceStateModel):
         self._obs_state = ObsState.FAULT
 
     @check_first()
-    def go_to_fault(self):
+    def to_fault(self):
         # override to support ObsState.FAULT
         if self._state == DevState.ON:
             self._obs_state = ObsState.FAULT
@@ -551,9 +551,9 @@ class SKASubarray(SKAObsDevice):
                 if self.state_model.assign_failed is not None:
                     self.state_model.assign_failed()
                 else:
-                    self.state_model.go_to_fault()
+                    self.state_model.to_fault()
         except Exception:
-            self.state_model.go_to_fault()
+            self.state_model.to_fault()
             raise
 
     def action_on_resourcing_succeeded(self):
@@ -629,9 +629,9 @@ class SKASubarray(SKAObsDevice):
                 if self.state_model.release_failed is not None:
                     self.state_model.release_failed()
                 else:
-                    self.state_model.go_to_fault()
+                    self.state_model.to_fault()
         except Exception:
-            self.state_model.go_to_fault()
+            self.state_model.to_fault()
             raise
 
     def do_ReleaseResources(self, argin):
@@ -695,9 +695,9 @@ class SKASubarray(SKAObsDevice):
                 if self.state_model.release_failed is not None:
                     self.state_model.release_failed()
                 else:
-                    self.state_model.go_to_fault()
+                    self.state_model.to_fault()
         except Exception:
-            self.state_model.go_to_fault()
+            self.state_model.to_fault()
             raise
 
     def do_ReleaseAllResources(self):
