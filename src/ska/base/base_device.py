@@ -13,6 +13,7 @@ device.
 # PROTECTED REGION ID(SKABaseDevice.additionnal_import) ENABLED START #
 # Standard imports
 import enum
+from functools import wraps
 import inspect
 import logging
 import logging.handlers
@@ -36,7 +37,7 @@ from ska.base import release
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode,
     HealthState, LoggingLevel, ReturnCode,
-    guard
+    check_first, guard, DevFailed_if_False
 )
 
 from ska.base.utils import get_groups_from_json
@@ -308,10 +309,10 @@ class LoggingUtils:
 # PROTECTED REGION END #    //  SKABaseDevice.additionnal_import
 
 
-__all__ = ["SKABaseDevice", "main"]
+__all__ = ["SKABaseDevice", "SKABaseDeviceStateModel", "main"]
 
 
-class SKABaseDeviceStateModel():
+class SKABaseDeviceStateModel(object):
     """
     Implements the state model for the SKABaseDevice
     """
@@ -328,40 +329,20 @@ class SKABaseDeviceStateModel():
         lambda model, admin_modes: model._admin_mode in admin_modes
     )
 
-    def __init__(self):
+    def __init__(self, state_callback=None):
         """
         Initialises the model. Note that this does not imply moving to
         INIT state. The INIT state is managed by the model itself.
         """
         self._admin_mode = None
-        self._state = None
+        self._state = DevState.UNKNOWN
+        self._state_callback = state_callback
 
-    def get_admin_mode(self):
-        """
-        Getter for admin_mode
-
-        :returns: the admin mode
-        :rtype: AdminMode
-        """
-        return self._admin_mode
-
-    def set_admin_mode(self, value):
-        """
-        Setter for admin_mode. Ensures that the model remains consistent
-        following a change to admin_mode.
-
-        :param value: the new admin_mode value
-        :type value: AdminMode
-        """
-        enabling_modes = [AdminMode.ONLINE, AdminMode.MAINTENANCE]
-        disabling_modes = [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
-
-        if self._state == DevState.DISABLE and value in enabling_modes:
-            self._state = DevState.OFF
-        elif self._state in [DevState.OFF, DevState.ON] and value in disabling_modes:
-            self._state = DevState.DISABLE
-
-        self._admin_mode = value
+    def _set_state(self, state):
+        if state != self._state:
+            self._state = state
+            if self._state_callback is not None:
+                self._state_callback(state)
 
     def get_state(self):
         """
@@ -372,56 +353,96 @@ class SKABaseDeviceStateModel():
         """
         return self._state
 
-    def init_device_called(self):
+    def _is_set_admin_mode_allowed(self, value):
+        return guard.allows(self, states=[DevState.DISABLE, DevState.OFF])
+
+    def is_to_notfitted_allowed(self):
+        return self._is_set_admin_mode_allowed(AdminMode.NOT_FITTED)
+
+    @check_first()
+    def to_notfitted(self):
+        self._admin_mode = AdminMode.NOT_FITTED
+        self._set_state(DevState.DISABLE)
+
+    def is_to_offline_allowed(self):
+        return self._is_set_admin_mode_allowed(AdminMode.OFFLINE)
+
+    @check_first()
+    def to_offline(self):
+        self._admin_mode = AdminMode.OFFLINE
+        self._set_state(DevState.DISABLE)
+
+    def is_to_maintenance_allowed(self):
+        return self._is_set_admin_mode_allowed(AdminMode.MAINTENANCE)
+
+    @check_first()
+    def to_maintenance(self):
+        self._admin_mode = AdminMode.MAINTENANCE
+        self._set_state(DevState.OFF)
+
+    def is_to_online_allowed(self):
+        return self._is_set_admin_mode_allowed(AdminMode.MAINTENANCE)
+
+    @check_first()
+    def to_online(self):
+        self._admin_mode = AdminMode.MAINTENANCE
+        self._set_state(DevState.OFF)
+
+    def is_init_started_allowed(self):
+        return guard.allows(self, state=DevState.UNKNOWN)
+
+    @check_first()
+    def init_started(self):
         """
-        Call this method to let the model know that the device's
-        `init_device` method has been called.
+        Implements "start_init_device" action on state model.
         """
-        self._state = DevState.INIT
+        self._set_state(DevState.INIT)
 
         # The "factory default" for AdminMode is MAINTENANCE. But fear
         # not, it is a memorized attribute and will soon be overwritten
         # with its memorized value.
         self._admin_mode = AdminMode.MAINTENANCE
 
-    @guard(state=DevState.INIT)
-    def init_device_completed(self):
+    def is_init_completed_allowed(self):
+        return guard.allows(self, state=DevState.INIT)
+
+    @check_first("init_completed")
+    def init_succeeded(self):
         """
-        Call this method to let the state model know that the device's
-        `init_device` method has completed successfully.
+        Implements "complete_init" action on state model.
         """
         if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
-            self._state = DevState.OFF
+            self._set_state(DevState.OFF)
         else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
-            self._state = DevState.DISABLE
+            self._set_state(DevState.DISABLE)
 
-    def Reset_called(self):
-        """
-        Call this method to let the state model know that the device's
-        `Reset` command has been called.
-        """
-        pass
+    @check_first("init_completed")
+    def init_failed(self):
+        self._set_state(DevState.FAULT)
 
-    def Reset_completed(self):
-        """
-        Call this method to let the state model know that the device's
-        `Reset` command has completed successfully.
-        """
-        self._health_state = HealthState.OK
-        self._control_mode = ControlMode.REMOTE
-        self._simulation_mode = SimulationMode.FALSE
-        self._test_mode = TestMode.NONE
+    def is_go_to_fault_allowed(self):
+        return True
 
-        if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
-            self._state = DevState.OFF
-        else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
-            self._state = DevState.DISABLE
-
+    @check_first()
     def go_to_fault(self):
         """
         Call this method to tell the state model to go to FAULT state.
         """
-        self._state = DevState.FAULT
+        self._set_state(DevState.FAULT)
+
+    def is_reset_allowed(self):
+        return True
+
+    @check_first("reset")
+    def reset_succeeded(self):
+        if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
+            self._set_state(DevState.OFF)
+        else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
+            self._set_state(DevState.DISABLE)
+
+    @check_first("reset")
+    def reset_failed(self):
+        self._set_state(DevState.FAULT)
 
 
 class SKABaseDevice(Device):
@@ -611,15 +632,16 @@ class SKABaseDevice(Device):
     # General methods
     # ---------------
 
-    def _update_device_state(self):
-        state = self.state_model.get_state()
-        if self.get_state() != state:
+    def _update_device_state(self, state):
+        old_state = self.get_state()
+        if state != old_state:
             self.set_state(state)
-            self.set_status("The device is in {} state.".format(state))
+            self.set_status(f"The device is in {state} state.")
+            self.logger.info(f"Device state changed from {old_state} to {state}")
 
-    def _call_with_pattern(self, argin=None):
+    def _call_with_pattern(self, action, argin=None):
         """
-        Implements the common calling pattern for all commands.
+        Implements the common calling pattern for most commands.
 
         :param argin: the argument provided to the Command, if any
         :type argin: any tango argument type
@@ -627,37 +649,34 @@ class SKABaseDevice(Device):
         :rtype: tango.DevVarLongStringArray
         """
         command_name = inspect.currentframe().f_back.f_code.co_name
-        called_name = "{}_called".format(command_name)
+        started_name = "{}_started".format(action)
         do_name = "do_{}".format(command_name)
-        completed_name = "{}_completed".format(command_name)
-        failed_name = "{}_failed".format(command_name)
+        succeeded_name = "{}_succeeded".format(action)
+        failed_name = "{}_failed".format(action)
 
-        command_called = getattr(self.state_model, called_name, None)
-        do_command = getattr(self, do_name, None)
-        command_completed = getattr(self.state_model, completed_name, None)
-        command_failed = getattr(self.state_model, failed_name, None)
+        started_action = getattr(self.state_model, started_name, None)
+        do_method = getattr(self, do_name, None)
+        succeeded_action = getattr(self.state_model, succeeded_name, None)
+        failed_action = getattr(self.state_model, failed_name, None)
 
         try:
-            if command_called is not None:
-                command_called()  # pylint: disable=not-callable
-                self._update_device_state()
+            if started_action is not None:
+                started_action()  # pylint: disable=not-callable
 
             if argin is None:
-                (return_code, message) = do_command()  # pylint: disable=not-callable
+                (return_code, message) = do_method()  # pylint: disable=not-callable
             else:
-                (return_code, message) = do_command(argin)  # pylint: disable=not-callable
+                (return_code, message) = do_method(argin)  # pylint: disable=not-callable
 
             if return_code == ReturnCode.OK:
-                command_completed()  # pylint: disable=not-callable
+                succeeded_action()  # pylint: disable=not-callable
             elif return_code == ReturnCode.FAILED:
-                if command_failed is not None:
-                    command_failed()
+                if failed_action is not None:
+                    failed_action()
                 else:
                     self.state_model.go_to_fault()
-            self._update_device_state()
         except Exception:
             self.state_model.go_to_fault()
-            self._update_device_state()
             raise
 
         self.logger.info(
@@ -675,14 +694,18 @@ class SKABaseDevice(Device):
 
         :return: None
         """
-        super().init_device()
         try:
-            self.state_model = self.state_model_class()
-            self._call_with_pattern()
+            super().init_device()
+            self._init_logging()
+
+            self.state_model = self.state_model_class(
+                state_callback=self._update_device_state
+            )
+            self._call_with_pattern("init")
         except Exception:
             self.set_state(DevState.FAULT)
             self.set_status("The device is in FAULT state.")
-            raise
+            self.logger.exception("init_device() failed.")
 
     def do_init_device(self):
         """
@@ -705,7 +728,6 @@ class SKABaseDevice(Device):
                                                 release.description)
         self._version_id = release.version
 
-        self._init_logging()
         try:
             # create TANGO Groups objects dict, according to property
             self.logger.debug("Groups definitions: {}".format(self.GroupDefinitions))
@@ -850,8 +872,16 @@ class SKABaseDevice(Device):
 
         :return: None
         """
-        self.state_model.admin_mode = value
-        self._update_device_state()
+        if value == AdminMode.NOT_FITTED:
+            self.state_model.to_notfitted()
+        elif value == AdminMode.OFFLINE:
+            self.state_model.to_offline()
+        elif value == AdminMode.MAINTENANCE:
+            self.state_model.to_maintenance()
+        elif value == AdminMode.ONLINE:
+            self.state_model.to_online()
+        else:
+            raise ValueError(f"Unknown adminMode {value}")
         # PROTECTED REGION END #    //  SKABaseDevice.adminMode_write
 
     def read_controlMode(self):
@@ -936,14 +966,17 @@ class SKABaseDevice(Device):
         return ['{}, {}'.format(self.__class__.__name__, self.read_buildState())]
         # PROTECTED REGION END #    //  SKABaseDevice.GetVersionInfo
 
-    @command(
-    )
+    @DevFailed_if_False
+    def is_Reset_allowed(self):
+        return self.state_model.is_reset_allowed()
+
+    @command()
     @DebugIt()
     def Reset(self):
         """
         Command to reset the device to its default state.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("reset")
 
     def do_Reset(self):
         """
@@ -957,6 +990,11 @@ class SKABaseDevice(Device):
             only.
         :rtype: (ReturnCode, str)
         """
+        self._health_state = HealthState.OK
+        self._control_mode = ControlMode.REMOTE
+        self._simulation_mode = SimulationMode.FALSE
+        self._test_mode = TestMode.NONE
+
         return (ReturnCode.OK, "Device reset")
 
 # ----------

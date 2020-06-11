@@ -202,9 +202,11 @@ class TestSKASubarray(object):
     def test_adminMode(self, tango_context):
         """Test for adminMode"""
         # PROTECTED REGION ID(SKASubarray.test_adminMode) ENABLED START #
-        assert tango_context.device.adminMode == AdminMode.ONLINE
-        tango_context.device.adminMode = AdminMode.MAINTENANCE
         assert tango_context.device.adminMode == AdminMode.MAINTENANCE
+        assert tango_context.device.state() == DevState.OFF
+        tango_context.device.adminMode = AdminMode.OFFLINE
+        assert tango_context.device.adminMode == AdminMode.OFFLINE
+        assert tango_context.device.state() == DevState.DISABLE
         # PROTECTED REGION END #    //  SKASubarray.test_adminMode
 
     # PROTECTED REGION ID(SKASubarray.test_buildState_decorators) ENABLED START #
@@ -414,40 +416,20 @@ class TestSKASubarray(object):
             ("OFF", "online"): "OFF",
             ("OFF", "maintenance"): "OFF",
             ("OFF", "on"): "EMPTY",
-            ("EMPTY", "notfitted"): "DISABLED",
-            ("EMPTY", "offline"): "DISABLED",
-            ("EMPTY", "online"): "EMPTY",
-            ("EMPTY", "maintenance"): "EMPTY",
             ("EMPTY", "off"): "OFF",
             ("EMPTY", "assign"): "IDLE",
-            ("IDLE", "notfitted"): "DISABLED",
-            ("IDLE", "offline"): "DISABLED",
-            ("IDLE", "online"): "IDLE",
-            ("IDLE", "maintenance"): "IDLE",
             ("IDLE", "assign"): "IDLE",
             ("IDLE", "release"): "IDLE",
             ("IDLE", "release (all)"): "EMPTY",
             ("IDLE", "releaseall"): "EMPTY",
             ("IDLE", "configure"): "READY",
             ("IDLE", "abort"): "ABORTED",
-            ("READY", "notfitted"): "DISABLED",
-            ("READY", "offline"): "DISABLED",
-            ("READY", "online"): "READY",
-            ("READY", "maintenance"): "READY",
             ("READY", "configure"): "READY",
             ("READY", "end"): "IDLE",
             ("READY", "abort"): "ABORTED",
             ("READY", "scan"): "SCANNING",
-            ("SCANNING", "notfitted"): "DISABLED",
-            ("SCANNING", "offline"): "DISABLED",
-            ("SCANNING", "online"): "SCANNING",
-            ("SCANNING", "maintenance"): "SCANNING",
             ("SCANNING", "endscan"): "READY",
             ("SCANNING", "abort"): "ABORTED",
-            ("ABORTED", "notfitted"): "DISABLED",
-            ("ABORTED", "offline"): "DISABLED",
-            ("ABORTED", "online"): "ABORTED",
-            ("ABORTED", "maintenance"): "ABORTED",
             ("ABORTED", "reset"): "IDLE",
             ("ABORTED", "restart"): "EMPTY",
         }

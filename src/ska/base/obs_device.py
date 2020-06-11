@@ -22,7 +22,7 @@ from ska.base import SKABaseDevice, SKABaseDeviceStateModel
 from ska.base.control_model import AdminMode, ObsMode, ObsState, guard
 # PROTECTED REGION END #    //  SKAObsDevice.additionnal_imports
 
-__all__ = ["SKAObsDevice", "main"]
+__all__ = ["SKAObsDevice", "SKAObsDeviceStateModel", "main"]
 
 
 class SKAObsDeviceStateModel(SKABaseDeviceStateModel):
@@ -45,43 +45,21 @@ class SKAObsDeviceStateModel(SKABaseDeviceStateModel):
             model._obs_state in obs_states
     )
 
-    def __init__(self):
+    def __init__(self, state_callback=None):
         """
         Initialises the model. Note that this does not imply moving to
         INIT state. The INIT state is managed by the model itself.
         """
-        super().__init__()
+        super().__init__(state_callback)
         self._obs_state = None
 
-    def set_admin_mode(self, value):
-        """
-        Setter for admin_mode. Ensures that the model remains consistent
-        following a change to admin_mode.
-
-        :param value: the new admin_mode value
-        :type value: AdminMode
-        """
-        if value in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
-            self._obs_state = ObsState.EMPTY
-        super().set_admin_mode(value)
-
-    def get_obs_state(self):
-        """
-        Getter for obs_state
-
-        :returns: the obs state
-        :rtype: ObsState
-        """
-        return self._obs_state
-
-    def init_device_called(self):
+    def init_started(self):
         """
         Call this method to let the model know that the device's
         `init_device` method has been called.
         """
-        super().init_device_called()
+        super().init_started()
         self._obs_state = ObsState.EMPTY
-
 
 class SKAObsDevice(SKABaseDevice):
     """
@@ -163,7 +141,7 @@ class SKAObsDevice(SKABaseDevice):
     def read_obsState(self):
         # PROTECTED REGION ID(SKAObsDevice.obsState_read) ENABLED START #
         """Reads Observation State of the device"""
-        return self.state_model.get_obs_state()
+        return self.state_model._obs_state
         # PROTECTED REGION END #    //  SKAObsDevice.obsState_read
 
     def read_obsMode(self):

@@ -17,17 +17,259 @@ from tango.server import run, attribute, command
 from tango.server import device_property
 
 # SKA specific imports
-from ska.base import SKAObsDevice
-from ska.base.control_model import AdminMode, ObsState, ReturnCode, guard
+from ska.base import SKAObsDevice, SKAObsDeviceStateModel
+from ska.base.control_model import ObsState, ReturnCode, check_first, guard, DevFailed_if_False
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 
-__all__ = ["SKASubarray", "main"]
+__all__ = ["SKASubarray", "SKASubarrayStateModel", "main"]
+
+
+class SKASubarrayStateModel(SKAObsDeviceStateModel):
+    """
+    Implements the state model for the SKASubarray
+    """
+    def is_on_allowed(self):
+        return guard.allows(
+            self,
+            state=DevState.OFF,
+        )
+
+    @check_first("on")
+    def on_succeeded(self):
+        """
+        Method that manages device state in response to completion of
+        the `On` command.
+        """
+        self._set_state(DevState.ON)
+        self._obs_state = ObsState.EMPTY
+
+    @check_first("on")
+    def on_failed(self):
+        self._set_state(DevState.FAULT)
+
+    def is_off_allowed(self):
+        return guard.allows(
+            self,
+            state=DevState.ON,
+            obs_state=ObsState.EMPTY
+        )
+
+    @check_first("off")
+    def off_succeeded(self):
+        """
+        Method that manages device state in response to completion of
+        the `Off` command.
+        """
+        self._set_state(DevState.OFF)
+
+    @check_first("off")
+    def off_failed(self):
+        self._set_state(DevState.FAULT)
+
+    def is_assign_started_allowed(self):
+        """
+        Check if command `AssignResources` is allowed in the current
+        device state.
+
+        :raises ``tango.DevFailed``: if the command is not allowed
+        :return: ``True`` if the command is allowed
+        :rtype: boolean
+        """
+        return guard.allows(
+            self,
+            is_obs=[ObsState.EMPTY, ObsState.IDLE]
+        )
+
+    def _resourcing_started(self):
+        self._obs_state = ObsState.RESOURCING
+
+    @check_first()
+    def assign_started(self):
+        self._resourcing_started()
+
+    def _is_resourcing_completed_allowed(self):
+        return guard.allows(self, is_obs=[ObsState.RESOURCING])
+
+    def is_assign_completed_allowed(self):
+        return self._is_resourcing_completed_allowed()
+
+    def _resourcing_succeeded_no_resources(self):
+        self._obs_state = ObsState.EMPTY
+
+    @check_first("assign_completed")
+    def assign_succeeded_no_resources(self):
+        self._resourcing_succeeded_no_resources()
+
+    def _resourcing_succeeded_some_resources(self):
+        self._obs_state = ObsState.IDLE
+
+    @check_first("assign_completed")
+    def assign_succeeded_some_resources(self):
+        self._resourcing_succeeded_some_resources()
+
+    @check_first("assign_completed")
+    def assign_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    def is_release_started_allowed(self):
+        return guard.allows(self, is_obs=[ObsState.IDLE])
+
+    @check_first()
+    def release_started(self):
+        self._resourcing_started()
+
+    def is_release_completed_allowed(self):
+        return self._is_resourcing_completed_allowed()
+
+    @check_first("release_completed")
+    def release_succeeded_no_resources(self):
+        self._resourcing_succeeded_no_resources()
+
+    @check_first("release_completed")
+    def release_succeeded_has_resources(self):
+        self._resourcing_succeeded_some_resources()
+
+    @check_first("release_completed")
+    def release_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    def is_configure_started_allowed(self):
+        return guard.allows(
+            self,
+            is_obs=[ObsState.IDLE, ObsState.READY]
+        )
+
+    @check_first()
+    def configure_started(self):
+        self._obs_state = ObsState.CONFIGURING
+
+    def is_configure_completed_allowed(self):
+        return guard.allows(self, is_obs=[ObsState.CONFIGURING])
+
+    @check_first("configure_completed")
+    def configure_succeeded(self):
+        self._obs_state = ObsState.READY
+
+    @check_first("configure_completed")
+    def configure_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    def is_scan_started_allowed(self):
+        return guard.allows(self, is_obs=[ObsState.READY])
+
+    @check_first()
+    def scan_started(self):
+        self._obs_state = ObsState.SCANNING
+
+    def is_scan_completed_allowed(self):
+        return guard.allows(self, is_obs=[ObsState.SCANNING])
+
+    @check_first("scan_completed")
+    def scan_succeeded(self):
+        self._obs_state = ObsState.READY
+
+    @check_first("scan_completed")
+    def scan_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    def is_end_scan_allowed(self):
+        return guard.allows(self, is_obs=[ObsState.SCANNING])
+
+    @check_first("end_scan")
+    def end_scan_succeeded(self):
+        self._obs_state = ObsState.READY
+
+    @check_first("end_scan")
+    def end_scan_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    def is_end_allowed(self):
+        return guard.allows(self, is_obs=[ObsState.READY])
+
+    @check_first("end")
+    def end_succeeded(self):
+        self._obs_state = ObsState.IDLE
+
+    @check_first("scan_completed")
+    def end_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    def is_abort_allowed(self):
+        return guard.allows(
+            self,
+            is_obs=[ObsState.IDLE, ObsState.CONFIGURING, ObsState.READY,
+                    ObsState.SCANNING, ObsState.RESETTING]
+        )
+
+    @check_first("abort")
+    def abort_succeeded(self):
+        self._obs_state = ObsState.ABORTED
+
+    @check_first("abort")
+    def abort_failed(self):
+        self._obs_state = ObsState.FAULT
+
+
+#    def is_reset_started_allowed(self):
+#        return guard.allows(self, is_obs=[ObsState.ABORTED, ObsState.FAULT])
+
+    @check_first()
+    def obs_reset_started(self):
+        self._obs_state = ObsState.RESETTING
+
+    def is_obs_reset_completed_allowed(self):
+        return guard.allows(
+            self,
+            is_obs=[ObsState.RESETTING]
+        )
+
+    @check_first("obs_reset_completed")
+    def obs_reset_succeeded(self):
+        self._obs_state = ObsState.IDLE
+
+    @check_first("obs_reset_completed")
+    def obs_reset_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    def is_restart_started_allowed(self):
+        return guard.allows(
+            self,
+            is_obs=[ObsState.ABORTED, ObsState.FAULT]
+        )
+
+    @check_first()
+    def restart_started(self):
+        self._obs_state = ObsState.RESTARTING
+
+    def is_restart_completed_allowed(self):
+        return guard.allows(
+            self,
+            is_obs=[ObsState.RESTARTING]
+        )
+
+    @check_first("restart_completed")
+    def restart_succeeded(self):
+        self._obs_state = ObsState.EMPTY
+
+    @check_first("restart_completed")
+    def restart_failed(self):
+        self._obs_state = ObsState.FAULT
+
+    @check_first()
+    def go_to_fault(self):
+        # override to support ObsState.FAULT
+        if self._state == DevState.ON:
+            self._obs_state = ObsState.FAULT
+        else:
+            self._set_state(DevState.FAULT)
 
 
 class SKASubarray(SKAObsDevice):
     """
     SubArray device
     """
+    state_model_class = SKASubarrayStateModel
+
     # PROTECTED REGION ID(SKASubarray.class_variable) ENABLED START #
     def _validate_capability_types(self, command_name, capability_types):
         """Check the validity of the input parameter passed on to the command specified
@@ -88,16 +330,6 @@ class SKASubarray(SKAObsDevice):
     # ----------
     # Attributes
     # ----------
-
-    adminMode = attribute(
-        dtype=AdminMode,
-        access=AttrWriteType.READ_WRITE,
-        memorized=True,
-        doc="The admin mode reported for this device. It may interpret the current "
-            "device condition and condition of all managed devices to set this. "
-            "Most possibly an aggregate attribute.",
-    )
-
     activationTime = attribute(
         dtype='double',
         unit="s",
@@ -124,15 +356,6 @@ class SKASubarray(SKAObsDevice):
     # ---------------
     # General methods
     # ---------------
-
-    def init_device_requested(self):
-        """
-        Method that manages device state in response to `init_device`
-        command being invoked.
-        """
-        super().init_device_requested()
-        self._admin_mode = AdminMode.ONLINE
-
     def do_init_device(self):
         """
         Stateless hook for implementation of ``init_device()``.
@@ -175,24 +398,6 @@ class SKASubarray(SKAObsDevice):
     # ------------------
     # Attributes methods
     # ------------------
-
-    def write_adminMode(self, value):
-        """
-        Overrides to ensure clean shutdown on writing on of the disabled modes
-
-        :param value: Admin Mode of the device.
-
-        :return: None
-        """
-        if value in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
-            if self._obs_state in [ObsState.CONFIGURING, ObsState.READY, ObsState.SCANNING]:
-                self.do_Reset()
-                self._obs_state = ObsState.IDLE
-            if self._obs_state == ObsState.IDLE:
-                self.do_ReleaseAllResources()
-            self._obs_state = ObsState.EMPTY
-        super().write_adminMode(value)
-
     def read_activationTime(self):
         # PROTECTED REGION ID(SKASubarray.activationTime_read) ENABLED START #
         """
@@ -233,6 +438,7 @@ class SKASubarray(SKAObsDevice):
     # Commands
     # --------
 
+    @DevFailed_if_False
     def is_On_allowed(self):
         """
         Check if command `On` is allowed in the current device state.
@@ -241,12 +447,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(
-            self,
-            "is_On_allowed",
-            admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
-            state=DevState.OFF,
-        )
+        return self.state_model.is_on_allowed()
 
     @command()
     @DebugIt()
@@ -258,7 +459,7 @@ class SKASubarray(SKAObsDevice):
             recommended to leave this command as currently implemented,
             and instead override the stateless hook ``do_On()``.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("on")
 
     def do_On(self):
         """
@@ -274,15 +475,7 @@ class SKASubarray(SKAObsDevice):
         """
         return (ReturnCode.OK, "On command successful")
 
-    def On_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `On` command.
-        """
-        self.set_state(DevState.ON)
-        self.set_status("The device is in ON state.")
-        self._obs_state = ObsState.EMPTY
-
+    @DevFailed_if_False
     def is_Off_allowed(self):
         """
         Check if command `Off` is allowed in the current device state.
@@ -291,13 +484,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(
-            self,
-            "is_Off_allowed",
-            admin_modes=[AdminMode.ONLINE, AdminMode.MAINTENANCE],
-            state=DevState.ON,
-            obs_state=ObsState.EMPTY
-        )
+        return self.state_model.is_off_allowed()
 
     @command()
     @DebugIt()
@@ -309,7 +496,7 @@ class SKASubarray(SKAObsDevice):
             recommended to leave this command as currently implemented,
             and instead override the stateless hook ``do_Off()``.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("off")
 
     def do_Off(self):
         """
@@ -325,14 +512,7 @@ class SKASubarray(SKAObsDevice):
         """
         return (ReturnCode.OK, "Off command successful")
 
-    def Off_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `Off` command.
-        """
-        self.set_state(DevState.OFF)
-        self.set_status("The device is in OFF state.")
-
+    @DevFailed_if_False
     def is_AssignResources_allowed(self):
         """
         Check if command `AssignResources` is allowed in the current
@@ -342,11 +522,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(
-            self,
-            "is_AssignResources_allowed",
-            is_obs=[ObsState.EMPTY, ObsState.IDLE]
-        )
+        return self.state_model.is_assign_started_allowed()
 
     @command(dtype_in=('str',), doc_in="List of Resources to add to subarray.")
     @DebugIt()
@@ -359,14 +535,32 @@ class SKASubarray(SKAObsDevice):
             and instead override the stateless hook
             ``do_AssignResources()``.
         """
-        self._call_with_pattern(argin)
+        # Technical debt: can't use _call_with_pattern here because the
+        # pattern doesn't allow for device-dependent decision on what
+        # state model method to call. Should be fixed in pytransitions
+        # refactor
+        try:
+            if self.state_model.assign_started is not None:
+                self.state_model.assign_started()
 
-    def AssignResources_requested(self):
-        """
-        Method that manages device state in response to
-        `AssignResources` command being invoked.
-        """
-        self._obs_state = ObsState.RESOURCING
+            (return_code, message) = self.do_AssignResources(argin)
+
+            if return_code == ReturnCode.OK:
+                self.action_on_resourcing_succeeded()
+            elif return_code == ReturnCode.FAILED:
+                if self.state_model.assign_failed is not None:
+                    self.state_model.assign_failed()
+                else:
+                    self.state_model.go_to_fault()
+        except Exception:
+            self.state_model.go_to_fault()
+            raise
+
+    def action_on_resourcing_succeeded(self):
+        if self.is_resourced():
+            self.state_model.assign_succeeded_has_resources()
+        else:
+            self.state_model.assign_succeeded_no_resources()
 
     def do_AssignResources(self, argin):
         """
@@ -388,19 +582,10 @@ class SKASubarray(SKAObsDevice):
                 self._assigned_resources.append(resource)
         return (ReturnCode.OK, "Resources assigned")
 
-    def AssignResources_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `AssignResources` command.
-        """
-        if self.is_resourced():
-            self._obs_state = ObsState.IDLE
-        else:
-            self._obs_state = ObsState.EMPTY
-
     def is_resourced(self):
         return self._assigned_resources
 
+    @DevFailed_if_False
     def is_ReleaseResources_allowed(self):
         """
         Check if command `ReleaseResources` is allowed in the current
@@ -410,8 +595,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(self, "is_ReleaseResources_allowed",
-                             is_obs=[ObsState.IDLE])
+        return self.state_model.is_release_started_allowed()
 
     @command(
         dtype_in=('str',),
@@ -429,14 +613,26 @@ class SKASubarray(SKAObsDevice):
         :param argin: the resources to be released
         :type argin: list of str
         """
-        return self._call_with_pattern(argin)
+        # Technical debt: can't use _call_with_pattern here because the
+        # pattern doesn't allow for device-dependent decision on what
+        # state model method to call. Should be fixed in pytransitions
+        # refactor
+        try:
+            if self.state_model.release_started is not None:
+                self.state_model.release_started()
 
-    def ReleaseResources_requested(self):
-        """
-        Method that manages device state in response to
-        `ReleaseResources` command being invoked.
-        """
-        self._obs_state = ObsState.RESOURCING
+            (return_code, message) = self.do_ReleaseResources(argin)
+
+            if return_code == ReturnCode.OK:
+                self.action_on_resourcing_succeeded()
+            elif return_code == ReturnCode.FAILED:
+                if self.state_model.release_failed is not None:
+                    self.state_model.release_failed()
+                else:
+                    self.state_model.go_to_fault()
+        except Exception:
+            self.state_model.go_to_fault()
+            raise
 
     def do_ReleaseResources(self, argin):
         """
@@ -458,16 +654,7 @@ class SKASubarray(SKAObsDevice):
                 self._assigned_resources.remove(resource)
         return (ReturnCode.OK, "Resources released")
 
-    def ReleaseResources_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `ReleaseResources` command.
-        """
-        if self.is_resourced():
-            self._obs_state = ObsState.IDLE
-        else:
-            self._obs_state = ObsState.EMPTY
-
+    @DevFailed_if_False
     def is_ReleaseAllResources_allowed(self):
         """
         Check if command `ReleaseAllResources` is allowed in the current
@@ -477,8 +664,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(self, "is_ReleaseAllResources_allowed",
-                             is_obs=[ObsState.IDLE])
+        return self.state_model.is_release_started_allowed()
 
     @command()
     @DebugIt()
@@ -493,14 +679,26 @@ class SKASubarray(SKAObsDevice):
         :return: list of resources removed
         :rtype: list of string
         """
-        self._call_with_pattern()
+        # Technical debt: can't use _call_with_pattern here because the
+        # pattern doesn't allow for device-dependent decision on what
+        # state model method to call. Should be fixed in pytransitions
+        # refactor
+        try:
+            if self.state_model.release_started is not None:
+                self.state_model.release_started()
 
-    def ReleaseAllResources_requested(self):
-        """
-        Method that manages device state in response to
-        `ReleaseAllResources` command being invoked.
-        """
-        self._obs_state = ObsState.RESOURCING
+            (return_code, message) = self.do_ReleaseAllResources()
+
+            if return_code == ReturnCode.OK:
+                self.state_model.release_succeeded_no_resources()
+            elif return_code == ReturnCode.FAILED:
+                if self.state_model.release_failed is not None:
+                    self.state_model.release_failed()
+                else:
+                    self.state_model.go_to_fault()
+        except Exception:
+            self.state_model.go_to_fault()
+            raise
 
     def do_ReleaseAllResources(self):
         """
@@ -517,13 +715,7 @@ class SKASubarray(SKAObsDevice):
         resources = self._assigned_resources[:]
         return self.do_ReleaseResources(resources)
 
-    def ReleaseAllResources_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `ReleaseAllResources` command.
-        """
-        self._obs_state = ObsState.EMPTY
-
+    @DevFailed_if_False
     def is_Configure_allowed(self):
         """
         Check if command `Configure` is allowed in the current
@@ -533,8 +725,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(self, "is_Configure_allowed",
-                             is_obs=[ObsState.IDLE, ObsState.READY])
+        return self.state_model.is_configure_started_allowed()
 
     @command(
         dtype_in='DevVarLongStringArray',
@@ -552,14 +743,7 @@ class SKASubarray(SKAObsDevice):
         :param argin: configuration specification
         :type argin: string
         """
-        self._call_with_pattern(argin)
-
-    def Configure_requested(self):
-        """
-        Method that manages device state in response to `Configure`
-        command being invoked.
-        """
-        self._obs_state = ObsState.CONFIGURING
+        self._call_with_pattern("configure", argin)
 
     def do_Configure(self, argin):
         """
@@ -587,29 +771,10 @@ class SKASubarray(SKAObsDevice):
 
         return (ReturnCode.OK, "Capability configured")
 
-    @guard(is_obs=[ObsState.CONFIGURING])
-    def Configure_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `Configure` command.
-        """
-        if self.is_configured():
-            self._obs_state = ObsState.READY
-        else:
-            self._obs_state = ObsState.IDLE
-
-    def is_configured(self):
-        """
-        Checks if this subarray has any configured capabilities at all.
-
-        :return: whether this subarray has any configured capabilities.
-        :rtype: boolean
-        """
-        return any(self._configured_capabilities.values())
-
     def _deconfigure(self):
         self._configured_capabilities = {k:0 for k in self._configured_capabilities}
 
+    @DevFailed_if_False
     def is_Scan_allowed(self):
         """
         Check if command `Scan` is allowed in the current device state.
@@ -618,8 +783,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(self, "is_Scan_allowed",
-                             is_obs=[ObsState.READY])
+        return self.state_model.is_scan_started_allowed()
 
     @command(dtype_in=('str',),)
     @DebugIt()
@@ -634,14 +798,7 @@ class SKASubarray(SKAObsDevice):
         :param argin: Information about the scan
         :type argin: Array of str
         """
-        self._call_with_pattern(argin)
-
-    def Scan_requested(self):
-        """
-        Method that manages device state in response to `Scan` command
-        being invoked.
-        """
-        self._obs_state = ObsState.SCANNING
+        self._call_with_pattern("scan", argin)
 
     def do_Scan(self, argin):
         """
@@ -663,14 +820,7 @@ class SKASubarray(SKAObsDevice):
         # with EndScan() or Abort().
         return (ReturnCode.STARTED, "Scan started")
 
-    @guard(is_obs=[ObsState.SCANNING])
-    def Scan_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `Scan` command.
-        """
-        self._obs_state = ObsState.READY
-
+    @DevFailed_if_False
     def is_EndScan_allowed(self):
         """
         Check if command `EndScan` is allowed in the current device state.
@@ -679,8 +829,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(self, "is_EndScan_allowed",
-                             is_obs=[ObsState.SCANNING])
+        return self.state_model.is_scan_completed_allowed()
 
     @command()
     @DebugIt()
@@ -693,7 +842,7 @@ class SKASubarray(SKAObsDevice):
             and instead override the stateless hook
             ``do_EndScan()``.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("end_scan")
 
     def do_EndScan(self):
         """
@@ -709,13 +858,7 @@ class SKASubarray(SKAObsDevice):
         """
         return (ReturnCode.OK, "EndScan command successful")
 
-    def EndScan_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `EndScan` command.
-        """
-        self._obs_state = ObsState.READY
-
+    @DevFailed_if_False
     def is_End_allowed(self):
         """
         Check if command `End` is allowed in the current device state.
@@ -724,8 +867,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(self, "is_End_allowed",
-                             is_obs=[ObsState.READY])
+        return self.state_model.is_end_allowed()
 
     @command(
     )
@@ -740,7 +882,7 @@ class SKASubarray(SKAObsDevice):
             and instead override the stateless hook
             ``do_End()``.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("end")
 
     def do_End(self):
         """
@@ -757,13 +899,7 @@ class SKASubarray(SKAObsDevice):
         self._deconfigure()
         return (ReturnCode.OK, "End successful")
 
-    def End_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `End` command.
-        """
-        self._obs_state = ObsState.IDLE
-
+    @DevFailed_if_False
     def is_Abort_allowed(self):
         """
         Check if command `Abort` is allowed in the current device state.
@@ -772,12 +908,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(
-            self,
-            "is_Abort_allowed",
-            is_obs=[ObsState.IDLE, ObsState.CONFIGURING, ObsState.READY,
-                    ObsState.SCANNING, ObsState.RESETTING]
-        )
+        return self.state_model.is_abort_allowed()
 
     @command()
     @DebugIt()
@@ -791,7 +922,7 @@ class SKASubarray(SKAObsDevice):
             and instead override the stateless hook
             ``do_Abort()``.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("abort")
 
     def do_Abort(self):
         """
@@ -808,13 +939,7 @@ class SKASubarray(SKAObsDevice):
         # Here we should stop any current running configuring or scan.
         return (ReturnCode.OK, "Abort command successful")
 
-    def Abort_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `Abort` command.
-        """
-        self._obs_state = ObsState.ABORTED
-
+    @DevFailed_if_False
     def is_Reset_allowed(self):
         """
         Check if command `Reset` is allowed in the current device state.
@@ -827,11 +952,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(
-            self,
-            "is_Reset_allowed",
-            is_obs=[ObsState.ABORTED, ObsState.FAULT]
-        )
+        return self.state_model.is_reset_allowed()
 
     @command()
     @DebugIt()
@@ -852,7 +973,7 @@ class SKASubarray(SKAObsDevice):
             and instead override the stateless hook
             ``do_Reset()``.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("reset")
 
     def do_Reset(self):
         """
@@ -869,20 +990,15 @@ class SKASubarray(SKAObsDevice):
         # Don't call superclass command because this command has a completely
         # different semantics for subarrays.
 
-        # Here we need to abort any configuring or running scan
+        # We might have interrupted a long-running command such as a Configure
+        # or a Scan, so we need to clean up from that.
         pass
 
         # Now totally deconfigure
         self._deconfigure()
         return (ReturnCode.OK, "Reset successful")
 
-    def Reset_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `Reset` command.
-        """
-        self._obs_state = ObsState.IDLE
-
+    @DevFailed_if_False
     def is_Restart_allowed(self):
         """
         Check if command `Restart` is allowed in the current device
@@ -892,11 +1008,7 @@ class SKASubarray(SKAObsDevice):
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
-        return guard.require(
-            self,
-            "is_Restart_allowed",
-            is_obs=[ObsState.ABORTED, ObsState.FAULT]
-        )
+        return self.state_model.is_restart_allowed()
 
     @command()
     @DebugIt()
@@ -910,7 +1022,7 @@ class SKASubarray(SKAObsDevice):
             and instead override the stateless hook
             ``do_Restart()``.
         """
-        self._call_with_pattern()
+        self._call_with_pattern("restart")
 
     def do_Restart(self):
         """
@@ -924,7 +1036,8 @@ class SKASubarray(SKAObsDevice):
             only.
         :rtype: (ReturnCode, str)
         """
-        # Here we need to abort any configuring or running scan
+        # We might have interrupted a long-running command such as a Configure
+        # or a Scan, so we need to clean up from that.
         pass
 
         # Now totally deconfigure
@@ -934,14 +1047,6 @@ class SKASubarray(SKAObsDevice):
         self.do_ReleaseAllResources()
 
         return (ReturnCode.OK, "Reset successful")
-
-    def Restart_completed(self, return_code):
-        """
-        Method that manages device state in response to completion of
-        the `Restart` command.
-        """
-        self._obs_state = ObsState.EMPTY
-
 
 # ----------
 # Run server

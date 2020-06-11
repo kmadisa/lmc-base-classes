@@ -354,6 +354,50 @@ class ReturnCode(enum.IntEnum):
     """
 
 
+def DevFailed_if_False(func):
+    """
+    Decorator that raises a DevFailed exception if the wrapped function
+    returns False. It is useful for Tango-style `is_[Command]_allowed`
+    methods. If the method returns False, Tango will throw a DevFailed
+    exception that blames the disallowal on device State, which may not
+    be correct. This decorator is a simple way to beat Tango to the
+    punch by throwing a well-constructed exception.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        boolean_return = func(*args, **kwargs)
+        if not boolean_return:
+            Except.throw_exception(
+                "OPERATION_NOT_ALLOWED",
+                "{}: disallowed in current state.".format(func.__name__),
+                func.__name__,
+                ErrSeverity.ERR
+            )
+        return boolean_return
+    return wrapper
+
+
+class check_first:
+    """
+    Decorator for use in StateModel classes, that checks if an action
+    may be performed in the current state before performing it
+    """
+    def __init__(self, hook=None):
+        self.hook = hook
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(model, *args, **kwargs):
+            action = self.hook or func.__name__
+            is_allowed = getattr(model, f"is_{action}_allowed", None)
+            if is_allowed is not None:
+                if not is_allowed():
+                    raise ValueError(
+                        f"Action '{action}' not allowed in current state."
+                    )
+            return func(model, *args, **kwargs)
+        return wrapper
+
 class guard:
     """
     Method decorator that only permits a device method to be run if the
