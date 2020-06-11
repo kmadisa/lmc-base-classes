@@ -11,9 +11,13 @@ other useful enumerations.
 """
 
 import enum
-from functools import wraps
 import inspect
+
+from functools import wraps
+
 from tango import Except, ErrSeverity
+
+from ska.base.faults import GuardLookupError, StateModelError
 
 # ---------------------------------
 # Core SKA Control Model attributes
@@ -369,7 +373,7 @@ def DevFailed_if_False(func):
         if not boolean_return:
             Except.throw_exception(
                 "OPERATION_NOT_ALLOWED",
-                "{}: disallowed in current state.".format(func.__name__),
+                f"{func.__name__}: disallowed in current state.",
                 func.__name__,
                 ErrSeverity.ERR
             )
@@ -392,7 +396,7 @@ class check_first:
             is_allowed = getattr(model, f"is_{action}_allowed", None)
             if callable(is_allowed):
                 if not is_allowed():
-                    raise ValueError(
+                    raise StateModelError(
                         f"Action '{action}' not allowed in current state."
                     )
             return func(model, *args, **kwargs)
@@ -475,10 +479,8 @@ class guard:
         :type func: function
         """
         if name in cls.checks:
-            raise LookupError(
-                "Cannot register guard: name '{}' is already registered.".format(
-                    name
-                )
+            raise GuardLookupError(
+                f"Cannot register guard: name '{name}' is already registered."
             )
         cls.checks[name] = func
 
@@ -500,8 +502,12 @@ class guard:
             be the value that the named check must take in order for the
             check to pass
         """
-        return guard.checks[check](device, value)
-
+        if check in guard.checks:
+            return guard.checks[check](device, value)
+        else:
+            raise GuardLookupError(
+                f"Requested check '{check}' is not registered. Available: {sorted(guard.checks)}"
+            )
     @classmethod
     def _throw(cls, origin, check):
         """
@@ -517,7 +523,7 @@ class guard:
         """
         Except.throw_exception(
             "OPERATION_NOT_ALLOWED",
-            "{}: disallowed on check '{}'".format(origin, check),
+            f"{origin}: disallowed on check '{check}'",
             origin,
             ErrSeverity.ERR
         )

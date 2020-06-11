@@ -15,3 +15,12 @@ class LoggingLevelError(SKABaseError):
 
 class LoggingTargetError(SKABaseError):
     """Error parsing logging target string."""
+
+
+class StateModelError(ValueError):
+    """Error in state machine model related to transitions or state."""
+
+
+class GuardLookupError(LookupError):
+    """Error accessing or registering a guard method."""
+
