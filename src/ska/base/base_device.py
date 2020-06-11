@@ -657,7 +657,7 @@ class SKABaseDevice(Device):
         started_action = getattr(self.state_model, started_name, None)
         do_method = getattr(self, do_name, None)
         succeeded_action = getattr(self.state_model, succeeded_name, None)
-        failed_action = getattr(self.state_model, failed_name, None)
+        failed_action = getattr(self.state_model, failed_name, self.state_model.to_fault)
 
         try:
             if started_action is not None:
@@ -671,11 +671,10 @@ class SKABaseDevice(Device):
             if return_code == ReturnCode.OK:
                 succeeded_action()  # pylint: disable=not-callable
             elif return_code == ReturnCode.FAILED:
-                if failed_action is not None:
-                    failed_action()
-                else:
-                    self.state_model.to_fault()
+                failed_action()  # pylint: disable=not-callable
         except Exception:
+            self.logger.exception(
+                f"Error executing '{action}'/'{command_name}' with argin '{argin}'")
             self.state_model.to_fault()
             raise
 
