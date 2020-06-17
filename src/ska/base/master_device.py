@@ -32,7 +32,7 @@ class SKAMaster(SKABaseDevice):
         """
         A class for the SKAMaster's init_device() "command".
         """
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for device initialisation.
 
@@ -40,15 +40,12 @@ class SKAMaster(SKABaseDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do(target, logger)
+            (return_code, message) = super().do(target)
 
             target._element_logger_address = ""
             target._element_alarm_address = ""

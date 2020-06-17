@@ -499,11 +499,9 @@ class BaseCommand:
         :type argin: ANY
         """
         if argin is None:
-            (return_code, message) = self.do(self.target, self.logger)
+            (return_code, message) = self.do(self.target)
         else:
-            (return_code, message) = self.do(
-                self.target, self.logger, argin=argin
-            )
+            (return_code, message) = self.do(self.target, argin=argin)
 
         self.logger.info(
             f"Exiting command {self.name} with return code {return_code!s}, "
@@ -511,7 +509,7 @@ class BaseCommand:
         )
         return (return_code, message)
 
-    def do(self, target, logger, argin=None):
+    def do(self, target, argin=None):
         """
         Hook for the functionality that the command implements. This
         class provides stub functionality; subclasses should subclass
@@ -526,7 +524,7 @@ class BaseCommand:
         :type argin: ANY
         """
         message = "BaseCommand.do() stub implementation executed OK"
-        logger.info(message)
+        self.logger.info(message)
         return (ReturnCode.OK, message)
 
 

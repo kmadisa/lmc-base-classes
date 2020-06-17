@@ -539,7 +539,7 @@ class SKABaseDevice(Device):
             """
             super().__init__(target, state_model, "init", logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for device initialisation.
 
@@ -547,9 +547,6 @@ class SKABaseDevice(Device):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -567,7 +564,7 @@ class SKABaseDevice(Device):
 
             try:
                 # create TANGO Groups dict, according to property
-                logger.debug(
+                self.logger.debug(
                     "Groups definitions: {}".format(
                         target.GroupDefinitions
                     )
@@ -575,13 +572,13 @@ class SKABaseDevice(Device):
                 target.groups = get_groups_from_json(
                     target.GroupDefinitions
                 )
-                logger.info(
+                self.logger.info(
                     "Groups loaded: {}".format(
                         sorted(target.groups.keys())
                     )
                 )
             except GroupDefinitionsError:
-                logger.info(
+                self.logger.debug(
                     "No Groups loaded for device: {}".format(
                         target.get_name()
                     )
@@ -613,7 +610,7 @@ class SKABaseDevice(Device):
             """
             super().__init__(target, state_model, "reset", logger=logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for device reset.
 
@@ -632,7 +629,7 @@ class SKABaseDevice(Device):
             target._test_mode = TestMode.NONE
 
             message = "Reset command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     _logging_config_lock = threading.Lock()

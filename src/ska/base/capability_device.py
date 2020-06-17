@@ -26,7 +26,7 @@ class SKACapability(SKAObsDevice):
     A Subarray handling device. It exposes the instances of configured capabilities.
     """
     class InitCommand(SKAObsDevice.InitCommand):
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for device initialisation.
 
@@ -34,22 +34,19 @@ class SKACapability(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do(target, logger)
+            (return_code, message) = super().do(target)
 
             target._activation_time = 0.0
             target._configured_instances = 0
             target._used_components = [""]
 
             message = "SKACapability initialisation completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     # PROTECTED REGION ID(SKACapability.class_variable) ENABLED START #

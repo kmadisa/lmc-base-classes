@@ -238,7 +238,7 @@ class SKASubarray(SKAObsDevice):
         """
         A class for the SKASubarray's init_device() "command".
         """
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for device initialisation.
 
@@ -246,15 +246,12 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do(target, logger)
+            (return_code, message) = super().do(target)
 
             # Initialize attribute values.
             target._activation_time = 0.0
@@ -274,7 +271,7 @@ class SKASubarray(SKAObsDevice):
                 target._configured_capabilities = {}
 
             message = "SKASubarray initialisation completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class OnCommand(ActionCommand):
@@ -301,7 +298,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "on", logger=logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for On() command functionality.
 
@@ -309,16 +306,13 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
             message = "On command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class OffCommand(ActionCommand):
@@ -345,7 +339,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "off", logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for Off() command functionality.
 
@@ -353,16 +347,13 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
             message = "Off command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class _ResourcingCommand(DualActionCommand):
@@ -410,7 +401,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "assign", logger)
 
-        def do(self, target, logger, argin):
+        def do(self, target, argin):
             """
             Stateless hook for AssignResources() command functionality.
 
@@ -418,9 +409,6 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :param argin: The resources to be assigned
             :type argin: list of str
             :return: A tuple containing a return code and a string
@@ -431,7 +419,7 @@ class SKASubarray(SKAObsDevice):
             target._assign_resources(argin)
 
             message = "AssignResources command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class ReleaseResourcesCommand(_ResourcingCommand):
@@ -458,7 +446,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "release", logger)
 
-        def do(self, target, logger, argin):
+        def do(self, target, argin):
             """
             Stateless hook for ReleaseResources() command functionality.
 
@@ -466,9 +454,6 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :param argin: The resources to be assigned
             :type argin: list of str
             :return: A tuple containing a return code and a string
@@ -479,14 +464,14 @@ class SKASubarray(SKAObsDevice):
             target._release_resources(argin)
 
             message = "ReleaseResources command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class ReleaseAllResourcesCommand(ReleaseResourcesCommand):
         """
         A class for SKASubarray's ReleaseAllResources() command.
         """
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for ReleaseAllResources() command functionality.
 
@@ -494,9 +479,6 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :param argin: The resources to be assigned
             :type argin: list of str
             :return: A tuple containing a return code and a string
@@ -507,7 +489,7 @@ class SKASubarray(SKAObsDevice):
             target._release_all_resources()
 
             message = "ReleaseAllResources command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class ConfigureCommand(DualActionCommand):
@@ -549,7 +531,7 @@ class SKASubarray(SKAObsDevice):
             if len(capabilities_instances) != len(capability_types):
                 raise ValueError("Argin value lists size mismatch.")
 
-        def do(self, target, logger, argin):
+        def do(self, target, argin):
             """
             Stateless hook for Configure() command functionality.
 
@@ -557,9 +539,6 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :param argin: The configuration
             :type argin: [list of int, list of str]
             :return: A tuple containing a return code and a string
@@ -577,7 +556,7 @@ class SKASubarray(SKAObsDevice):
                 target._configured_capabilities[capability_type] += capability_instances
 
             message = "Configure command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class ScanCommand(DualActionCommand):
@@ -604,7 +583,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "scan", logger)
 
-        def do(self, target, logger, argin):
+        def do(self, target, argin):
             """
             Stateless hook for Scan() command functionality.
 
@@ -612,9 +591,6 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :param argin: Scan info
             :type argin: str
             :return: A tuple containing a return code and a string
@@ -623,7 +599,7 @@ class SKASubarray(SKAObsDevice):
             :rtype: (ReturnCode, str)
             """
             message = "Scan command STARTED"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.STARTED, message)
 
     class EndScanCommand(ActionCommand):
@@ -650,7 +626,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "end_scan", logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for EndScan() command functionality.
 
@@ -658,16 +634,13 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
             message = "EndScan command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class EndCommand(ActionCommand):
@@ -694,7 +667,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "end", logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for End() command functionality.
 
@@ -702,9 +675,6 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -713,7 +683,7 @@ class SKASubarray(SKAObsDevice):
             target._deconfigure()
 
             message = "End command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class AbortCommand(DualActionCommand):
@@ -740,7 +710,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "abort", logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for Abort() command functionality.
 
@@ -748,16 +718,13 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
             message = "Abort command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class ObsResetCommand(DualActionCommand):
@@ -784,7 +751,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "obs_reset", logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for ObsReset() command functionality.
 
@@ -792,9 +759,6 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param logger: the logger for this Command.
-            :type logger: a logger that implements the standard library
-                logger interface
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -807,7 +771,7 @@ class SKASubarray(SKAObsDevice):
             target._deconfigure()
 
             message = "ObsReset command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     class RestartCommand(DualActionCommand):
@@ -834,7 +798,7 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "restart", logger)
 
-        def do(self, target, logger):
+        def do(self, target):
             """
             Stateless hook for Restart() command functionality.
 
@@ -857,7 +821,7 @@ class SKASubarray(SKAObsDevice):
             target._release_all_resources()
 
             message = "Restart command completed OK"
-            logger.info(message)
+            self.logger.info(message)
             return (ReturnCode.OK, message)
 
     # PROTECTED REGION ID(SKASubarray.class_variable) ENABLED START #
