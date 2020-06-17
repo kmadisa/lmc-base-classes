@@ -258,11 +258,10 @@ class SKASubarray(SKAObsDevice):
 
             # Initialize attribute values.
             target._activation_time = 0.0
-            target._assigned_resources = [""]
-            target._assigned_resources.clear()
+            target._assigned_resources = []
 
-            # device._configured_capabilities is will be kept as a
-            # dictionary internally. The keys and value will represent
+            # device._configured_capabilities is kept as a
+            # dictionary internally. The keys and values will represent
             # the capability type name and the number of instances,
             # respectively.
             try:
@@ -562,7 +561,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             :param argin: The configuration
-            :type argin: list of str
+            :type argin: [list of int, list of str]
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.

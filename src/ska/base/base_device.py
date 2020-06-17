@@ -830,8 +830,8 @@ class SKABaseDevice(Device):
 
         Subclasses that have no need to override the default
         default implementation of state management may leave
-        ``init_device()`` alone and override `do_init_device()``
-        instead.
+        ``init_device()`` alone.  Override the ``do()`` method
+        on the nested class ``InitCommand`` instead.
 
         :return: None
         """

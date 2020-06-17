@@ -4,6 +4,9 @@ Module for SKA Control Model (SCM) related code.
 
 For further details see the SKA1 CONTROL SYSTEM GUIDELINES (CS_GUIDELINES MAIN VOLUME)
 Document number:  000-000000-010 GDL
+And architectural updates:
+https://jira.skatelescope.org/browse/ADR-8
+https://confluence.skatelescope.org/pages/viewpage.action?pageId=105416556
 
 The enumerated types mapping to the states and modes are included here, as well as
 other useful enumerations.
@@ -376,10 +379,11 @@ class DeviceStateModel:
             `ACTION` is attempted, the transitions table will be checked
             for an entry under key `(IN-STATE, EVENT)`. If no such key
             exists, the action will be denied and a model will raise a
-            `ValueError`. If the key does exist, then its value
+            `StateModelError`. If the key does exist, then its value
             `(OUT-STATE, SIDE-EFFECT)` will result in the model
             transitioning to state `OUT-STATE`, and executing
-            `SIDE-EFFECT`, which must a function or lambda.
+            `SIDE-EFFECT`, which must be a function or lambda that
+            takes a single parameter - a model instance.
         :type transitions: dict
         :param initial_state: the starting state of the model
         :type initial_state: a state with an entry in the transitions
@@ -471,7 +475,7 @@ class BaseCommand:
         """
         What to do when the command is called. This base class simply
         calls ``do()`` or ``do(argin)``, depending on whether the
-        ``argin`` argument is provided
+        ``argin`` argument is provided.
 
         :param argin: the argument passed to the Tango command, if
             present
@@ -482,7 +486,7 @@ class BaseCommand:
 
     def _call_do(self, argin=None):
         """
-        Help method that ensure the ``do`` method is called with the
+        Helper method that ensures the ``do`` method is called with the
         right arguments, and that the call is logged.
 
         :param argin: the argument passed to the Tango command, if
@@ -528,7 +532,7 @@ class ActionCommand(BaseCommand):
     """
     Abstract base class for a tango command, which checks a state model
     to find out whether the command is allowed to be run, and after
-    running, sends an actions to that state model, thus driving device
+    running, sends an action to that state model, thus driving device
     state.
     """
     def __init__(self, target, state_model, action_hook, logger=None):
@@ -536,7 +540,7 @@ class ActionCommand(BaseCommand):
         Create a new ActionCommand for a device.
 
         :param target: the object that this base command acts upon. For
-            example, the device that this BaseCommand implements the
+            example, the device that this ActionCommand implements the
             command for.
         :type target: object
         :param state_model: the state model that this command uses to
@@ -625,13 +629,13 @@ class ActionCommand(BaseCommand):
 
     def succeeded(self):
         """
-        Callback for the successful completion of the command
+        Callback for the successful completion of the command.
         """
         self._perform_action(self._succeeded_hook)
 
     def failed(self):
         """
-        Callback for the failed completion of the command
+        Callback for the failed completion of the command.
         """
         self._perform_action(self._failed_hook)
 
@@ -645,10 +649,10 @@ class ActionCommand(BaseCommand):
     def _is_action_allowed(self, action):
         """
         Helper method; whether a given action is permitted in the
-        current state of the state model
+        current state of the state model.
 
         :param action: the action on the state model that is being
-            strutinized
+            scrutinised
         :type action: string
         :returns: whether the action is allowed
         :rtype: boolean
@@ -671,14 +675,15 @@ class DualActionCommand(ActionCommand):
     Abstract base class for a tango command ActionCommand, which
     additionally sends a "started" action to the state model to advise
     the the action has been started. It thus supports commands with
-    transient DOING states.
+    transient DOING states.  For example, a "configure" action
+    which moves from CONFIGURING to CONFIGURED.
     """
     def __init__(self, target, state_model, action_hook, logger=None):
         """
         Create a new DualActionCommand
 
         :param target: the object that this base command acts upon. For
-            example, the device that this BaseCommand implements the
+            example, the device that this DualActionCommand implements the
             command for.
         :type target: object
         :param state_model: the state model that this command uses to
