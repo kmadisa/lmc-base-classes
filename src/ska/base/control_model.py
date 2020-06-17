@@ -11,9 +11,10 @@ other useful enumerations.
 """
 
 import enum
-from functools import wraps
-import inspect
-from tango import Except, ErrSeverity
+import logging
+from ska.base.faults import ReturnCodeError, StateModelError
+
+module_logger = logging.getLogger(__name__)
 
 # ---------------------------------
 # Core SKA Control Model attributes
@@ -173,24 +174,30 @@ class ObsState(enum.IntEnum):
     pre-defined pattern).
     """
 
-    ABORTED = 6
+    ABORTING = 6
     """
-    The subarray has had its previous state interrupted by the
-    controller.
+    The subarray is trying to abort what it was doing due to having been
+    interrupted by the controller.
     """
 
-    RESETTING = 7
+    ABORTED = 7
+    """
+    The subarray has had its previous state interrupted by the
+    controller, and is now in an aborted state.
+    """
+
+    RESETTING = 8
     """
     The subarray device is resetting to the IDLE state.
     """
 
-    FAULT = 8
+    FAULT = 9
     """
     The subarray has detected an error in its observing state making it
     impossible to remain in the previous state.
     """
 
-    RESTARTING = 9
+    RESTARTING = 10
     """
     The subarray device is restarting, as the last known stable state is
     where no resources were allocated and the configuration undefined.
@@ -354,230 +361,398 @@ class ReturnCode(enum.IntEnum):
     """
 
 
-class guard:
+class DeviceStateModel:
     """
-    Method decorator that only permits a device method to be run if the
-    device meets certain guard conditions on device state, otherwise
-    raising a ``tango.DevFailed`` exception.
-
-    It can be used on a command itself (e.g. `Scan()`), or, to conform
-    to Tango subsystem expectations, as the implementation of the
-    `is_[Command]_allowed` method (e.g. `is_Scan_allowed()`) that the
-    Tango subsystem calls prior to calling the command itself. It can
-    also be used on callbacks, to check that the state is still what the
-    callback expected it to be.
-
-    Additionally, it provides an equivalent classmethod `requires` for
-    inline checking; and `allows`, which checks but returns a boolean
-    rather than raising an exception.
-
-    Since this guard knows nothing of the implementation details of any
-    device, the device class must use `guard.register` to register the
-    checks that it may want to perform, before making use of the
-    decorator.
-
-    :example: `FooDevice` has a `state` attribute, the current value of
-        which is stored in `self._state`. The device command `Foo()` is
-        allowed only when the state is `READY`. The device class (note
-        class not instance) first registers a check named "state":
-
-        ::
-
-            guard.register(
-                "state",
-                lambda device, value: device._state == value
-            )
-
-        and then it can use the ``@guard`` decorator to ensure
-        that the state is checked before `Foo()` is run:
-
-        ::
-
-            @guard(state=READY)
-            def Foo(self):
-                pass
-
-        It can also use the `requires` classmethod to perform inline
-        checks:
-
-        ::
-
-            def is_Foo_allowed(self):
-                return guard.requires(self, state=READY)
-
-        All devices in the runtime have access to registered checks, so
-        subclasses have access to checks registered by base classes.
+    Base class for the state model used by SKA devices.
     """
 
-    checks = {}
-
-    @classmethod
-    def register(cls, name, func):
+    def __init__(self, transitions, initial_state):
         """
-        Registers a device state guard with the ``@guard`` decorator.
+        Create a new device state model.
 
-        :note: Registered guards are available to all devices in the
-            runtime. This was not the design intent and the behaviour
-            may change in future. Meanwhile, for safety, guards must be
-            registered under unique names and cannot be replaced.
-        :param name: the name of the check. Once registered, this check
-            may be invoked by using the name as an argument to the
-            decorator or `allows` classmethod.
-        :type name: string
-        :param func: a function that takes two arguments: the device to
-            be checked, and a comparison value to be passed into the
-            check.
-        :type func: function
+        :param transitions: a dictionary for which each key is a (state,
+            event) tuple, and each value is a (state, side-effect)
+            tuple. When the device is in state `IN-STATE`, and action
+            `ACTION` is attempted, the transitions table will be checked
+            for an entry under key `(IN-STATE, EVENT)`. If no such key
+            exists, the action will be denied and a model will raise a
+            `ValueError`. If the key does exist, then its value
+            `(OUT-STATE, SIDE-EFFECT)` will result in the model
+            transitioning to state `OUT-STATE`, and executing
+            `SIDE-EFFECT`, which must a function or lambda.
+        :type transitions: dict
+        :param initial_state: the starting state of the model
+        :type initial_state: a state with an entry in the transitions
+            table
         """
-        if name in cls.checks:
-            raise LookupError(
-                "Cannot register guard: name '{}' is already registered.".format(
-                    name
-                )
-            )
-        cls.checks[name] = func
+        self._transitions = transitions
+        self._state = initial_state
 
-    @classmethod
-    def _check(cls, device, check, value):
+    def update_transitions(self, transitions):
         """
-        Checks to see whether a single device state check passed.
+        Update the transitions table with new transitions.
 
-        :param device: the device that the checks are to be performed
-            against. Since it will usually be the device itself that
-            invokes this method, this argument will usually be passed
-            `self`
-        :type device: A tango device, normally the `self` of the device
-            invoking the check
-        :param check: the name of the check to be performed. The check
-            must already have been registered using `guard.register`.
-        :type check: str
-        :param value: an argument to the named check; this will ypically
-            be the value that the named check must take in order for the
-            check to pass
+        :param transitions: new transitions to be included in the
+            transitions table. Transitions with pre-existing keys will
+            replace the transitions for that key. Transitions with novel
+            keys will be added. There is no provision for removing
+            transitions
+        :type transitions: dict
         """
-        return guard.checks[check](device, value)
+        self._transitions.update(transitions)
 
-    @classmethod
-    def _throw(cls, origin, check):
+    def is_action_allowed(self, action):
         """
-        Helper classmethod that constructs and throws a
-        ``Tango.DevFailed`` exception.
+        Whether a given action is allowed in the current state.
 
-        :param origin: the origin of the check; typically the name of
-            the command that the check was being conducted for.
-        :type origin: string
-        :param check: the name of the check that failed.
-        :type check: string
-
+        :param action: an action, as given in the transitions table
+        :type action: ANY
         """
-        Except.throw_exception(
-            "OPERATION_NOT_ALLOWED",
-            "{}: disallowed on check '{}'".format(origin, check),
-            origin,
-            ErrSeverity.ERR
-        )
+        return (self._state, action) in self._transitions
 
-    @classmethod
-    def allows(cls, device, **checks):
+    def try_action(self, action):
         """
-        Performs the provided device state checks against the device,
-        and returns a boolean advising whether all checks pass.
+        Checks whether a given action is allowed in the current state,
+        and raises a StateModelError if it is not.
 
-        :param device: the device that the checks are to be performed
-            against. Since it will usually be the device itself that
-            invokes this method, this argument will usually be passed
-            `self`
-        :type device: A tango device, normally the `self` of the device
-            invoking the check
-        :param checks: kwargs or a dictionary where keys are names of
-            checks to be performed, and values are values that the
-            checks are supposed to check for.
-        :example: A Tango device has an `On()` command that is only allowed
-            to run when the device is in OFF state:
-
-            ::
-
-                def foo(self):
-                    if guard.allows(self, state=ON):
-                        do_foo()
-                    else:
-                        self.logger.warning("Sorry, you can't do_foo now!")
-        """
-        for check in checks:
-            if not guard._check(device, check, checks[check]):
-                return False
-        return True
-
-    @classmethod
-    def require(cls, device, origin=None, **checks):
-        """
-        Performs the provided device state checks against the device,
-        and raises a tango.DevFailed exception if any check does not
-        pass
-
-        :param device: the device that the checks are to be performed
-            against. Since it will usually be the device itself that
-            invokes this method, this argument will usually be passed
-            `self`
-        :type device: A tango device, normally the `self` of the device
-            invoking the check
-        :param origin: (optional) the origin of this check; used to
-            construct a helpful DevFailed exception. If omitted, the
-            origin will be extracted from the calling frame. That won't
-            work though if this classmethod is called from within a
-            decorator, so in that case the origin must be passed.
-        :type origin: string
-        :param checks: kwargs or a dictionary where keys are names of
-            checks to be performed, and values are values that the
-            checks are supposed to check for.
-        :return: True
+        :param action: an action, as given in the transitions table
+        :type action: ANY
+        :raises StateModelError: if the action is not allowed in the
+            current state
+        :returns: True if the action is allowed
         :rtype: boolean
-        :example: A Tango device has an `On()` command that is only allowed
-            to run when the device is in OFF state:
-
-            ::
-
-                def is_Simulate_allowed(self):
-                    guard.require(self, mode=SIMULATION)
         """
-        if origin is None:
-            frame = inspect.currentframe().f_back
-            calling_method = frame.f_code.co_name
-            calling_object = frame.f_locals["self"]
-            origin = getattr(calling_object, calling_method).__qualname__
-
-        for check in checks:
-            if not guard._check(device, check, checks[check]):
-                guard._throw(origin, check)
+        if not self.is_action_allowed(action):
+            raise StateModelError(
+                f"Action '{action}' not allowed in current state."
+            )
         return True
 
-    def __init__(self, **checks):
+    def perform_action(self, action):
         """
-        Initialises a callable guard object, to function as a
-        device method generator.
+        Performs an action on the state model
 
-        :param checks: a dictionary (typically kwargs) where the keys
-            are the names of the checks to be run, and the values are
-            passed into the check (typically the value that the check
-            will have to take in order to pass). Each check must first
-            have been registered by the device class, or a KeyError will
-            occur when the decorator is called.
-        :type checks: dict (typically kwargs)
-        """
-        self.checks = checks
-
-    def __call__(self, func):
-        """
-        The decorator method. Makes this class callable, and ensures
-        that when called on a device method, a wrapped method is
-        returned.
-
-        :param func: The target of the decorator
-        :type func: function
+        :param action: an action, as given in the transitions table
+        :type action: ANY
+        :raises StateModelError: if the action is not allowed in the
+            current state
 
         """
-        @wraps(func)
-        def wrapped(device, *args, **kwargs):
-            guard.require(device, **self.checks, origin=func.__name__)
-            return func(device, *args, **kwargs)
-        return wrapped
+        self.try_action(action)
+
+        (self._state, side_effect) = self._transitions[(self._state, action)]
+        if side_effect is not None:
+            side_effect(self)
+
+
+class BaseCommand:
+    """
+    Abstract base class for Tango device server commands
+    """
+
+    def __init__(self, target, logger=None):
+        """
+        Creates a new BaseCommand object for a device.
+
+        :param target: the object that this base command acts upon. For
+            example, the device that this BaseCommand implements the
+            command for.
+        :type target: object
+        :param logger: the logger to be used by this Command. If not
+            provided, then a default module logger will be used.
+        :type logger: a logger that implements the standard library
+            logger interface
+        """
+        self.name = self.__class__.__name__
+        self.target = target
+        self.logger = logger or module_logger
+
+    def __call__(self, argin=None):
+        """
+        What to do when the command is called. This base class simply
+        calls ``do()`` or ``do(argin)``, depending on whether the
+        ``argin`` argument is provided
+
+        :param argin: the argument passed to the Tango command, if
+            present
+        :type argin: ANY
+        """
+        (return_code, message) = self._call_do(argin)
+        return ((return_code,), (message,))
+
+    def _call_do(self, argin=None):
+        """
+        Help method that ensure the ``do`` method is called with the
+        right arguments, and that the call is logged.
+
+        :param argin: the argument passed to the Tango command, if
+            present
+        :type argin: ANY
+        """
+        if argin is None:
+            (return_code, message) = self.do(self.target, self.logger)
+        else:
+            (return_code, message) = self.do(
+                self.target, self.logger, argin=argin
+            )
+
+        self.logger.debug(
+            "Exiting command {} with return code {}, message '{}'".format(
+                self.name,
+                return_code,
+                message
+            )
+        )
+        return (return_code, message)
+
+    def do(self, target, logger, argin=None):
+        """
+        Hook for the functionality that the command implements. This
+        class provides stub functionality; subclasses should subclass
+        this method with their command functionality.
+
+        :param target: the object that this base command acts upon. For
+            example, the device that this BaseCommand implements the
+            command for.
+        :type target: object
+        :param argin: the argument passed to the Tango command, if
+            present
+        :type argin: ANY
+        """
+        message = "BaseCommand.do() stub implementation executed OK"
+        logger.info(message)
+        return (ReturnCode.OK, message)
+
+
+class ActionCommand(BaseCommand):
+    """
+    Abstract base class for a tango command, which checks a state model
+    to find out whether the command is allowed to be run, and after
+    running, sends an actions to that state model, thus driving device
+    state.
+    """
+    def __init__(self, target, state_model, action_hook, logger=None):
+        """
+        Create a new ActionCommand for a device.
+
+        :param target: the object that this base command acts upon. For
+            example, the device that this BaseCommand implements the
+            command for.
+        :type target: object
+        :param state_model: the state model that this command uses to
+             check that it is allowed to run, and that it drives with
+             actions.
+        :type state_model: SKABaseClassStateModel or a subclass of same
+        :param action_hook: a hook for the command, used to build
+            actions that will be sent to the state model; for example,
+            if the hook is "scan", then success of the command will
+            result in action "scan_succeeded" being sent to the state
+            model
+        :type action_hook: string
+        :param logger: the logger to be used by this Command. If not
+            provided, then a default module logger will be used.
+        :type logger: a logger that implements the standard library
+            logger interface
+        """
+        super().__init__(target, logger=logger)
+        self.state_model = state_model
+        self._succeeded_hook = f"{action_hook}_succeeded"
+        self._failed_hook = f"{action_hook}_failed"
+
+    def __call__(self, argin=None):
+        """
+        What to do when the command is called. This is implemented to
+        check that the command is allowed to run, then run the command,
+        then send an action to the state model advising whether the
+        command succeeded or failed.
+
+        :param argin: the argument passed to the Tango command, if
+            present
+        :type argin: ANY
+        """
+        self.check_allowed()
+        try:
+            (return_code, message) = self._call_do(argin)
+            self._returned(return_code)
+        except Exception:
+            self.fatal_error()
+            raise
+        return (return_code, message)
+
+    def check_allowed(self):
+        """
+        Checks whether the command is allowed to be run in the current
+        state of the state model.
+
+        :returns: True if the command is allowed to be run
+        :raises StateModelError: if the command is not allowed to be run
+        """
+        if not self.is_allowed():
+            raise StateModelError(
+                f"Command {self.name} is not allowed in current state."
+            )
+        return True
+
+    def _returned(self, return_code):
+        """
+        Helper method that handles the return of the ``do()`` method.
+        If the return code is OK or FAILED, then it performs an
+        appropriate action on the state model. Otherwise it raises an
+        error.
+
+        :param return_code: The return_code returned by the ``do()``
+            method
+        :type return_code: ReturnCode
+        """
+        if return_code == ReturnCode.OK:
+            self.succeeded()
+        elif return_code == ReturnCode.FAILED:
+            self.failed()
+        else:
+            raise ReturnCodeError(
+                "ActionCommands may only return with code OK or FAILED."
+            )
+
+    def is_allowed(self):
+        """
+        Whether this command is allowed to run in the current state of
+        the state model.
+
+        :returns: whether this command is allowed to run
+        :rtype: boolean
+        """
+        return self._is_action_allowed(self._succeeded_hook)
+
+    def succeeded(self):
+        """
+        Callback for the successful completion of the command
+        """
+        self._perform_action(self._succeeded_hook)
+
+    def failed(self):
+        """
+        Callback for the failed completion of the command
+        """
+        self._perform_action(self._failed_hook)
+
+    def fatal_error(self):
+        """
+        Callback for a fatal error in the command, such as an unhandled
+        exception.
+        """
+        self._perform_action("fatal_error")
+
+    def _is_action_allowed(self, action):
+        """
+        Helper method; whether a given action is permitted in the
+        current state of the state model
+
+        :param action: the action on the state model that is being
+            strutinized
+        :type action: string
+        :returns: whether the action is allowed
+        :rtype: boolean
+        """
+        return self.state_model.is_action_allowed(action)
+
+    def _perform_action(self, action):
+        """
+        Helper method; performs an action on the state model, thus
+        driving state
+
+        :param action: the action to perform on the state model
+        :type action: string
+        """
+        self.state_model.perform_action(action)
+
+
+class DualActionCommand(ActionCommand):
+    """
+    Abstract base class for a tango command ActionCommand, which
+    additionally sends a "started" action to the state model to advise
+    the the action has been started. It thus supports commands with
+    transient DOING states.
+    """
+    def __init__(self, target, state_model, action_hook, logger=None):
+        """
+        Create a new DualActionCommand
+
+        :param target: the object that this base command acts upon. For
+            example, the device that this BaseCommand implements the
+            command for.
+        :type target: object
+        :param state_model: the state model that this command uses to
+             check that it is allowed to run, and that it drives with
+             actions.
+        :type state_model: SKABaseClassStateModel or a subclass of same
+        :param action_hook: a hook for the command, used to build
+            actions that will be sent to the state model; for example,
+            if the hook is "scan", then success of the command will
+            result in action "scan_succeeded" being sent to the state
+            model
+        :type action_hook: string
+        :param logger: the logger to be used by this Command. If not
+            provided, then a default module logger will be used.
+        :type logger: a logger that implements the standard library
+            logger interface
+        """
+        super().__init__(target, state_model, action_hook, logger=logger)
+        self._started_hook = f"{action_hook}_started"
+
+    def __call__(self, argin=None):
+        """
+        What to do when the command is called. This is implemented to
+        check that the command is allowed to run, then send an action to
+        the state model advising that the command has started, then run
+        the command, then send an action to the state model advising
+        if the command has succeeded or failed. (If the command returns
+        prior to completion, no action is sent, but it then becomes the
+        responsibility of a completion callback to ensure that the
+        ``succeeded()`` or ``failed()`` method is eventually called.)
+
+        :param argin: the argument passed to the Tango command, if
+            present
+        :type argin: ANY
+        """
+
+        self.check_allowed()
+        try:
+            self.started()
+            (return_code, message) = self._call_do(argin)
+            self._returned(return_code)
+        except Exception:
+            self.fatal_error()
+            raise
+        return (return_code, message)
+
+    def is_allowed(self):
+        """
+        Whether this command is allowed to run in the current state of
+        the state model.
+
+        :returns: whether this command is allowed to run
+        :rtype: boolean
+        """
+        return self._is_action_allowed(self._started_hook)
+
+    def started(self):
+        """
+        Lets the state model know that the command has started
+        """
+        self._perform_action(self._started_hook)
+
+    def _returned(self, return_code):
+        """
+        Helper method that handles the return of the ``do()`` method.
+        If the return code is OK or FAILED, then it performs an
+        appropriate action on the state model. Otherwise it does
+        nothing.
+
+        :param return_code: The return_code returned by the ``do()``
+            method
+        :type return_code: ReturnCode
+        """
+        if return_code == ReturnCode.OK:
+            self.succeeded()
+        elif return_code == ReturnCode.FAILED:
+            self.failed()

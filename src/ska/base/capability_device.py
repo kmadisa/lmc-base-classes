@@ -9,16 +9,13 @@
 Capability handling device
 """
 # PROTECTED REGION ID(SKACapability.additionnal_import) ENABLED START #
-# Standard import
-import os
-import sys
-
 # Tango imports
 from tango import DebugIt
 from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
-from ska.base import SKAObsDevice, release
+from ska.base import SKAObsDevice
+from ska.base.control_model import ReturnCode
 # PROTECTED REGION END #    //  SKACapability.additionnal_imports
 
 __all__ = ["SKACapability", "main"]
@@ -28,6 +25,33 @@ class SKACapability(SKAObsDevice):
     """
     A Subarray handling device. It exposes the instances of configured capabilities.
     """
+    class InitCommand(SKAObsDevice.InitCommand):
+        def do(self, target, logger):
+            """
+            Stateless hook for device initialisation.
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param logger: the logger for this command.
+            :type logger: a logger that implements the standard library
+                logger interface
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            (return_code, message) = super().do(target, logger)
+
+            target._activation_time = 0.0
+            target._configured_instances = 0
+            target._used_components = [""]
+
+            message = "SKACapability initialisation completed OK"
+            logger.info(message)
+            return (ReturnCode.OK, message)
+
     # PROTECTED REGION ID(SKACapability.class_variable) ENABLED START #
     # PROTECTED REGION END #    //  SKACapability.class_variable
 
@@ -74,22 +98,6 @@ class SKACapability(SKAObsDevice):
     # General methods
     # ---------------
 
-    def do_init_device(self):
-        """
-        Method that initialises device attribute and other internal
-        values. This method is called, possibly asynchronously, by
-        ``init_device``. Subclasses that have no need to override the
-        default implementation of state management and asynchrony may
-        leave ``init_device`` alone and override this method instead.
-        """
-        (return_code, message) = super().do_init_device()
-
-        self._activation_time = 0.0
-        self._configured_instances = 0
-        self._used_components = [""]
-
-        return (return_code, message)
-
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKACapability.always_executed_hook) ENABLED START #
         pass
@@ -131,12 +139,14 @@ class SKACapability(SKAObsDevice):
         return self._used_components
         # PROTECTED REGION END #    //  SKACapability.usedComponents_read
 
-
     # --------
     # Commands
     # --------
 
-    @command(dtype_in='uint16', doc_in="The number of instances to configure for this Capability.",)
+    @command(
+        dtype_in='uint16',
+        doc_in="The number of instances to configure for this Capability.",
+    )
     @DebugIt()
     def ConfigureInstances(self, argin):
         # PROTECTED REGION ID(SKACapability.ConfigureInstances) ENABLED START #
@@ -149,16 +159,17 @@ class SKACapability(SKAObsDevice):
         self._configured_instances = argin
         # PROTECTED REGION END #    //  SKACapability.ConfigureInstances
 
+
 # ----------
 # Run server
 # ----------
-
 
 def main(args=None, **kwargs):
     # PROTECTED REGION ID(SKACapability.main) ENABLED START #
     """Main function of the SKACapability module."""
     return run((SKACapability,), args=args, **kwargs)
     # PROTECTED REGION END #    //  SKACapability.main
+
 
 if __name__ == '__main__':
     main()

@@ -13,7 +13,6 @@ device.
 # PROTECTED REGION ID(SKABaseDevice.additionnal_import) ENABLED START #
 # Standard imports
 import enum
-import inspect
 import logging
 import logging.handlers
 import socket
@@ -34,10 +33,10 @@ from tango import DevState
 import ska.logging as ska_logging
 from ska.base import release
 from ska.base.control_model import (
-    AdminMode, ControlMode, SimulationMode, TestMode,
-    HealthState, LoggingLevel, ReturnCode,
-    guard
+    AdminMode, ControlMode, SimulationMode, TestMode, HealthState,
+    LoggingLevel, ReturnCode, DeviceStateModel
 )
+from ska.base.control_model import ActionCommand, DualActionCommand
 
 from ska.base.utils import get_groups_from_json
 from ska.base.faults import (GroupDefinitionsError,
@@ -308,156 +307,341 @@ class LoggingUtils:
 # PROTECTED REGION END #    //  SKABaseDevice.additionnal_import
 
 
-__all__ = ["SKABaseDevice", "main"]
+__all__ = ["SKABaseDevice", "SKABaseDeviceStateModel", "main"]
 
 
-class SKABaseDeviceStateModel():
+class SKABaseDeviceStateModel(DeviceStateModel):
     """
     Implements the state model for the SKABaseDevice
     """
-    guard.register(
-        "state",
-        lambda model, state: model._state == state
-    )
-    guard.register(
-        "states",
-        lambda model, states: model._state in states
-    )
-    guard.register(
-        "admin_modes",
-        lambda model, admin_modes: model._admin_mode in admin_modes
-    )
 
-    def __init__(self):
-        """
-        Initialises the model. Note that this does not imply moving to
-        INIT state. The INIT state is managed by the model itself.
-        """
-        self._admin_mode = None
-        self._state = None
+    _base_transitions = {
+        ('UNINITIALISED', 'init_started'): (
+            "INIT (ENABLED)",
+            lambda self: (
+                self._set_admin_mode(AdminMode.MAINTENANCE),
+                self._set_state(DevState.INIT),
+            )
+        ),
+        ('INIT (ENABLED)', 'init_succeeded'): (
+            'OFF',
+            lambda self: self._set_state(DevState.OFF)
+        ),
+        ('INIT (ENABLED)', 'init_failed'): (
+            'FAULT (ENABLED)',
+            lambda self: self._set_state(DevState.FAULT)
+        ),
+        ('INIT (ENABLED)', 'fatal_error'): (
+            "FAULT (ENABLED)",
+            lambda self: self._set_state(DevState.FAULT)
+        ),
+        ('INIT (ENABLED)', 'to_notfitted'): (
+            "INIT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
+        ),
+        ('INIT (ENABLED)', 'to_offline'): (
+            "INIT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
+        ),
+        ('INIT (ENABLED)', 'to_maintenance'): (
+            "INIT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
+        ),
+        ('INIT (ENABLED)', 'to_online'): (
+            "INIT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.ONLINE)
+        ),
+        ('INIT (DISABLED)', 'init_succeeded'): (
+            'DISABLED',
+            lambda self: self._set_state(DevState.DISABLE)
+        ),
+        ('INIT (DISABLED)', 'init_failed'): (
+            'FAULT (DISABLED)',
+            lambda self: self._set_state(DevState.FAULT)
+        ),
+        ('INIT (DISABLED)', 'fatal_error'): (
+            "FAULT (DISABLED)",
+            lambda self: self._set_state(DevState.FAULT)
+        ),
+        ('INIT (DISABLED)', 'to_notfitted'): (
+            "INIT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
+        ),
+        ('INIT (DISABLED)', 'to_offline'): (
+            "INIT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
+        ),
+        ('INIT (DISABLED)', 'to_maintenance'): (
+            "INIT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
+        ),
+        ('INIT (DISABLED)', 'to_online'): (
+            "INIT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.ONLINE)
+        ),
+        ('FAULT (DISABLED)', 'reset_succeeded'): (
+            "DISABLED",
+            lambda self: self._set_state(DevState.DISABLE)
+        ),
+        ('FAULT (DISABLED)', 'reset_failed'): ("FAULT (DISABLED)", None),
+        ('FAULT (DISABLED)', 'fatal_error'): ("FAULT (DISABLED)", None),
+        ('FAULT (DISABLED)', 'to_notfitted'): (
+            "FAULT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
+        ),
+        ('FAULT (DISABLED)', 'to_offline'): (
+            "FAULT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
+        ),
+        ('FAULT (DISABLED)', 'to_maintenance'): (
+            "FAULT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
+        ),
+        ('FAULT (DISABLED)', 'to_online'): (
+            "FAULT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.ONLINE)
+        ),
+        ('FAULT (ENABLED)', 'reset_succeeded'): (
+            "OFF",
+            lambda self: self._set_state(DevState.OFF)
+        ),
+        ('FAULT (ENABLED)', 'reset_failed'): ("FAULT (ENABLED)", None),
+        ('FAULT (ENABLED)', 'fatal_error'): ("FAULT (ENABLED)", None),
+        ('FAULT (ENABLED)', 'to_notfitted'): (
+            "FAULT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)),
+        ('FAULT (ENABLED)', 'to_offline'): (
+            "FAULT (DISABLED)",
+            lambda self: self._set_admin_mode(AdminMode.OFFLINE)),
+        ('FAULT (ENABLED)', 'to_maintenance'): (
+            "FAULT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
+        ),
+        ('FAULT (ENABLED)', 'to_online'): (
+            "FAULT (ENABLED)",
+            lambda self: self._set_admin_mode(AdminMode.ONLINE)
+        ),
+        ('DISABLED', 'to_offline'): (
+            "DISABLED",
+            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
+        ),
+        ('DISABLED', 'to_online'): (
+            "OFF",
+            lambda self: (
+                self._set_admin_mode(AdminMode.ONLINE),
+                self._set_state(DevState.OFF)
+            )
+        ),
+        ('DISABLED', 'to_maintenance'): (
+            "OFF",
+            lambda self: (
+                self._set_admin_mode(AdminMode.MAINTENANCE),
+                self._set_state(DevState.OFF)
+            )
+        ),
+        ('DISABLED', 'to_notfitted'): (
+            "DISABLED",
+            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
+        ),
+        ('DISABLED', 'fatal_error'): (
+            "FAULT (DISABLED)",
+            lambda self: self._set_state(DevState.FAULT)
+        ),
+        ('OFF', 'to_notfitted'): (
+            "DISABLED",
+            lambda self: (
+                self._set_admin_mode(AdminMode.NOT_FITTED),
+                self._set_state(DevState.DISABLE)
+            )
+        ),
+        ('OFF', 'to_offline'): (
+            "DISABLED", lambda self: (
+                self._set_admin_mode(AdminMode.OFFLINE),
+                self._set_state(DevState.DISABLE)
+            )
+        ),
+        ('OFF', 'to_online'): (
+            "OFF",
+            lambda self: self._set_admin_mode(AdminMode.ONLINE)
+        ),
+        ('OFF', 'to_maintenance'): (
+            "OFF",
+            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
+        ),
+        ('OFF', 'fatal_error'): (
+            "FAULT (ENABLED)",
+            lambda self: self._set_state(DevState.FAULT)
+        ),
+    }
 
-    def get_admin_mode(self):
+    def __init__(self, admin_mode_callback=None, state_callback=None):
         """
-        Getter for admin_mode
+        Initialises the state model.
 
-        :returns: the admin mode
-        :rtype: AdminMode
+        :param admin_mode_callback: A callback to be called when a
+            transition implies a change to admin_mode
+        :type admin_mode_callback: callable
+        :param state_callback: A callback to be called when a transition
+            implies a change to device state
+        :type admin_mode_callback: callable
         """
-        return self._admin_mode
+        super().__init__(self._base_transitions, "UNINITIALISED")
 
-    def set_admin_mode(self, value):
-        """
-        Setter for admin_mode. Ensures that the model remains consistent
-        following a change to admin_mode.
+        self._admin_mode_callback = admin_mode_callback
+        self._state_callback = state_callback
 
-        :param value: the new admin_mode value
-        :type value: AdminMode
+    def _set_admin_mode(self, admin_mode):
         """
-        enabling_modes = [AdminMode.ONLINE, AdminMode.MAINTENANCE]
-        disabling_modes = [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
+        Helper method: calls the admin_mode callback if one exists
 
-        if self._state == DevState.DISABLE and value in enabling_modes:
-            self._state = DevState.OFF
-        elif self._state in [DevState.OFF, DevState.ON] and value in disabling_modes:
-            self._state = DevState.DISABLE
+        :param admin_mode: the new admin_mode value
+        :type admin_mode: AdminMode
+        """
+        if self._admin_mode_callback is not None:
+            self._admin_mode_callback(admin_mode)
 
-        self._admin_mode = value
+    def _set_state(self, state):
+        """
+        Helper method: calls the state callback if one exists
 
-    def get_state(self):
+        :param state: the new state value
+        :type admin_mode: DevState
         """
-        Getter for state
-
-        :return: the state
-        :rtype: DevState
-        """
-        return self._state
-
-    def init_device_called(self):
-        """
-        Call this method to let the model know that the device's
-        `init_device` method has been called.
-        """
-        self._state = DevState.INIT
-
-        # The "factory default" for AdminMode is MAINTENANCE. But fear
-        # not, it is a memorized attribute and will soon be overwritten
-        # with its memorized value.
-        self._admin_mode = AdminMode.MAINTENANCE
-
-    @guard(state=DevState.INIT)
-    def init_device_completed(self):
-        """
-        Call this method to let the state model know that the device's
-        `init_device` method has completed successfully.
-        """
-        if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
-            self._state = DevState.OFF
-        else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
-            self._state = DevState.DISABLE
-
-    def Reset_called(self):
-        """
-        Call this method to let the state model know that the device's
-        `Reset` command has been called.
-        """
-        pass
-
-    def Reset_completed(self):
-        """
-        Call this method to let the state model know that the device's
-        `Reset` command has completed successfully.
-        """
-        self._health_state = HealthState.OK
-        self._control_mode = ControlMode.REMOTE
-        self._simulation_mode = SimulationMode.FALSE
-        self._test_mode = TestMode.NONE
-
-        if self._admin_mode in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
-            self._state = DevState.OFF
-        else:  # admin_mode is in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]
-            self._state = DevState.DISABLE
-
-    def go_to_fault(self):
-        """
-        Call this method to tell the state model to go to FAULT state.
-        """
-        self._state = DevState.FAULT
+        if self._state_callback is not None:
+            self._state_callback(state)
 
 
 class SKABaseDevice(Device):
     """
     A generic base device for SKA.
-
-    Advice for subclassers:
-
-    * This module implements the SKA control model into
-      SKABaseDeviceStateModel so that you don't have to. Instead of
-      subclassing commands and `init_device` directly, you are highly
-      recommended to subclass the stateless hooks commencing with `do_`;
-      for example, `do_init_device`, `do_Scan`, etc.
-    * You `do_` hooks must return a `(return_code, message)` tuple, e.g.
-      `return (ReturnCode.OK, "Scan command executed")
-    * Synchronous `do_` hooks must return a return code of OK or FAILED.
-      This will ensure that state is updated upon completion.
-    * Asynchronous `do_` hooks must return a return code of STARTED or
-      QUEUED; and it is your responsibility to ensure that your
-      asynchronous work eventually calls
-      `state_model.[Command]_completed` with a return code of OK or
-      FAILED.
-    * If your `do_` hook raises an uncaught exception, the device will
-      be put into state FAULT.
-    * If you must modify the handling of state, you may do so by
-      subclassing the `[Command]_calls` and `[Command]_completed`
-      methods of the SKABaseDeviceStateModel class.
     """
-    state_model_class = SKABaseDeviceStateModel
+    class InitCommand(DualActionCommand):
+        """
+        A class for the SKABaseDevice's init_device() "command".
+        """
+        def __init__(self, target, state_model, logger=None):
+            """
+            Create a new InitCommand
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param state_model: the state model that this command uses
+                 to check that it is allowed to run, and that it drives
+                 with actions.
+            :type state_model: SKABaseClassStateModel or a subclass of
+                same
+            :param logger: the logger to be used by this Command. If not
+                provided, then a default module logger will be used.
+            :type logger: a logger that implements the standard library
+                logger interface
+            """
+            super().__init__(target, state_model, "init", logger)
+
+        def do(self, target, logger):
+            """
+            Stateless hook for device initialisation.
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param logger: the logger for this command.
+            :type logger: a logger that implements the standard library
+                logger interface
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            target._health_state = HealthState.OK
+            target._control_mode = ControlMode.REMOTE
+            target._simulation_mode = SimulationMode.FALSE
+            target._test_mode = TestMode.NONE
+
+            target._build_state = '{}, {}, {}'.format(release.name,
+                                                      release.version,
+                                                      release.description)
+            target._version_id = release.version
+
+            try:
+                # create TANGO Groups dict, according to property
+                logger.debug(
+                    "Groups definitions: {}".format(
+                        target.GroupDefinitions
+                    )
+                )
+                target.groups = get_groups_from_json(
+                    target.GroupDefinitions
+                )
+                logger.info(
+                    "Groups loaded: {}".format(
+                        sorted(target.groups.keys())
+                    )
+                )
+            except GroupDefinitionsError:
+                logger.info(
+                    "No Groups loaded for device: {}".format(
+                        target.get_name()
+                    )
+                )
+
+            return (ReturnCode.OK, "init_device executed")
+
+    class ResetCommand(ActionCommand):
+        """
+        A class for the SKABaseDevice's Reset() command.
+        """
+        def __init__(self, target, state_model, logger=None):
+            """
+            Create a new ResetCommand
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param state_model: the state model that this command uses
+                 to check that it is allowed to run, and that it drives
+                 with actions.
+            :type state_model: SKABaseClassStateModel or a subclass of
+                same
+            :param logger: the logger to be used by this Command. If not
+                provided, then a default module logger will be used.
+            :type logger: a logger that implements the standard library
+                logger interface
+            """
+            super().__init__(target, state_model, "reset", logger=logger)
+
+        def do(self, target, logger):
+            """
+            Stateless hook for device reset.
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            target._health_state = HealthState.OK
+            target._control_mode = ControlMode.REMOTE
+            target._simulation_mode = SimulationMode.FALSE
+            target._test_mode = TestMode.NONE
+
+            message = "Reset command completed OK"
+            logger.info(message)
+            return (ReturnCode.OK, message)
 
     _logging_config_lock = threading.Lock()
     _logging_configured = False
 
     def _init_logging(self):
         """
-        This method initializes the logging mechanism, based on default properties.
+        This method initializes the logging mechanism, based on default
+        properties.
         """
 
         class EnsureTagsFilter(logging.Filter):
@@ -611,110 +795,82 @@ class SKABaseDevice(Device):
     # General methods
     # ---------------
 
-    def _update_device_state(self):
-        state = self.state_model.get_state()
-        if self.get_state() != state:
-            self.set_state(state)
-            self.set_status("The device is in {} state.".format(state))
-
-    def _call_with_pattern(self, argin=None):
+    def _update_admin_mode(self, mode):
         """
-        Implements the common calling pattern for all commands.
+        Helper method for changing admin_mode; passed to the state model
+        as a callback
 
-        :param argin: the argument provided to the Command, if any
-        :type argin: any tango argument type
-        :return: a ResultCode and descriptive message
-        :rtype: tango.DevVarLongStringArray
+        :param mode: the new admin_mode value
+        :type admin_mode: AdminMode
         """
-        command_name = inspect.currentframe().f_back.f_code.co_name
-        called_name = "{}_called".format(command_name)
-        do_name = "do_{}".format(command_name)
-        completed_name = "{}_completed".format(command_name)
-        failed_name = "{}_failed".format(command_name)
-
-        command_called = getattr(self.state_model, called_name, None)
-        do_command = getattr(self, do_name, None)
-        command_completed = getattr(self.state_model, completed_name, None)
-        command_failed = getattr(self.state_model, failed_name, None)
-
-        try:
-            if command_called is not None:
-                command_called()  # pylint: disable=not-callable
-                self._update_device_state()
-
-            if argin is None:
-                (return_code, message) = do_command()  # pylint: disable=not-callable
-            else:
-                (return_code, message) = do_command(argin)  # pylint: disable=not-callable
-
-            if return_code == ReturnCode.OK:
-                command_completed()  # pylint: disable=not-callable
-            elif return_code == ReturnCode.FAILED:
-                if command_failed is not None:
-                    command_failed()
-                else:
-                    self.state_model.go_to_fault()
-            self._update_device_state()
-        except Exception:
-            self.state_model.go_to_fault()
-            self._update_device_state()
-            raise
-
-        self.logger.info(
-            "Exiting {} with return code {}, message '{}'".format(
-                command_name,
-                return_code,
-                message
+        if mode != self._admin_mode:
+            self.logger.info(
+                f"Device adminMode changed from {self._admin_mode} to {mode}"
             )
-        )
-        return (return_code, message)
+            self._admin_mode = mode
+
+    def _update_state(self, state):
+        """
+        Helper method for changing state; passed to the state model as a
+        callback
+
+        :param state: the new state value
+        :type state: DevState
+        """
+        if state != self.get_state():
+            self.logger.info(
+                f"Device state changed from {self.get_state()} to {state}"
+            )
+            self.set_state(state)
+            self.set_status(f"The device is in {state} state.")
 
     def init_device(self):
         """
-        Method that initializes the tango device after startup.
+        Initializes the tango device after startup.
+
+        Subclasses that have no need to override the default
+        default implementation of state management may leave
+        ``init_device()`` alone and override `do_init_device()``
+        instead.
 
         :return: None
         """
-        super().init_device()
         try:
-            self.state_model = self.state_model_class()
-            self._call_with_pattern()
+            super().init_device()
+
+            self._init_logging()
+            self._init_state()
+            self._init_state_model()
+            self._init_command_objects()
+
+            self._init_command()
         except Exception:
             self.set_state(DevState.FAULT)
             self.set_status("The device is in FAULT state.")
-            raise
+            self.logger.exception("init_device() failed.")
 
-    def do_init_device(self):
+    def _init_state(self):
         """
-        Stateless hook for initialisation of device attributes and other
-        internal values. Subclasses that have no need to override the
-        default implementation of state management may leave
-        ``init_device`` alone and override this method instead.
-
-        :return: A tuple containing a return code and a string message
-            indicating status. The message is for information purpose
-            only.
-        :rtype: (ReturnCode, str)
+        Creates initial state attributes for the device
         """
-        self._health_state = HealthState.OK
-        self._control_mode = ControlMode.REMOTE
-        self._simulation_mode = SimulationMode.FALSE
-        self._test_mode = TestMode.NONE
+        self._admin_mode = None
 
-        self._build_state = '{}, {}, {}'.format(release.name, release.version,
-                                                release.description)
-        self._version_id = release.version
+    def _init_state_model(self):
+        """
+        Creates the state model for the device
+        """
+        self.state_model = SKABaseDeviceStateModel(
+            admin_mode_callback=self._update_admin_mode,
+            state_callback=self._update_state
+        )
 
-        self._init_logging()
-        try:
-            # create TANGO Groups objects dict, according to property
-            self.logger.debug("Groups definitions: {}".format(self.GroupDefinitions))
-            self.groups = get_groups_from_json(self.GroupDefinitions)
-            self.logger.info("Groups loaded: {}".format(sorted(self.groups.keys())))
-        except GroupDefinitionsError:
-            self.logger.info("No Groups loaded for device: {}".format(self.get_name()))
-
-        return (ReturnCode.OK, "init_device executed")
+    def _init_command_objects(self):
+        self._init_command = self.InitCommand(
+            self, self.state_model, self.logger
+        )
+        self._reset_command = self.ResetCommand(
+            self, self.state_model, self.logger
+        )
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKABaseDevice.always_executed_hook) ENABLED START #
@@ -787,8 +943,11 @@ class SKABaseDevice(Device):
 
         self._logging_level = lmc_logging_level
         self.logger.setLevel(_LMC_TO_PYTHON_LOGGING_LEVEL[lmc_logging_level])
-        self.logger.tango_logger.set_level(_LMC_TO_TANGO_LOGGING_LEVEL[lmc_logging_level])
-        self.logger.info('Logging level set to %s on Python and Tango loggers', lmc_logging_level)
+        self.logger.tango_logger.set_level(
+            _LMC_TO_TANGO_LOGGING_LEVEL[lmc_logging_level]
+        )
+        self.logger.info('Logging level set to %s on Python and Tango loggers',
+                         lmc_logging_level)
         # PROTECTED REGION END #    //  SKABaseDevice.loggingLevel_write
 
     def read_loggingTargets(self):
@@ -817,7 +976,8 @@ class SKABaseDevice(Device):
         :return: None.
         """
         device_name = self.get_name()
-        valid_targets = LoggingUtils.sanitise_logging_targets(value, device_name)
+        valid_targets = LoggingUtils.sanitise_logging_targets(value,
+                                                              device_name)
         LoggingUtils.update_logging_handlers(valid_targets, self.logger)
         # PROTECTED REGION END #    //  SKABaseDevice.loggingTargets_write
 
@@ -837,8 +997,9 @@ class SKABaseDevice(Device):
         Reads Admin Mode of the device.
 
         :return: Admin Mode of the device
+        :rtype: AdminMode
         """
-        return self.state_model._admin_mode
+        return self._admin_mode
         # PROTECTED REGION END #    //  SKABaseDevice.adminMode_read
 
     def write_adminMode(self, value):
@@ -847,11 +1008,20 @@ class SKABaseDevice(Device):
         Sets Admin Mode of the device.
 
         :param value: Admin Mode of the device.
+        :type value: AdminMode
 
         :return: None
         """
-        self.state_model.admin_mode = value
-        self._update_device_state()
+        if value == AdminMode.NOT_FITTED:
+            self.state_model.perform_action("to_notfitted")
+        elif value == AdminMode.OFFLINE:
+            self.state_model.perform_action("to_offline")
+        elif value == AdminMode.MAINTENANCE:
+            self.state_model.perform_action("to_maintenance")
+        elif value == AdminMode.ONLINE:
+            self.state_model.perform_action("to_online")
+        else:
+            raise ValueError(f"Unknown adminMode {value}")
         # PROTECTED REGION END #    //  SKABaseDevice.adminMode_write
 
     def read_controlMode(self):
@@ -933,31 +1103,33 @@ class SKABaseDevice(Device):
 
         :return: Version details of the device.
         """
-        return ['{}, {}'.format(self.__class__.__name__, self.read_buildState())]
+        return [f"{self.__class__.__name__}, {self.read_buildState()}"]
         # PROTECTED REGION END #    //  SKABaseDevice.GetVersionInfo
 
-    @command(
-    )
+    def is_Reset_allowed(self):
+        """
+        Whether the ``Reset()`` command is allowed to be run in the
+        current state
+
+        :returns: whether the ``Reset()`` command is allowed to be run in the
+            current state
+        :rtype: boolean
+        """
+        return self._reset_command.is_allowed()
+
+    @command()
     @DebugIt()
     def Reset(self):
         """
-        Command to reset the device to its default state.
-        """
-        self._call_with_pattern()
+        Reset the device from the FAULT state.
 
-    def do_Reset(self):
-        """
-        Stateless hook for implementation of ``Reset()`` command.
         Subclasses that have no need to override the default
         implementation of state management may leave ``Reset()`` alone
-        and override this method instead.
+        and override method ``do_Reset()`` instead.
 
-        :return: A tuple containing a return code and a string message
-            indicating status. The message is for information purpose
-            only.
-        :rtype: (ReturnCode, str)
+        :return: None
         """
-        return (ReturnCode.OK, "Device reset")
+        self._reset_command()
 
 # ----------
 # Run server
@@ -970,10 +1142,7 @@ def main(args=None, **kwargs):
     Main function of the SKABaseDevice module.
 
     :param args: None
-
     :param kwargs:
-
-    :return:
     """
     return run((SKABaseDevice,), args=args, **kwargs)
     # PROTECTED REGION END #    //  SKABaseDevice.main

@@ -4,23 +4,20 @@
 #
 #
 #
-""" SKAAlarmHandler
-
-A generic base device for Alarms for SKA. It exposes SKA alarms and SKA alerts as TANGO attributes.
-SKA Alarms and SKA/Element Alerts are rules-based configurable conditions that can be defined over multiple
-attribute values and quality factors, and are separate from the "built-in" TANGO attribute alarms.
+"""
+This module implements SKAAlarmHandler, a generic base device for Alarms
+for SKA. It exposes SKA alarms and SKA alerts as TANGO attributes. SKA
+Alarms and SKA/Element Alerts are rules-based configurable conditions
+that can be defined over multiple attribute values and quality factors,
+and are separate from the "built-in" TANGO attribute alarms.
 """
 # PROTECTED REGION ID(SKAAlarmHandler.additionnal_import) ENABLED START #
-# Standard imports
-import os
-import sys
-
 # Tango imports
 from tango import DebugIt
 from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
-from ska.base import SKABaseDevice #, release
+from ska.base import SKABaseDevice
 
 # PROTECTED REGION END #    //  SKAAlarmHandler.additionnal_import
 
@@ -246,6 +243,7 @@ def main(args=None, **kwargs):
     """
     return run((SKAAlarmHandler,), args=args, **kwargs)
     # PROTECTED REGION END #    //  SKAAlarmHandler.main
+
 
 if __name__ == '__main__':
     main()

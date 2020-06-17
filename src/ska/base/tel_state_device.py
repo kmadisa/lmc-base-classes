@@ -9,16 +9,12 @@
 A generic base device for Telescope State for SKA.
 """
 # PROTECTED REGION ID(SKATelState.additionnal_import) ENABLED START #
-# Standard import
-import os
-import sys
-
 # Tango imports
-from tango import DebugIt
+# from tango import DebugIt
 from tango.server import run, device_property
 
 # SKA specific imports
-from ska.base import SKABaseDevice, release
+from ska.base import SKABaseDevice
 # PROTECTED REGION END #    //  SKATelState.additionnal_imports
 
 __all__ = ["SKATelState", "main"]
@@ -39,7 +35,6 @@ class SKATelState(SKABaseDevice):
         dtype='str',
     )
 
-
     # ----------
     # Attributes
     # ----------
@@ -47,7 +42,6 @@ class SKATelState(SKABaseDevice):
     # ---------------
     # General methods
     # ---------------
-
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKATelState.always_executed_hook) ENABLED START #
         pass
@@ -61,7 +55,6 @@ class SKATelState(SKABaseDevice):
     # ------------------
     # Attributes methods
     # ------------------
-
 
     # --------
     # Commands
@@ -85,6 +78,7 @@ def main(args=None, **kwargs):
     """
     return run((SKATelState,), args=args, **kwargs)
     # PROTECTED REGION END #    //  SKATelState.main
+
 
 if __name__ == '__main__':
     main()

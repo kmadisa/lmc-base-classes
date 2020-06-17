@@ -7,19 +7,15 @@
 
 """ SKAMaster
 
-A master test
+Master device
 """
 # PROTECTED REGION ID(SKAMaster.additionnal_import) ENABLED START #
-# Standard imports
-import os
-import sys
-
 # Tango imports
 from tango import DebugIt
 from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
-from ska.base import SKABaseDevice, release
+from ska.base import SKABaseDevice
 from ska.base.utils import validate_capability_types, validate_input_sizes, convert_dict_to_list
 
 
@@ -30,8 +26,46 @@ __all__ = ["SKAMaster", "main"]
 
 class SKAMaster(SKABaseDevice):
     """
-    A master test
+    Master device
     """
+    class InitCommand(SKABaseDevice.InitCommand):
+        """
+        A class for the SKAMaster's init_device() "command".
+        """
+        def do(self, target, logger):
+            """
+            Stateless hook for device initialisation.
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param logger: the logger for this command.
+            :type logger: a logger that implements the standard library
+                logger interface
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            (return_code, message) = super().do(target, logger)
+
+            target._element_logger_address = ""
+            target._element_alarm_address = ""
+            target._element_tel_state_address = ""
+            target._element_database_address = ""
+            target._element_alarm_device = ""
+            target._element_tel_state_device = ""
+            target._element_database_device = ""
+            target._max_capabilities = {}
+            if target.MaxCapabilities:
+                for max_capability in target.MaxCapabilities:
+                    capability_type, max_capability_instances = max_capability.split(":")
+                    target._max_capabilities[capability_type] = int(max_capability_instances)
+            target._available_capabilities = target._max_capabilities.copy()
+
+            return (return_code, message)
+
     # PROTECTED REGION ID(SKAMaster.class_variable) ENABLED START #
     # PROTECTED REGION END #    //  SKAMaster.class_variable
 
@@ -73,7 +107,8 @@ class SKAMaster(SKABaseDevice):
     maxCapabilities = attribute(
         dtype=('str',),
         max_dim_x=20,
-        doc="Maximum number of instances of each capability type, e.g. 'CORRELATOR:512', 'PSS-BEAMS:4'.",
+        doc=("Maximum number of instances of each capability type,"
+             " e.g. 'CORRELATOR:512', 'PSS-BEAMS:4'."),
     )
 
     availableCapabilities = attribute(
@@ -86,33 +121,6 @@ class SKAMaster(SKABaseDevice):
     # ---------------
     # General methods
     # ---------------
-
-    def do_init_device(self):
-        """
-        Method that initialises device attribute and other internal
-        values. This method is called, possibly asynchronously, by
-        ``init_device``. Subclasses that have no need to override the
-        default implementation of state management and asynchrony may
-        leave ``init_device`` alone and override this method instead.
-        """
-        (return_code, message) = super().do_init_device()
-
-        # Initialize attribute values.
-        self._element_logger_address = ""
-        self._element_alarm_address = ""
-        self._element_tel_state_address = ""
-        self._element_database_address = ""
-        self._element_alarm_device = ""
-        self._element_tel_state_device = ""
-        self._element_database_device = ""
-        self._max_capabilities = {}
-        if self.MaxCapabilities:
-            for max_capability in self.MaxCapabilities:
-                capability_type, max_capability_instances = max_capability.split(":")
-                self._max_capabilities[capability_type] = int(max_capability_instances)
-        self._available_capabilities = self._max_capabilities.copy()
-
-        return (return_code, message)
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKAMaster.always_executed_hook) ENABLED START #
@@ -168,7 +176,11 @@ class SKAMaster(SKABaseDevice):
     # Commands
     # --------
 
-    @command(dtype_in='DevVarLongStringArray', doc_in="[nrInstances][Capability types]", dtype_out='bool',)
+    @command(
+        dtype_in='DevVarLongStringArray',
+        doc_in="[nrInstances][Capability types]",
+        dtype_out='bool',
+    )
     @DebugIt()
     def isCapabilityAchievable(self, argin):
         # PROTECTED REGION ID(SKAMaster.isCapabilityAchievable) ENABLED START #
@@ -202,15 +214,15 @@ class SKAMaster(SKABaseDevice):
         return True
         # PROTECTED REGION END #    //  SKAMaster.isCapabilityAchievable
 
+
 # ----------
 # Run server
 # ----------
-
-
 def main(args=None, **kwargs):
     # PROTECTED REGION ID(SKAMaster.main) ENABLED START #
     return run((SKAMaster,), args=args, **kwargs)
     # PROTECTED REGION END #    //  SKAMaster.main
+
 
 if __name__ == '__main__':
     main()

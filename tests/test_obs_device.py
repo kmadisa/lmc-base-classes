@@ -75,14 +75,6 @@ class TestSKAObsDevice(object):
         assert (re.match(versionPattern, versionInfo[0])) is not None
         # PROTECTED REGION END #    //  SKAObsDevice.test_GetVersionInfo
 
-    # PROTECTED REGION ID(SKAObsDevice.test_Reset_decorators) ENABLED START #
-    # PROTECTED REGION END #    //  SKAObsDevice.test_Reset_decorators
-    def test_Reset(self, tango_context):
-        """Test for Reset"""
-        # PROTECTED REGION ID(SKAObsDevice.test_Reset) ENABLED START #
-        assert tango_context.device.Reset() is None
-        # PROTECTED REGION END #    //  SKAObsDevice.test_Reset
-
     # PROTECTED REGION ID(SKAObsDevice.test_obsState_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKAObsDevice.test_obsState_decorators
     def test_obsState(self, tango_context):

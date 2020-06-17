@@ -168,14 +168,14 @@ class TestSKASubarray(object):
 
     # PROTECTED REGION ID(SKASubarray.test_Reset_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_Reset_decorators
-    def test_Reset(self, tango_context):
+    def test_ObsReset(self, tango_context):
         """Test for Reset"""
         # PROTECTED REGION ID(SKASubarray.test_Reset) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
         tango_context.device.Abort()
-        assert tango_context.device.Reset() is None
+        assert tango_context.device.ObsReset() is None
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
 
     # PROTECTED REGION ID(SKASubarray.test_Scan_decorators) ENABLED START #
@@ -202,9 +202,11 @@ class TestSKASubarray(object):
     def test_adminMode(self, tango_context):
         """Test for adminMode"""
         # PROTECTED REGION ID(SKASubarray.test_adminMode) ENABLED START #
-        assert tango_context.device.adminMode == AdminMode.ONLINE
-        tango_context.device.adminMode = AdminMode.MAINTENANCE
         assert tango_context.device.adminMode == AdminMode.MAINTENANCE
+        assert tango_context.device.state() == DevState.OFF
+        tango_context.device.adminMode = AdminMode.OFFLINE
+        assert tango_context.device.adminMode == AdminMode.OFFLINE
+        assert tango_context.device.state() == DevState.DISABLE
         # PROTECTED REGION END #    //  SKASubarray.test_adminMode
 
     # PROTECTED REGION ID(SKASubarray.test_buildState_decorators) ENABLED START #
@@ -311,14 +313,20 @@ class TestSKASubarray(object):
         'state_under_test, action_under_test',
         itertools.product(
             [
-                "DISABLED", "OFF",
-                # "FAULT",
-                "EMPTY", "IDLE", "READY", "SCANNING", "ABORTED",
-                # "OBSFAULT",
+                # not testing FAULT or OBSFAULT states because in the current
+                # implementation the interface cannot be used to get the device
+                # into these states
+                "DISABLED", "OFF", "EMPTY", "IDLE", "READY", "SCANNING",
+                "ABORTED",
             ],
-            ["notfitted", "offline", "online", "maintenance", "on", "off",
-             "assign", "release", "release (all)", "releaseall", "configure",
-             "scan", "endscan", "end", "abort", "reset", "restart"]
+            [
+                # not testing 'reset' action because in the current
+                # implementation the interface cannot be used to get the device
+                # into a state from which 'reset' is a valid action
+                "notfitted", "offline", "online", "maintenance", "on", "off",
+                "assign", "release", "release (all)", "releaseall",
+                "configure", "scan", "endscan", "end", "abort", "obsreset",
+                "restart"]
         )
     )
     def test_state_machine(self, tango_context,
@@ -335,7 +343,7 @@ class TestSKASubarray(object):
         states = {
             "DISABLED":
                 ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.DISABLE, ObsState.EMPTY),
-            "FAULT":
+            "FAULT":  # not tested
                 ([AdminMode.NOT_FITTED, AdminMode.OFFLINE, AdminMode.ONLINE, AdminMode.MAINTENANCE],
                  DevState.FAULT, ObsState.EMPTY),
             "OFF":
@@ -350,7 +358,7 @@ class TestSKASubarray(object):
                 ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.SCANNING),
             "ABORTED":
                 ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.ABORTED),
-            "OBSFAULT":
+            "OBSFAULT":  # not tested
                 ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.FAULT),
         }
 
@@ -373,6 +381,8 @@ class TestSKASubarray(object):
                 lambda d: d.On(),
             "off":
                 lambda d: d.Off(),
+            "reset":
+                lambda d: d.Reset(),  # not tested
             "assign":
                 lambda d: d.AssignResources(
                     ["Dummy resource 1", "Dummy resource 2"]
@@ -395,8 +405,8 @@ class TestSKASubarray(object):
                 lambda d: d.End(),
             "abort":
                 lambda d: d.Abort(),
-            "reset":
-                lambda d: d.Reset(),
+            "obsreset":
+                lambda d: d.ObsReset(),
             "restart":
                 lambda d: d.Restart(),
         }
@@ -414,41 +424,21 @@ class TestSKASubarray(object):
             ("OFF", "online"): "OFF",
             ("OFF", "maintenance"): "OFF",
             ("OFF", "on"): "EMPTY",
-            ("EMPTY", "notfitted"): "DISABLED",
-            ("EMPTY", "offline"): "DISABLED",
-            ("EMPTY", "online"): "EMPTY",
-            ("EMPTY", "maintenance"): "EMPTY",
             ("EMPTY", "off"): "OFF",
             ("EMPTY", "assign"): "IDLE",
-            ("IDLE", "notfitted"): "DISABLED",
-            ("IDLE", "offline"): "DISABLED",
-            ("IDLE", "online"): "IDLE",
-            ("IDLE", "maintenance"): "IDLE",
             ("IDLE", "assign"): "IDLE",
             ("IDLE", "release"): "IDLE",
             ("IDLE", "release (all)"): "EMPTY",
             ("IDLE", "releaseall"): "EMPTY",
             ("IDLE", "configure"): "READY",
             ("IDLE", "abort"): "ABORTED",
-            ("READY", "notfitted"): "DISABLED",
-            ("READY", "offline"): "DISABLED",
-            ("READY", "online"): "READY",
-            ("READY", "maintenance"): "READY",
             ("READY", "configure"): "READY",
             ("READY", "end"): "IDLE",
             ("READY", "abort"): "ABORTED",
             ("READY", "scan"): "SCANNING",
-            ("SCANNING", "notfitted"): "DISABLED",
-            ("SCANNING", "offline"): "DISABLED",
-            ("SCANNING", "online"): "SCANNING",
-            ("SCANNING", "maintenance"): "SCANNING",
             ("SCANNING", "endscan"): "READY",
             ("SCANNING", "abort"): "ABORTED",
-            ("ABORTED", "notfitted"): "DISABLED",
-            ("ABORTED", "offline"): "DISABLED",
-            ("ABORTED", "online"): "ABORTED",
-            ("ABORTED", "maintenance"): "ABORTED",
-            ("ABORTED", "reset"): "IDLE",
+            ("ABORTED", "obsreset"): "IDLE",
             ("ABORTED", "restart"): "EMPTY",
         }
 
@@ -473,9 +463,14 @@ class TestSKASubarray(object):
         # in the polled attribute obsState
         tango_context.device.set_source(DevSource.DEV)
 
+        state = "OFF"  # debugging only
+        assert_state(state)  # debugging only
+
         # Put the device into the state under test
         for action in setups[state_under_test]:
             perform_action(action)
+            state = transitions[state, action]  # debugging only
+            assert_state(state)  # debugging only
 
         # Check that we are in the state under test
         assert_state(state_under_test)

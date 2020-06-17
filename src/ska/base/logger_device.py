@@ -4,22 +4,19 @@
 #
 #
 #
-""" SKALogger
-
-A generic base device for Logging for SKA. It enables to view on-line logs through the TANGO Logging Services
-and to store logs using Python logging. It configures the log levels of remote logging for selected devices.
+"""
+This module implements SKALogger device, a generic base device for
+logging for SKA. It enables to view on-line logs through the TANGO
+Logging Services and to store logs using Python logging. It configures
+the log levels of remote logging for selected devices.
 """
 # PROTECTED REGION ID(SKALogger.additionnal_import) ENABLED START #
-# Standard imports
-import os
-import sys
-
 # Tango imports
 from tango import DebugIt, DeviceProxy, DevFailed
 from tango.server import run, command
 
 # SKA specific imports
-from ska.base import SKABaseDevice, release
+from ska.base import SKABaseDevice
 from ska.base.control_model import LoggingLevel
 # PROTECTED REGION END #    //  SKALogger.additionnal_import
 
@@ -106,6 +103,7 @@ def main(args=None, **kwargs):
     """
     return run((SKALogger,), args=args, **kwargs)
     # PROTECTED REGION END #    //  SKALogger.main
+
 
 if __name__ == '__main__':
     main()

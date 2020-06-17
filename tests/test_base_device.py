@@ -8,9 +8,6 @@
 #########################################################################################
 """Contain the tests for the SKABASE."""
 
-# Standard imports
-import sys
-import os
 import re
 import pytest
 
@@ -386,7 +383,11 @@ class TestSKABaseDevice(object):
     def test_Reset(self, tango_context):
         """Test for Reset"""
         # PROTECTED REGION ID(SKABaseDevice.test_Reset) ENABLED START #
-        assert tango_context.device.Reset() is None
+        # This is a pretty weak test, but Reset() is only allowed from
+        # device state FAULT, and we have no way of putting into FAULT
+        # state through its interface.
+        with pytest.raises(DevFailed):
+            tango_context.device.Reset()
         # PROTECTED REGION END #    //  SKABaseDevice.test_Reset
 
     # PROTECTED REGION ID(SKABaseDevice.test_buildState_decorators) ENABLED START #
@@ -433,7 +434,9 @@ class TestSKABaseDevice(object):
         # tango logging target must be enabled by default
         assert tango_context.device.loggingTargets == ("tango::logger", )
 
-        with mock.patch("ska.base.base_device.LoggingUtils.create_logging_handler") as mocked_creator:
+        with mock.patch(
+            "ska.base.base_device.LoggingUtils.create_logging_handler"
+        ) as mocked_creator:
 
             def null_creator(target, tango_logger):
                 handler = logging.NullHandler()
