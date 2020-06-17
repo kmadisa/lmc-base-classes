@@ -157,7 +157,8 @@ class SKAObsDevice(SKABaseDevice):
         :type obs_state: ObsState
         """
         if obs_state != self._obs_state:
-            self.logger.info(f"Device obs_state changed from {self._obs_state} to {obs_state}")
+            self.logger.info(
+                f"Device obs_state changed from {self._obs_state!s} to {obs_state!s}")
             self._obs_state = obs_state
 
     def always_executed_hook(self):

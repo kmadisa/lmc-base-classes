@@ -805,7 +805,7 @@ class SKABaseDevice(Device):
         """
         if mode != self._admin_mode:
             self.logger.info(
-                f"Device adminMode changed from {self._admin_mode} to {mode}"
+                f"Device adminMode changed from {self._admin_mode!s} to {mode!s}"
             )
             self._admin_mode = mode
 
@@ -844,10 +844,13 @@ class SKABaseDevice(Device):
             self._init_command_objects()
 
             self._init_command()
-        except Exception:
+        except Exception as exc:
             self.set_state(DevState.FAULT)
-            self.set_status("The device is in FAULT state.")
-            self.logger.exception("init_device() failed.")
+            self.set_status("The device is in FAULT state - init_device failed.")
+            if hasattr(self, "logger"):
+                self.logger.exception("init_device() failed.")
+            else:
+                print(f"ERROR: init_device failed, and no logger: {exc}.")
 
     def _init_state(self):
         """

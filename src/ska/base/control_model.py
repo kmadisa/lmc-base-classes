@@ -392,6 +392,11 @@ class DeviceStateModel:
         self._transitions = transitions
         self._state = initial_state
 
+    @property
+    def state(self):
+        """Return current state as a string."""
+        return self._state
+
     def update_transitions(self, transitions):
         """
         Update the transitions table with new transitions.
@@ -428,7 +433,7 @@ class DeviceStateModel:
         """
         if not self.is_action_allowed(action):
             raise StateModelError(
-                f"Action '{action}' not allowed in current state."
+                f"Action '{action}' not allowed in current state ({self._state})."
             )
         return True
 
@@ -500,12 +505,9 @@ class BaseCommand:
                 self.target, self.logger, argin=argin
             )
 
-        self.logger.debug(
-            "Exiting command {} with return code {}, message '{}'".format(
-                self.name,
-                return_code,
-                message
-            )
+        self.logger.info(
+            f"Exiting command {self.name} with return code {return_code!s}, "
+            f"message '{message}'"
         )
         return (return_code, message)
 
@@ -579,6 +581,9 @@ class ActionCommand(BaseCommand):
             (return_code, message) = self._call_do(argin)
             self._returned(return_code)
         except Exception:
+            self.logger.exception(
+                f"Error executing command {self.name} with argin '{argin}'"
+            )
             self.fatal_error()
             raise
         return (return_code, message)
@@ -593,7 +598,8 @@ class ActionCommand(BaseCommand):
         """
         if not self.is_allowed():
             raise StateModelError(
-                f"Command {self.name} is not allowed in current state."
+                f"Command {self.name} is not allowed in "
+                f"current state ({self.state_model.state})."
             )
         return True
 
@@ -614,7 +620,8 @@ class ActionCommand(BaseCommand):
             self.failed()
         else:
             raise ReturnCodeError(
-                "ActionCommands may only return with code OK or FAILED."
+                f"ActionCommands may only return with code OK or FAILED - "
+                f"not {return_code!s}."
             )
 
     def is_allowed(self):
@@ -726,6 +733,9 @@ class DualActionCommand(ActionCommand):
             (return_code, message) = self._call_do(argin)
             self._returned(return_code)
         except Exception:
+            self.logger.exception(
+                f"Error executing command {self.name} with argin '{argin}'"
+            )
             self.fatal_error()
             raise
         return (return_code, message)
