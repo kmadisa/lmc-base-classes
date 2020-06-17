@@ -30,6 +30,7 @@ clean shell runner:
   stage: .pre
   tags:
     - docker-executor
+    - auto-k8s
   script:
     # Gitlab CI badges creation
     - rm -rf build/*
@@ -38,6 +39,7 @@ build wheel for publication: # Executed on a tag
   stage: build
   tags:
     - docker-executor
+    - auto-k8s
   script:
     - python3 setup.py egg_info -b+$CI_COMMIT_SHORT_SHA sdist bdist_wheel
   only:
@@ -50,6 +52,7 @@ build wheel for development: # Executed on a commit
   stage: build
   tags:
     - docker-executor
+    - auto-k8s
   script:
     - python3 setup.py egg_info -b+dev.$CI_COMMIT_SHORT_SHA sdist bdist_wheel
   except:
@@ -65,6 +68,7 @@ unit tests:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
     - docker-executor
+    - auto-k8s
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - python3 -m pip install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA) --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
@@ -81,6 +85,7 @@ linting:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
     - docker-executor
+    - auto-k8s
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - python3 -m pip install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA) --extra-index-url https://nexus.engageska-portugal.pt/repository/pypi/simple
@@ -93,6 +98,7 @@ publish to nexus:
   stage: publish
   tags:
     - docker-executor
+    - auto-k8s
   variables:
     TWINE_USERNAME: $TWINE_USERNAME
     TWINE_PASSWORD: $TWINE_PASSWORD
@@ -115,6 +121,7 @@ release docker image:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
     - docker-executor
+    - auto-k8s
   script:
     - make build
     - make push
@@ -131,6 +138,7 @@ pages:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
     - docker-executor
+    - auto-k8s
   script:
     - cp -R build public
     - mv public/lmcbaseclasses_htmlcov/* public
