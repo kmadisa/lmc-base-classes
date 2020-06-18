@@ -29,7 +29,6 @@ stages:
 clean shell runner:
   stage: .pre
   tags:
-    - docker-executor
     - auto-k8s
   script:
     # Gitlab CI badges creation
@@ -38,7 +37,6 @@ clean shell runner:
 build wheel for publication: # Executed on a tag
   stage: build
   tags:
-    - docker-executor
     - auto-k8s
   script:
     - python3 setup.py egg_info -b+$CI_COMMIT_SHORT_SHA sdist bdist_wheel
@@ -51,7 +49,6 @@ build wheel for publication: # Executed on a tag
 build wheel for development: # Executed on a commit
   stage: build
   tags:
-    - docker-executor
     - auto-k8s
   script:
     - python3 setup.py egg_info -b+dev.$CI_COMMIT_SHORT_SHA sdist bdist_wheel
@@ -67,7 +64,6 @@ unit tests:
   before_script:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
-    - docker-executor
     - auto-k8s
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
@@ -84,7 +80,6 @@ linting:
   before_script:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
-    - docker-executor
     - auto-k8s
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
@@ -97,7 +92,6 @@ linting:
 publish to nexus:
   stage: publish
   tags:
-    - docker-executor
     - auto-k8s
   variables:
     TWINE_USERNAME: $TWINE_USERNAME
@@ -120,7 +114,6 @@ release docker image:
   before_script:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
-    - docker-executor
     - auto-k8s
   script:
     - make build
@@ -137,7 +130,6 @@ pages:
   before_script:
   - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
-    - docker-executor
     - auto-k8s
   script:
     - cp -R build public
