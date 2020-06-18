@@ -384,7 +384,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "off", logger)
+            super().__init__(target, state_model, "off", logger=logger)
 
         def do(self):
             """
@@ -470,7 +470,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "assign", logger)
+            super().__init__(target, state_model, "assign", logger=logger)
 
         def do(self, argin):
             """
@@ -512,7 +512,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "release", logger)
+            super().__init__(target, state_model, "release", logger=logger)
 
         def do(self, argin):
             """
@@ -682,7 +682,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "end_scan", logger)
+            super().__init__(target, state_model, "end_scan", logger=logger)
 
         def do(self):
             """
@@ -719,7 +719,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "end", logger)
+            super().__init__(target, state_model, "end", logger=logger)
 
         def do(self):
             """
