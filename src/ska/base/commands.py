@@ -4,7 +4,7 @@ ReturnCode enum.
 """
 import enum
 import logging
-from ska.base.faults import ReturnCodeError
+from ska.base.faults import CommandError, ReturnCodeError, StateModelError
 
 module_logger = logging.getLogger(__name__)
 
@@ -146,10 +146,14 @@ class BaseCommand:
 
         :param action: the action to perform on the state model
         :type action: string
-        :raises: StateModelError if the action is not allowed in current state
+        :raises: CommandError if the action is not allowed in current state
         :returns: True is the action is allowed
         """
-        return self.state_model.try_action(action)
+        try:
+            return self.state_model.try_action(action)
+        except StateModelError as exc:
+            raise CommandError(
+                f"Error executing command {self.name}") from exc
 
     def _perform_action(self, action):
         """

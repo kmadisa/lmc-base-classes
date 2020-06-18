@@ -20,7 +20,7 @@ from ska.base.commands import ReturnCode
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
 )
-from ska.base.faults import StateModelError
+from ska.base.faults import CommandError
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
 
 
@@ -582,7 +582,7 @@ class TestSKASubarray_commands:
         # there will be no side-effect on the resource manager
         for action in ["init_started", "init_succeeded", "on_succeeded"]:
             assert not assign_resources.is_allowed()
-            with pytest.raises(StateModelError):
+            with pytest.raises(CommandError):
                 assign_resources('{"example": ["foo"]}')
             assert not resource_manager.size()
             assert resource_manager.get() == set()
