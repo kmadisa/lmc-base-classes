@@ -162,7 +162,7 @@ class BaseCommand:
         self.state_model.perform_action(action)
 
 
-class WriteCommand(BaseCommand):
+class ReturnCodeCommand(BaseCommand):
     def __call__(self, argin=None):
         """
         What to do when the command is called. This base class simply
@@ -204,14 +204,16 @@ class WriteCommand(BaseCommand):
         return (return_code, message)
 
 
-class ActionCommand(BaseCommand):
+class ActionCommand(ReturnCodeCommand):
     """
     Abstract base class for a tango command, which checks a state model
     to find out whether the command is allowed to be run, and after
     running, sends an action to that state model, thus driving device
     state.
     """
-    def __init__(self, target, state_model, action_hook, logger=None):
+    def __init__(
+        self, target, state_model, action_hook, start_action=False, logger=None
+    ):
         """
         Create a new ActionCommand for a device.
 
@@ -225,6 +227,10 @@ class ActionCommand(BaseCommand):
             result in action "scan_succeeded" being sent to the state
             model.
         :type action_hook: string
+        :param start_action: whether the state model supports a start
+            action (i.e. to put the state model into an transient state
+            while the command is running); default False
+        :type start_action: boolean
         :param logger: the logger to be used by this Command. If not
             provided, then a default module logger will be used.
         :type logger: a logger that implements the standard library
@@ -233,6 +239,10 @@ class ActionCommand(BaseCommand):
         super().__init__(target, state_model, logger=logger)
         self._succeeded_hook = f"{action_hook}_succeeded"
         self._failed_hook = f"{action_hook}_failed"
+
+        self._started_hook = None
+        if start_action:
+            self._started_hook = f"{action_hook}_started"
 
     def __call__(self, argin=None):
         """
@@ -247,6 +257,7 @@ class ActionCommand(BaseCommand):
         """
         self.check_allowed()
         try:
+            self.started()
             (return_code, message) = self._call_do(argin)
             self._returned(return_code)
         except Exception:
@@ -273,10 +284,11 @@ class ActionCommand(BaseCommand):
         elif return_code == ReturnCode.FAILED:
             self.failed()
         else:
-            raise ReturnCodeError(
-                f"ActionCommands may only return with code OK or FAILED - "
-                f"not {return_code!s}."
-            )
+            if self._started_hook is None:
+                raise ReturnCodeError(
+                    f"ActionCommands that do not have a started action may"
+                    f"only return with code OK or FAILED, not {return_code!s}."
+                )
 
     def check_allowed(self):
         """
@@ -286,7 +298,7 @@ class ActionCommand(BaseCommand):
         :returns: True if the command is allowed to be run
         :raises StateModelError: if the command is not allowed to be run
         """
-        return self._try_action(self._succeeded_hook)
+        return self._try_action(self._started_hook or self._succeeded_hook)
 
     def is_allowed(self):
         """
@@ -296,7 +308,16 @@ class ActionCommand(BaseCommand):
         :returns: whether this command is allowed to run
         :rtype: boolean
         """
-        return self._is_action_allowed(self._succeeded_hook)
+        return self._is_action_allowed(
+            self._started_hook or self._succeeded_hook
+        )
+
+    def started(self):
+        """
+        Action to perform upon starting the comand.
+        """
+        if self._started_hook is not None:
+            self._perform_action(self._started_hook)
 
     def succeeded(self):
         """
@@ -309,113 +330,3 @@ class ActionCommand(BaseCommand):
         Callback for the failed completion of the command.
         """
         self._perform_action(self._failed_hook)
-
-
-class DualActionCommand(ActionCommand):
-    """
-    Abstract base class for a tango command ActionCommand, which
-    additionally sends a "started" action to the state model to advise
-    the the action has been started. It thus supports commands with
-    transient DOING states; for example, a "configure" action
-    which moves from CONFIGURING to CONFIGURED.
-    """
-    def __init__(self, target, state_model, action_hook=None, logger=None):
-        """
-        Create a new DualActionCommand
-
-        :param target: the object that this base command acts upon. For
-            example, the device that this DualActionCommand implements the
-            command for.
-        :type target: object
-        :param state_model: the state model that this command uses to
-             check that it is allowed to run, and that it drives with
-             actions.
-        :type state_model: SKABaseClassStateModel or a subclass of same
-        :param action_hook: a hook for the command, used to build
-            actions that will be sent to the state model; for example,
-            if the hook is "scan", then success of the command will
-            result in action "scan_succeeded" being sent to the state
-            model.
-        :type action_hook: string
-        :param logger: the logger to be used by this Command. If not
-            provided, then a default module logger will be used.
-        :type logger: a logger that implements the standard library
-            logger interface
-        """
-        super().__init__(target, state_model, action_hook, logger=logger)
-        self._started_hook = f"{action_hook}_started"
-
-    def __call__(self, argin=None):
-        """
-        What to do when the command is called. This is implemented to
-        check that the command is allowed to run, then send an action to
-        the state model advising that the command has started, then run
-        the command, then send an action to the state model advising
-        if the command has succeeded or failed. (If the command returns
-        prior to completion, no action is sent, but it then becomes the
-        responsibility of a completion callback to ensure that the
-        ``succeeded()`` or ``failed()`` method is eventually called.)
-
-        :param argin: the argument passed to the Tango command, if
-            present
-        :type argin: ANY
-        """
-
-        self.check_allowed()
-        try:
-            self.started()
-            (return_code, message) = self._call_do(argin)
-            self._returned(return_code)
-        except Exception:
-            self.logger.exception(
-                f"Error executing command {self.name} with argin '{argin}'"
-            )
-            self.fatal_error()
-            raise
-        return (return_code, message)
-
-    def is_allowed(self):
-        """
-        Whether this command is allowed to run in the current state of
-        the state model.
-
-        :returns: whether this command is allowed to run
-        :rtype: boolean
-        """
-        return self._is_action_allowed(self._started_hook)
-
-    def check_allowed(self):
-        """
-        Checks whether the command is allowed to be run in the current
-        state of the state model.
-
-        :returns: True if the command is allowed to be run
-        :raises StateModelError: if the command is not allowed to be run
-        """
-        return self._try_action(self._started_hook)
-
-    def started(self):
-        """
-        Lets the state model know that the command has started
-        """
-        self._perform_action(self._started_hook)
-
-    def _returned(self, return_code):
-        """
-        Helper method that handles the return of the ``do()`` method.
-        If the return code is OK or FAILED, then it performs an
-        appropriate action on the state model. Otherwise it does
-        nothing.
-
-        :param return_code: The return_code returned by the ``do()``
-            method
-        :type return_code: ReturnCode
-        """
-        if return_code == ReturnCode.OK:
-            self.succeeded()
-        elif return_code == ReturnCode.FAILED:
-            self.failed()
-        # else do nothing -- other returncodes are permitted here but no
-        # action is taken -- it is the responsibility of the completion
-        # callback to ensure that succeeded() or failed() are eventually
-        # called

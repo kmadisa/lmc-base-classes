@@ -31,7 +31,7 @@ from tango.server import run, Device, attribute, command, device_property
 import ska.logging as ska_logging
 from ska.base import release
 from ska.base.commands import (
-    ActionCommand, BaseCommand, DualActionCommand, ReturnCode
+    ActionCommand, BaseCommand, ReturnCode
 )
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode, HealthState,
@@ -513,7 +513,7 @@ class SKABaseDeviceStateModel(DeviceStateModel):
         Returns the dev_state
 
         :returns: dev_state of this state model
-        :rtype: DevState
+        :rtype: tango.DevState
         """
         return self._dev_state
 
@@ -535,7 +535,7 @@ class SKABaseDevice(Device):
     """
     A generic base device for SKA.
     """
-    class InitCommand(DualActionCommand):
+    class InitCommand(ActionCommand):
         """
         A class for the SKABaseDevice's init_device() "command".
         """
@@ -557,7 +557,9 @@ class SKABaseDevice(Device):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "init", logger)
+            super().__init__(
+                target, state_model, "init", start_action=True, logger
+            )
 
         def do(self):
             """
