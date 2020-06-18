@@ -56,8 +56,8 @@ class TestSKASubarray(object):
         """Test for Abort"""
         # PROTECTED REGION ID(SKASubarray.test_Abort) ENABLED START #
         tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.Configure([[2], ["BAND1"]])
+        tango_context.device.AssignResources('{"example": ["BAND1"]}')
+        tango_context.device.Configure('{"BAND1": 2}')
         assert tango_context.device.Abort() == [
             [ReturnCode.OK], ["Abort command completed OK"]
         ]
@@ -69,8 +69,8 @@ class TestSKASubarray(object):
         """Test for Configure"""
         # PROTECTED REGION ID(SKASubarray.test_Configure) ENABLED START #
         tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.Configure([[2], ["BAND1"]])
+        tango_context.device.AssignResources('{"example": ["BAND1"]}')
+        tango_context.device.Configure('{"BAND1": 2}')
         # The obsState attribute is changed by Configure, but
         # as it is a polled attribute the value in the cache may be stale,
         # so change source to ensure we read directly from the device
@@ -113,10 +113,12 @@ class TestSKASubarray(object):
         """Test for AssignResources"""
         # PROTECTED REGION ID(SKASubarray.test_AssignResources) ENABLED START #
         tango_context.device.On()
-        tango_context.device.AssignResources(['BAND1', 'BAND2'])
-        assert tango_context.device.State() == DevState.ON and \
-               tango_context.device.assignedResources == ('BAND1', 'BAND2')
+        tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
+        assert tango_context.device.State() == DevState.ON
+        assert tango_context.device.assignedResources == ('BAND1', 'BAND2')
         tango_context.device.ReleaseAllResources()
+        with pytest.raises(DevFailed):
+            tango_context.device.AssignResources('Invalid JSON')
         # PROTECTED REGION END #    //  SKASubarray.test_AssignResources
 
     # PROTECTED REGION ID(SKASubarray.test_EndSB_decorators) ENABLED START #
@@ -125,8 +127,8 @@ class TestSKASubarray(object):
         """Test for EndSB"""
         # PROTECTED REGION ID(SKASubarray.test_EndSB) ENABLED START #
         tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.Configure([[2], ["BAND1"]])
+        tango_context.device.AssignResources('{"example": ["BAND1"]}')
+        tango_context.device.Configure('{"BAND1": 2}')
         assert tango_context.device.End() == [
             [ReturnCode.OK], ["End command completed OK"]
         ]
@@ -138,9 +140,9 @@ class TestSKASubarray(object):
         """Test for EndScan"""
         # PROTECTED REGION ID(SKASubarray.test_EndScan) ENABLED START #
         tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.Configure([[2], ["BAND1"]])
-        tango_context.device.Scan([""])
+        tango_context.device.AssignResources('{"example": ["BAND1"]}')
+        tango_context.device.Configure('{"BAND1": 2}')
+        tango_context.device.Scan('{"id": 123}')
         assert tango_context.device.EndScan() == [
             [ReturnCode.OK], ["EndScan command completed OK"]
         ]
@@ -153,7 +155,7 @@ class TestSKASubarray(object):
         # PROTECTED REGION ID(SKASubarray.test_ReleaseAllResources) ENABLED START #
         # assert tango_context.device.ReleaseAllResources() == [""]
         tango_context.device.On()
-        tango_context.device.AssignResources(['BAND1', 'BAND2'])
+        tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
         tango_context.device.ReleaseAllResources()
         assert tango_context.device.assignedResources is None
         # PROTECTED REGION END #    //  SKASubarray.test_ReleaseAllResources
@@ -163,10 +165,9 @@ class TestSKASubarray(object):
     def test_ReleaseResources(self, tango_context):
         """Test for ReleaseResources"""
         # PROTECTED REGION ID(SKASubarray.test_ReleaseResources) ENABLED START #
-        # assert tango_context.device.ReleaseResources([""]) == [""]
         tango_context.device.On()
-        tango_context.device.AssignResources(['BAND1', 'BAND2'])
-        tango_context.device.ReleaseResources(['BAND1'])
+        tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
+        tango_context.device.ReleaseResources('{"example": ["BAND1"]}')
         assert tango_context.device.State() == DevState.ON and\
                tango_context.device.assignedResources == ('BAND2',)
         tango_context.device.ReleaseAllResources()
@@ -178,8 +179,8 @@ class TestSKASubarray(object):
         """Test for Reset"""
         # PROTECTED REGION ID(SKASubarray.test_Reset) ENABLED START #
         tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.Configure([[2], ["BAND1"]])
+        tango_context.device.AssignResources('{"example": ["BAND1"]}')
+        tango_context.device.Configure('{"BAND1": 2}')
         tango_context.device.Abort()
         assert tango_context.device.ObsReset() == [
             [ReturnCode.OK], ["ObsReset command completed OK"]
@@ -192,11 +193,14 @@ class TestSKASubarray(object):
         """Test for Scan"""
         # PROTECTED REGION ID(SKASubarray.test_Scan) ENABLED START #
         tango_context.device.On()
-        tango_context.device.AssignResources(["BAND1"])
-        tango_context.device.Configure([[2], ["BAND1"]])
-        assert tango_context.device.Scan([""]) == [
-            [ReturnCode.STARTED], ["Scan command STARTED"]
+        tango_context.device.AssignResources('{"example": ["BAND1"]}')
+        tango_context.device.Configure('{"BAND1": 2}')
+        assert tango_context.device.Scan('{"id": 123}') == [
+            [ReturnCode.STARTED], ["Scan command STARTED - config {'id': 123}"]
         ]
+        tango_context.device.EndScan()
+        with pytest.raises(DevFailed):
+            tango_context.device.Scan('Invalid JSON')
         # PROTECTED REGION END #    //  SKASubarray.test_Scan
 
     # PROTECTED REGION ID(SKASubarray.test_activationTime_decorators) ENABLED START #
@@ -394,21 +398,17 @@ class TestSKASubarray(object):
             "reset":
                 lambda d: d.Reset(),  # not tested
             "assign":
-                lambda d: d.AssignResources(
-                    ["Dummy resource 1", "Dummy resource 2"]
-                ),
+                lambda d: d.AssignResources('{"example": ["BAND1", "BAND2"]}'),
             "release":
-                lambda d: d.ReleaseResources(["Dummy resource 2"]),
+                lambda d: d.ReleaseResources('{"example": ["BAND1"]}'),
             "release (all)":
-                lambda d: d.ReleaseResources(
-                    ["Dummy resource 1", "Dummy resource 2"]
-                ),
+                lambda d: d.ReleaseResources('{"example": ["BAND1", "BAND2"]}'),
             "releaseall":
                 lambda d: d.ReleaseAllResources(),
             "configure":
-                lambda d: d.Configure([[2, 2], ["BAND1", "BAND2"]]),
+                lambda d: d.Configure('{"BAND1": 2, "BAND2": 2}'),
             "scan":
-                lambda d: d.Scan(["Dummy scan id"]),
+                lambda d: d.Scan('{"id": 123}'),
             "endscan":
                 lambda d: d.EndScan(),
             "end":
@@ -508,46 +508,46 @@ class TestSKASubarrayResourceManager:
         assert not resource_manager.size()
         assert resource_manager.get() == set()
 
-        resource_manager.assign(["A"])
+        resource_manager.assign('{"example": ["A"]}')
         assert resource_manager.size() == 1
         assert resource_manager.get() == set(["A"])
 
-        resource_manager.assign(["A"])
+        resource_manager.assign('{"example": ["A"]}')
         assert resource_manager.size() == 1
         assert resource_manager.get() == set(["A"])
 
-        resource_manager.assign(["A", "B"])
+        resource_manager.assign('{"example": ["A", "B"]}')
         assert resource_manager.size() == 2
         assert resource_manager.get() == set(["A", "B"])
 
-        resource_manager.assign(["A"])
+        resource_manager.assign('{"example": ["A"]}')
         assert resource_manager.size() == 2
         assert resource_manager.get() == set(["A", "B"])
 
-        resource_manager.assign(["A", "C"])
+        resource_manager.assign('{"example": ["A", "C"]}')
         assert resource_manager.size() == 3
         assert resource_manager.get() == set(["A", "B", "C"])
 
-        resource_manager.assign(["D"])
+        resource_manager.assign('{"example": ["D"]}')
         assert resource_manager.size() == 4
         assert resource_manager.get() == set(["A", "B", "C", "D"])
 
     def test_ResourceManager_release(self, resource_manager):
         resource_manager = SKASubarrayResourceManager()
-        resource_manager.assign(["A", "B", "C", "D"])
+        resource_manager.assign('{"example": ["A", "B", "C", "D"]}')
 
         # okay to release resources not assigned; does nothing
-        resource_manager.release(["E"])
+        resource_manager.release('{"example": ["E"]}')
         assert resource_manager.size() == 4
         assert resource_manager.get() == set(["A", "B", "C", "D"])
 
         # check release does what it should
-        resource_manager.release(["D"])
+        resource_manager.release('{"example": ["D"]}')
         assert resource_manager.size() == 3
         assert resource_manager.get() == set(["A", "B", "C"])
 
         # okay to release resources both assigned and not assigned
-        resource_manager.release(["C", "D"])
+        resource_manager.release('{"example": ["C", "D"]}')
         assert resource_manager.size() == 2
         assert resource_manager.get() == set(["A", "B"])
 
@@ -583,7 +583,7 @@ class TestSKASubarray_commands:
         for action in ["init_started", "init_succeeded", "on_succeeded"]:
             assert not assign_resources.is_allowed()
             with pytest.raises(StateModelError):
-                assign_resources(["foo"])
+                assign_resources('{"example": ["foo"]}')
             assert not resource_manager.size()
             assert resource_manager.get() == set()
 
@@ -593,7 +593,7 @@ class TestSKASubarray_commands:
         # should return True, and the command should succeed, and we
         # should see the result in the resource manager
         assert assign_resources.is_allowed()
-        assert assign_resources(["foo"]) == (
+        assert assign_resources('{"example": ["foo"]}') == (
             ReturnCode.OK, "AssignResources command completed OK"
         )
         assert resource_manager.size() == 1
