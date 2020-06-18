@@ -13,15 +13,7 @@ import pytest
 
 from tango import DevState
 
-from ska.base import SKASubarrayStateModel
 from ska.base.control_model import AdminMode, ObsState
-
-@pytest.fixture(scope="function")
-def state_model():
-    """
-    Yields an SKASubarrayStateModel.
-    """
-    yield SKASubarrayStateModel()
 
 
 class TestSKASubarrayStateModel():

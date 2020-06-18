@@ -6,6 +6,8 @@ import pytest
 
 from tango.test_context import DeviceTestContext
 
+from ska.base import SKASubarrayStateModel
+
 
 @pytest.fixture(scope="class")
 def tango_context(request):
@@ -61,3 +63,11 @@ def initialize_device(tango_context):
         Context to run a device without a database.
     """
     yield tango_context.device.Init()
+
+
+@pytest.fixture(scope="function")
+def state_model():
+    """
+    Yields an SKASubarrayStateModel.
+    """
+    yield SKASubarrayStateModel()

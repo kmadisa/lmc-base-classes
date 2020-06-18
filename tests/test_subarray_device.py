@@ -15,10 +15,12 @@ import pytest
 from tango import DevState, DevSource, DevFailed
 
 # PROTECTED REGION ID(SKASubarray.test_additional_imports) ENABLED START #
+from ska.base import SKASubarray, SKASubarrayResourceManager
+from ska.base.commands import ReturnCode
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
 )
-from ska.base import SKASubarrayResourceManager
+from ska.base.faults import StateModelError
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
 
 
@@ -484,10 +486,15 @@ class TestSKASubarray(object):
                 perform_action(action_under_test)
             assert_state(state_under_test)
 
+
+@pytest.fixture
+def resource_manager():
+    yield SKASubarrayResourceManager()
+
+
 class TestSKASubarrayResourceManager:
-    def test_ResourceManager_assign(self):
+    def test_ResourceManager_assign(self, resource_manager):
         # create a resource manager and check that it is empty
-        resource_manager = SKASubarrayResourceManager()
         assert not resource_manager.size()
         assert resource_manager.get() == set()
 
@@ -515,7 +522,7 @@ class TestSKASubarrayResourceManager:
         assert resource_manager.size() == 4
         assert resource_manager.get() == set(["A", "B", "C", "D"])
 
-    def test_ResourceManager_release(self):
+    def test_ResourceManager_release(self, resource_manager):
         resource_manager = SKASubarrayResourceManager()
         resource_manager.assign(["A", "B", "C", "D"])
 
@@ -544,9 +551,40 @@ class TestSKASubarrayResourceManager:
         assert resource_manager.size() == 0
         assert resource_manager.get() == set()
 
-    # def test_AssignCommand(self):
-    #     resource_manager = SKASubarrayResourceManager()
-    #     state_model = SKASubarrayStateModel()
-    #     assign_command = SKASubarray.AssignResourcesCommand(
-    #         resource_manager
-    #     )
+
+class TestSKASubarray_commands:
+    """
+    This class contains tests of SKASubarray commands
+    """
+
+    def test_AssignCommand(self, resource_manager, state_model):
+        """
+        Test for SKASubarray.AssignResourcesCommand
+        """
+        assign_resources = SKASubarray.AssignResourcesCommand(
+            resource_manager,
+            state_model
+        )
+
+        # until the state_model is in the right state for it, the
+        # command's is_allowed() method will return False, and an
+        # attempt to call the command will raise a StateModelError, and
+        # there will be no side-effect on the resource manager
+        for action in ["init_started", "init_succeeded", "on_succeeded"]:
+            assert not assign_resources.is_allowed()
+            with pytest.raises(StateModelError):
+                assign_resources(["foo"])
+            assert not resource_manager.size()
+            assert resource_manager.get() == set()
+
+            state_model.perform_action(action)
+
+        # now that the state_model is in the right state, is_allowed()
+        # should return True, and the command should succeed, and we
+        # should see the result in the resource manager
+        assert assign_resources.is_allowed()
+        assert assign_resources(["foo"]) == (
+            ReturnCode.OK, "AssignResources command completed OK"
+        )
+        assert resource_manager.size() == 1
+        assert resource_manager.get() == set(["foo"])

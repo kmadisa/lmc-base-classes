@@ -8,6 +8,7 @@ from ska.base.faults import ReturnCodeError
 
 module_logger = logging.getLogger(__name__)
 
+
 class ReturnCode(enum.IntEnum):
     """
     Python enumerated type for command return codes.
@@ -171,21 +172,6 @@ class ActionCommand(BaseCommand):
             raise
         return (return_code, message)
 
-    def check_allowed(self):
-        """
-        Checks whether the command is allowed to be run in the current
-        state of the state model.
-
-        :returns: True if the command is allowed to be run
-        :raises StateModelError: if the command is not allowed to be run
-        """
-        if not self.is_allowed():
-            raise StateModelError(
-                f"Command {self.name} is not allowed in "
-                f"current state ({self.state_model.state})."
-            )
-        return True
-
     def _returned(self, return_code):
         """
         Helper method that handles the return of the ``do()`` method.
@@ -206,6 +192,16 @@ class ActionCommand(BaseCommand):
                 f"ActionCommands may only return with code OK or FAILED - "
                 f"not {return_code!s}."
             )
+
+    def check_allowed(self):
+        """
+        Checks whether the command is allowed to be run in the current
+        state of the state model.
+
+        :returns: True if the command is allowed to be run
+        :raises StateModelError: if the command is not allowed to be run
+        """
+        return self._try_action(self._succeeded_hook)
 
     def is_allowed(self):
         """
@@ -248,6 +244,17 @@ class ActionCommand(BaseCommand):
         :rtype: boolean
         """
         return self.state_model.is_action_allowed(action)
+
+    def _try_action(self, action):
+        """
+        Helper method; "tries" an action on the state model.
+
+        :param action: the action to perform on the state model
+        :type action: string
+        :raises: StateModelError if the action is not allowed in current state
+        :returns: True is the action is allowed
+        """
+        return self.state_model.try_action(action)
 
     def _perform_action(self, action):
         """
@@ -332,6 +339,16 @@ class DualActionCommand(ActionCommand):
         :rtype: boolean
         """
         return self._is_action_allowed(self._started_hook)
+
+    def check_allowed(self):
+        """
+        Checks whether the command is allowed to be run in the current
+        state of the state model.
+
+        :returns: True if the command is allowed to be run
+        :raises StateModelError: if the command is not allowed to be run
+        """
+        return self._try_action(self._started_hook)
 
     def started(self):
         """
