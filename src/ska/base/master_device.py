@@ -51,7 +51,7 @@ class SKAMaster(SKABaseDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do()
+            super().do()
 
             device = self.target
             device._element_logger_address = ""

@@ -23,7 +23,7 @@ from ska.base.control_model import ObsState
 from ska.base.faults import CapabilityValidationError
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 
-__all__ = ["SKASubarray", "SKASubarrayStateModel", "main"]
+__all__ = ["SKASubarray", "SKASubarrayResourceManager", "SKASubarrayStateModel", "main"]
 
 
 class SKASubarrayStateModel(SKAObsDeviceStateModel):
@@ -300,12 +300,10 @@ class SKASubarray(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do()
+            super().do()
+
             device = self.target
-
             device.resource_manager = SKASubarrayResourceManager()
-
-            # Initialize attribute values.
             device._activation_time = 0.0
 
             # device._configured_capabilities is kept as a
@@ -446,7 +444,7 @@ class SKASubarray(SKAObsDevice):
             """
             Action to take on failed completion of a resourcing command.
             """
-            self._state_model.perform_action("resourcing_failed")
+            self.state_model.perform_action("resourcing_failed")
 
     class AssignResourcesCommand(_ResourcingCommand):
         """

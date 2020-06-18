@@ -83,9 +83,9 @@ class SKAObsDevice(SKABaseDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do()
-            device = self.target
+            super().do()
 
+            device = self.target
             device._obs_mode = ObsMode.IDLE
             device._config_progress = 0
             device._config_delay_expected = 0

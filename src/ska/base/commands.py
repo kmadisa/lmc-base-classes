@@ -198,7 +198,7 @@ class ReturnCodeCommand(BaseCommand):
             (return_code, message) = self.do(argin=argin)
 
         self.logger.info(
-            f"Exiting command {self.name} with return_code {ReturnCode!s}, "
+            f"Exiting command {self.name} with return_code {return_code!s}, "
             f"message: '{message}'"
         )
         return (return_code, message)
