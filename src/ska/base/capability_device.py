@@ -15,7 +15,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice
-from ska.base.commands import WriteCommand, ReturnCode
+from ska.base.commands import ReturnCodeCommand, ReturnCode
 # PROTECTED REGION END #    //  SKACapability.additionnal_imports
 
 __all__ = ["SKACapability", "main"]
@@ -146,30 +146,10 @@ class SKACapability(SKAObsDevice):
     # Commands
     # --------
 
-    class ConfigureInstancesCommand(WriteCommand):
+    class ConfigureInstancesCommand(ReturnCodeCommand):
         """
         A class for the SKALoggerDevice's SetLoggingLevel() command.
         """
-        def __init__(self, target, state_model, logger=None):
-            """
-            Constructor for ConfigureInstancesCommand
-
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
-            :param state_model: the state model that this command uses
-                 to check that it is allowed to run, and that it drives
-                 with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
-            :param logger: the logger to be used by this Command. If not
-                provided, then a default module logger will be used.
-            :type logger: a logger that implements the standard library
-                logger interface
-            """
-            super().__init__(target, state_model, logger=logger)
-
         def do(self, argin):
             """
             Stateless hook for ConfigureInstances()) command

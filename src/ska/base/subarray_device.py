@@ -18,7 +18,7 @@ from tango.server import device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice, SKAObsDeviceStateModel
-from ska.base.commands import ActionCommand, DualActionCommand, ReturnCode
+from ska.base.commands import ActionCommand, ReturnCode
 from ska.base.control_model import ObsState
 from ska.base.faults import CapabilityValidationError
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
@@ -399,10 +399,30 @@ class SKASubarray(SKAObsDevice):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    class _ResourcingCommand(DualActionCommand):
+    class _ResourcingCommand(ActionCommand):
         """
         An abstract base class for SKASubarray's resourcing commands.
         """
+        def __init__(self, target, state_model, logger=None):
+            """
+            Constructor for _ResourcingCommand
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param state_model: the state model that this command uses
+                 to check that it is allowed to run, and that it drives
+                 with actions.
+            :type state_model: SKABaseClassStateModel or a subclass of
+                same
+            :param logger: the logger to be used by this Command. If not
+                provided, then a default module logger will be used.
+            :type logger: a logger that implements the standard library
+                logger interface
+            """
+            super().init(self, target, state_model, start_action=True, logger)
+
         def succeeded(self):
             """
             Action to take on successful completion of a resourcing
@@ -524,7 +544,7 @@ class SKASubarray(SKAObsDevice):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    class ConfigureCommand(DualActionCommand):
+    class ConfigureCommand(ActionCommand):
         """
         A class for SKASubarray's Configure() command.
         """
@@ -546,7 +566,9 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "configure", logger)
+            super().__init__(
+                target, state_model, "configure", start_action=True, logger
+            )
 
         @staticmethod
         def _validate_input_sizes(argin):
@@ -589,7 +611,7 @@ class SKASubarray(SKAObsDevice):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    class ScanCommand(DualActionCommand):
+    class ScanCommand(ActionCommand):
         """
         A class for SKASubarray's Scan() command.
         """
@@ -611,7 +633,9 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "scan", logger)
+            super().__init__(
+                target, state_model, "scan", start_action=True, logger
+            )
 
         def do(self, argin):
             """
@@ -705,7 +729,7 @@ class SKASubarray(SKAObsDevice):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    class AbortCommand(DualActionCommand):
+    class AbortCommand(ActionCommand):
         """
         A class for SKASubarray's Abort() command.
         """
@@ -727,7 +751,9 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "abort", logger)
+            super().__init__(
+                target, state_model, "abort", start_action=True, logger
+            )
 
         def do(self):
             """
@@ -742,7 +768,7 @@ class SKASubarray(SKAObsDevice):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    class ObsResetCommand(DualActionCommand):
+    class ObsResetCommand(ActionCommand):
         """
         A class for SKASubarray's ObsReset() command.
         """
@@ -764,7 +790,9 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "obs_reset", logger)
+            super().__init__(
+                target, state_model, "obs_reset", start_action=True, logger
+            )
 
         def do(self):
             """
@@ -787,7 +815,7 @@ class SKASubarray(SKAObsDevice):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    class RestartCommand(DualActionCommand):
+    class RestartCommand(ActionCommand):
         """
         A class for SKASubarray's Restart() command.
         """
@@ -809,7 +837,9 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "restart", logger)
+            super().__init__(
+                target, state_model, "restart", start_action=True, logger
+            )
 
         def do(self):
             """
