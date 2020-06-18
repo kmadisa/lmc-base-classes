@@ -59,7 +59,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
         assert tango_context.device.Abort() == [
-            [ReturnCode.OK,], ["Abort command completed OK",]
+            [ReturnCode.OK], ["Abort command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_Abort
 
@@ -128,7 +128,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
         assert tango_context.device.End() == [
-            [ReturnCode.OK,], ["End command completed OK",]
+            [ReturnCode.OK], ["End command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_EndSB
 
@@ -142,7 +142,7 @@ class TestSKASubarray(object):
         tango_context.device.Configure([[2], ["BAND1"]])
         tango_context.device.Scan([""])
         assert tango_context.device.EndScan() == [
-            [ReturnCode.OK,], ["EndScan command completed OK",]
+            [ReturnCode.OK], ["EndScan command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_EndScan
 
@@ -182,7 +182,7 @@ class TestSKASubarray(object):
         tango_context.device.Configure([[2], ["BAND1"]])
         tango_context.device.Abort()
         assert tango_context.device.ObsReset() == [
-            [ReturnCode.OK,], ["ObsReset command completed OK",]
+            [ReturnCode.OK], ["ObsReset command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
 
@@ -195,7 +195,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
         assert tango_context.device.Scan([""]) == [
-            [ReturnCode.STARTED,], ["Scan command STARTED",]
+            [ReturnCode.STARTED], ["Scan command STARTED"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_Scan
 

@@ -16,7 +16,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKABaseDevice
-from ska.base.commands import ReturnCode
+from ska.base.commands import BaseCommand, ReturnCode
 from ska.base.utils import validate_capability_types, validate_input_sizes, convert_dict_to_list
 
 
@@ -29,6 +29,15 @@ class SKAMaster(SKABaseDevice):
     """
     Master device
     """
+    def _init_command_objects(self):
+        """
+        Sets up the command objects
+        """
+        super()._init_command_objects()
+        self._is_capability_achievable_command = self.IsCapabilityAchievableCommand(
+            self, self.state_model, self.logger
+        )
+
     class InitCommand(SKABaseDevice.InitCommand):
         """
         A class for the SKAMaster's init_device() "command".
@@ -173,6 +182,33 @@ class SKAMaster(SKABaseDevice):
     # Commands
     # --------
 
+    class IsCapabilityAchievableCommand(BaseCommand):
+        """
+        A class for the SKAMaster's IsCapabilityAchievable() command.
+        """
+        def do(self, argin):
+            """
+            Stateless hook for device IsCapabilityAchievable() command.
+
+            :return: Whether the capability is achievable
+            :rtype: bool
+            """
+            device = self.target
+            command_name = 'isCapabilityAchievable'
+            capabilities_instances, capability_types = argin
+            validate_input_sizes(command_name, argin)
+            validate_capability_types(command_name, capability_types,
+                                      list(device._max_capabilities.keys()))
+
+            for capability_type, capability_instances in zip(
+                capability_types, capabilities_instances
+            ):
+                if not device._available_capabilities[
+                    capability_type
+                ] >= capability_instances:
+                    return False
+            return True
+
     @command(
         dtype_in='DevVarLongStringArray',
         doc_in="[nrInstances][Capability types]",
@@ -197,18 +233,7 @@ class SKAMaster(SKABaseDevice):
 
             False if cannot.
         """
-        command_name = 'isCapabilityAchievable'
-        capabilities_instances, capability_types = argin
-        validate_input_sizes(command_name, argin)
-        validate_capability_types(command_name, capability_types,
-                                  list(self._max_capabilities.keys()))
-
-        for capability_type, capability_instances in zip(
-                capability_types, capabilities_instances):
-            if not self._available_capabilities[capability_type] >= capability_instances:
-                return False
-
-        return True
+        return self._is_capability_achievable_command(argin)
         # PROTECTED REGION END #    //  SKAMaster.isCapabilityAchievable
 
 

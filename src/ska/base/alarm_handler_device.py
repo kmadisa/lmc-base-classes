@@ -18,6 +18,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKABaseDevice
+from ska.base.commands import BaseCommand
 
 # PROTECTED REGION END #    //  SKAAlarmHandler.additionnal_import
 
@@ -87,6 +88,27 @@ class SKAAlarmHandler(SKABaseDevice):
     # ---------------
     # General methods
     # ---------------
+
+    def _init_command_objects(self):
+        """
+        Sets up the command objects
+        """
+        super()._init_command_objects()
+        self._get_alarm_rule_command = self.GetAlarmRuleCommand(
+            self, self.state_model, self.logger
+        )
+        self._get_alarm_data_command = self.GetAlarmDataCommand(
+            self, self.state_model, self.logger
+        )
+        self._get_alarm_additional_info_command = self.GetAlarmAdditionalInfoCommand(
+            self, self.state_model, self.logger
+        )
+        self._get_alarm_stats_command = self.GetAlarmStatsCommand(
+            self, self.state_model, self.logger
+        )
+        self._get_alert_stats_command = self.GetAlertStatsCommand(
+            self, self.state_model, self.logger
+        )
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKAAlarmHandler.always_executed_hook) ENABLED START #
@@ -169,6 +191,73 @@ class SKAAlarmHandler(SKABaseDevice):
     # Commands
     # --------
 
+    class GetAlarmRuleCommand(BaseCommand):
+        """
+        A class for the SKAAlarmHandler's GetAlarmRule() command.
+        """
+        def do(self, argin):
+            """
+            Stateless hook for SKAAlarmHandler GetAlarmRule() command.
+
+            :return: Alarm configuration info: rule, actions, etc.
+            :rtype: JSON string
+            """
+            return ""
+
+    class GetAlarmDataCommand(BaseCommand):
+        """
+        A class for the SKAAlarmHandler's GetAlarmData() command.
+        """
+        def do(self, argin):
+            """
+            Stateless hook for SKAAlarmHandler GetAlarmData() command.
+
+            :return: Alarm data
+            :rtype: JSON string
+            """
+            return ""
+
+    class GetAlarmAdditionalInfoCommand(BaseCommand):
+        """
+        A class for the SKAAlarmHandler's GetAlarmAdditionalInfo()
+        command.
+        """
+        def do(self, argin):
+            """
+            Stateless hook for SKAAlarmHandler GetAlarmAdditionalInfo()
+            command.
+
+            :return: Alarm additional info
+            :rtype: JSON string
+            """
+            return ""
+
+    class GetAlarmStatsCommand(BaseCommand):
+        """
+        A class for the SKAAlarmHandler's GetAlarmStats() command.
+        """
+        def do(self):
+            """
+            Stateless hook for SKAAlarmHandler GetAlarmStats() command.
+
+            :return: Alarm stats
+            :rtype: JSON string
+            """
+            return ""
+
+    class GetAlertStatsCommand(BaseCommand):
+        """
+        A class for the SKAAlarmHandler's GetAlertStats() command.
+        """
+        def do(self):
+            """
+            Stateless hook for SKAAlarmHandler GetAlertStats() command.
+
+            :return: Alert stats
+            :rtype: JSON string
+            """
+            return ""
+
     @command(dtype_in='str', doc_in="Alarm name", dtype_out='str', doc_out="JSON string",)
     @DebugIt()
     def GetAlarmRule(self, argin):
@@ -176,9 +265,9 @@ class SKAAlarmHandler(SKABaseDevice):
         """
         Get all configuration info of the alarm, e.g. rule, defined action, etc.
         :param argin: Name of the alarm
-        :return: JSON string containing configuration information of the alarm
+        :retur: JSON string containing configuration information of the alarm
         """
-        return ""
+        return self._get_alarm_rule_command(argin)
         # PROTECTED REGION END #    //  SKAAlarmHandler.GetAlarmRule
 
     @command(dtype_in='str', doc_in="Alarm name", dtype_out='str', doc_out="JSON string",)
@@ -191,7 +280,7 @@ class SKAAlarmHandler(SKABaseDevice):
         :param argin: Name of the alarm
         :return: JSON string containing alarm data
         """
-        return ""
+        return self._get_alarm_data_command(argin)
         # PROTECTED REGION END #    //  SKAAlarmHandler.GetAlarmData
 
     @command(dtype_in='str', doc_in="Alarm name", dtype_out='str', doc_out="JSON string", )
@@ -203,7 +292,7 @@ class SKAAlarmHandler(SKABaseDevice):
         :param argin: Name of the alarm
         :return: JSON string containing additional alarm information
         """
-        return ""
+        return self._get_alarm_additional_info_command(argin)
         # PROTECTED REGION END #    //  SKAAlarmHandler.GetAlarmAdditionalInfo
 
     @command(dtype_out='str', doc_out="JSON string",)
@@ -214,7 +303,7 @@ class SKAAlarmHandler(SKABaseDevice):
         Get current alarm stats.
         :return: JSON string containing alarm statistics
         """
-        return ""
+        return self._get_alarm_stats_command()
         # PROTECTED REGION END #    //  SKAAlarmHandler.GetAlarmStats
 
     @command(dtype_out='str', doc_out="JSON string",)
@@ -225,7 +314,7 @@ class SKAAlarmHandler(SKABaseDevice):
         Get current alert stats.
         :return: JSON string containing alert statistics
         """
-        return ""
+        return self._get_alert_stats_command()
         # PROTECTED REGION END #    //  SKAAlarmHandler.GetAlertStats
 
 # ----------

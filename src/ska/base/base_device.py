@@ -30,7 +30,9 @@ from tango.server import run, Device, attribute, command, device_property
 # SKA specific imports
 import ska.logging as ska_logging
 from ska.base import release
-from ska.base.commands import ActionCommand, DualActionCommand, ReturnCode
+from ska.base.commands import (
+    ActionCommand, BaseCommand, DualActionCommand, ReturnCode
+)
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode, HealthState,
     LoggingLevel, DeviceStateModel
@@ -604,49 +606,6 @@ class SKABaseDevice(Device):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    class ResetCommand(ActionCommand):
-        """
-        A class for the SKABaseDevice's Reset() command.
-        """
-        def __init__(self, target, state_model, logger=None):
-            """
-            Create a new ResetCommand
-
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
-            :param state_model: the state model that this command uses
-                 to check that it is allowed to run, and that it drives
-                 with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
-            :param logger: the logger to be used by this Command. If not
-                provided, then a default module logger will be used.
-            :type logger: a logger that implements the standard library
-                logger interface
-            """
-            super().__init__(target, state_model, "reset", logger=logger)
-
-        def do(self):
-            """
-            Stateless hook for device reset.
-
-            :return: A tuple containing a return code and a string
-                message indicating status. The message is for
-                information purpose only.
-            :rtype: (ReturnCode, str)
-            """
-            device = self.target
-            device._health_state = HealthState.OK
-            device._control_mode = ControlMode.REMOTE
-            device._simulation_mode = SimulationMode.FALSE
-            device._test_mode = TestMode.NONE
-
-            message = "Reset command completed OK"
-            self.logger.info(message)
-            return (ReturnCode.OK, message)
-
     _logging_config_lock = threading.Lock()
     _logging_configured = False
 
@@ -862,6 +821,9 @@ class SKABaseDevice(Device):
 
     def _init_command_objects(self):
         self._reset_command = self.ResetCommand(
+            self, self.state_model, self.logger
+        )
+        self._get_version_info_command = self.GetVersionInfoCommand(
             self, self.state_model, self.logger
         )
 
@@ -1087,6 +1049,22 @@ class SKABaseDevice(Device):
     # Commands
     # --------
 
+    class GetVersionInfoCommand(BaseCommand):
+        """
+        A class for the SKABaseDevice's Reset() command.
+        """
+        def do(self):
+            """
+            Stateless hook for device GetVersionInfo() command.
+
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            device = self.target
+            return [f"{device.__class__.__name__}, {device.read_buildState()}"]
+
     @command(dtype_out=('str',), doc_out="Version strings",)
     @DebugIt()
     def GetVersionInfo(self):
@@ -1096,8 +1074,51 @@ class SKABaseDevice(Device):
 
         :return: Version details of the device.
         """
-        return [f"{self.__class__.__name__}, {self.read_buildState()}"]
+        return self._get_version_info_command()
         # PROTECTED REGION END #    //  SKABaseDevice.GetVersionInfo
+
+    class ResetCommand(ActionCommand):
+        """
+        A class for the SKABaseDevice's Reset() command.
+        """
+        def __init__(self, target, state_model, logger=None):
+            """
+            Create a new ResetCommand
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param state_model: the state model that this command uses
+                 to check that it is allowed to run, and that it drives
+                 with actions.
+            :type state_model: SKABaseClassStateModel or a subclass of
+                same
+            :param logger: the logger to be used by this Command. If not
+                provided, then a default module logger will be used.
+            :type logger: a logger that implements the standard library
+                logger interface
+            """
+            super().__init__(target, state_model, "reset", logger=logger)
+
+        def do(self):
+            """
+            Stateless hook for device reset.
+
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            device = self.target
+            device._health_state = HealthState.OK
+            device._control_mode = ControlMode.REMOTE
+            device._simulation_mode = SimulationMode.FALSE
+            device._test_mode = TestMode.NONE
+
+            message = "Reset command completed OK"
+            self.logger.info(message)
+            return (ReturnCode.OK, message)
 
     def is_Reset_allowed(self):
         """

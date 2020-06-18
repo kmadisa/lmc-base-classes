@@ -1014,7 +1014,7 @@ class SKASubarray(SKAObsDevice):
         Turn subarray on
         """
         (return_code, message) = self._on_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_Off_allowed(self):
         """
@@ -1036,7 +1036,7 @@ class SKASubarray(SKAObsDevice):
         Turn the subarray of
         """
         (return_code, message) = self._off_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_AssignResources_allowed(self):
         """
@@ -1064,7 +1064,7 @@ class SKASubarray(SKAObsDevice):
         :type argin: list of str
         """
         (return_code, message) = self._assign_resources_command(argin)
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_ReleaseResources_allowed(self):
         """
@@ -1092,7 +1092,7 @@ class SKASubarray(SKAObsDevice):
         :type argin: list of str
         """
         (return_code, message) = self._release_resources_command(argin)
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_ReleaseAllResources_allowed(self):
         """
@@ -1118,7 +1118,7 @@ class SKASubarray(SKAObsDevice):
         :rtype: list of string
         """
         (return_code, message) = self._release_all_resources_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_Configure_allowed(self):
         """
@@ -1146,7 +1146,7 @@ class SKASubarray(SKAObsDevice):
         :type argin: string
         """
         (return_code, message) = self._configure_command(argin)
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_Scan_allowed(self):
         """
@@ -1172,7 +1172,7 @@ class SKASubarray(SKAObsDevice):
         :type argin: Array of str
         """
         (return_code, message) = self._scan_command(argin)
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_EndScan_allowed(self):
         """
@@ -1194,7 +1194,7 @@ class SKASubarray(SKAObsDevice):
         End the scan
         """
         (return_code, message) = self._end_scan_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_End_allowed(self):
         """
@@ -1217,7 +1217,7 @@ class SKASubarray(SKAObsDevice):
         End the scan block.
         """
         (return_code, message) = self._end_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_Abort_allowed(self):
         """
@@ -1240,7 +1240,7 @@ class SKASubarray(SKAObsDevice):
         ``Scan()``.
         """
         (return_code, message) = self._abort_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_ObsReset_allowed(self):
         """
@@ -1263,7 +1263,7 @@ class SKASubarray(SKAObsDevice):
         Reset the current observation process.
         """
         (return_code, message) = self._obs_reset_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
     def is_Restart_allowed(self):
         """
@@ -1287,7 +1287,7 @@ class SKASubarray(SKAObsDevice):
         all resources.
         """
         (return_code, message) = self._restart_command()
-        return [[return_code],[message]]
+        return [[return_code], [message]]
 
 
 # ----------

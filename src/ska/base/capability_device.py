@@ -15,7 +15,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice
-from ska.base.commands import ActionCommand, ReturnCode
+from ska.base.commands import WriteCommand, ReturnCode
 # PROTECTED REGION END #    //  SKACapability.additionnal_imports
 
 __all__ = ["SKACapability", "main"]
@@ -146,7 +146,7 @@ class SKACapability(SKAObsDevice):
     # Commands
     # --------
 
-    class ConfigureInstancesCommand(ActionCommand):
+    class ConfigureInstancesCommand(WriteCommand):
         """
         A class for the SKALoggerDevice's SetLoggingLevel() command.
         """
