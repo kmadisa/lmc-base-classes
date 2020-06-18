@@ -403,7 +403,7 @@ class SKASubarray(SKAObsDevice):
         """
         An abstract base class for SKASubarray's resourcing commands.
         """
-        def __init__(self, target, state_model, logger=None):
+        def __init__(self, target, state_model, action_hook, logger=None):
             """
             Constructor for _ResourcingCommand
 
@@ -416,13 +416,19 @@ class SKASubarray(SKAObsDevice):
                  with actions.
             :type state_model: SKABaseClassStateModel or a subclass of
                 same
+            :param action_hook: a hook for the command, used to build
+                actions that will be sent to the state model; for example,
+                if the hook is "scan", then success of the command will
+                result in action "scan_succeeded" being sent to the state
+                model.
+            :type action_hook: string
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().init(
-                self, target, state_model, start_action=True, logger=logger
+            super().__init__(
+                target, state_model, action_hook, start_action=True, logger=logger
             )
 
         def succeeded(self):
