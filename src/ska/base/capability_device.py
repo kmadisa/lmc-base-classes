@@ -15,7 +15,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice
-from ska.base.control_model import ReturnCode
+from ska.base.commands import ReturnCode
 # PROTECTED REGION END #    //  SKACapability.additionnal_imports
 
 __all__ = ["SKACapability", "main"]

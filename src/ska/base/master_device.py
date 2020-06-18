@@ -16,6 +16,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKABaseDevice
+from ska.base.commands import ReturnCode
 from ska.base.utils import validate_capability_types, validate_input_sizes, convert_dict_to_list
 
 
@@ -61,7 +62,9 @@ class SKAMaster(SKABaseDevice):
                     target._max_capabilities[capability_type] = int(max_capability_instances)
             target._available_capabilities = target._max_capabilities.copy()
 
-            return (return_code, message)
+            message = "Init command completed OK"
+            self.logger.info(message)
+            return (ReturnCode.OK, message)
 
     # PROTECTED REGION ID(SKAMaster.class_variable) ENABLED START #
     # PROTECTED REGION END #    //  SKAMaster.class_variable

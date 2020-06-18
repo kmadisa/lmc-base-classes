@@ -18,8 +18,8 @@ from tango.server import device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice, SKAObsDeviceStateModel
-from ska.base.control_model import ObsState, ReturnCode
-from ska.base.control_model import ActionCommand, DualActionCommand
+from ska.base.commands import ActionCommand, DualActionCommand, ReturnCode
+from ska.base.control_model import ObsState
 from ska.base.faults import CapabilityValidationError
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 

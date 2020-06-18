@@ -1,4 +1,5 @@
 __all__ = (
+    "commands",
     "control_model",
     "SKAAlarmHandler",
     "SKABaseDevice", "SKABaseDeviceStateModel",

@@ -30,11 +30,11 @@ from tango.server import run, Device, attribute, command, device_property
 # SKA specific imports
 import ska.logging as ska_logging
 from ska.base import release
+from ska.base.commands import ActionCommand, DualActionCommand, ReturnCode
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode, HealthState,
-    LoggingLevel, ReturnCode, DeviceStateModel
+    LoggingLevel, DeviceStateModel
 )
-from ska.base.control_model import ActionCommand, DualActionCommand
 
 from ska.base.utils import get_groups_from_json
 from ska.base.faults import (GroupDefinitionsError,

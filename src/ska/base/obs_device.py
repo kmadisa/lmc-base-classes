@@ -19,7 +19,8 @@ from tango.server import run, attribute
 
 # SKA specific imports
 from ska.base import SKABaseDevice, SKABaseDeviceStateModel
-from ska.base.control_model import AdminMode, ObsMode, ObsState, ReturnCode
+from ska.base.commands import ReturnCode
+from ska.base.control_model import AdminMode, ObsMode, ObsState
 # PROTECTED REGION END #    //  SKAObsDevice.additionnal_imports
 
 __all__ = ["SKAObsDevice", "SKAObsDeviceStateModel", "main"]
