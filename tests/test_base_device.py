@@ -387,7 +387,23 @@ class TestSKABaseDevice(object):
         # state through its interface.
         with pytest.raises(DevFailed):
             tango_context.device.Reset()
+
+        ## FIXME - forcing state to allow command execution
+        print(f"state now: {tango_context.device.force_state}")
+        tango_context.device.Reset()
         # PROTECTED REGION END #    //  SKABaseDevice.test_Reset
+
+    def test_Echo(self, tango_context):
+        result = tango_context.device.Echo("123")
+        assert result == "Echo 123"
+
+    def test_Disallowed(self, tango_context):
+        # we should not be allowed to call this command
+        # so it must raise DevFailed instead of returning True
+        # if it returns True, that is also a failure
+        with pytest.raises(DevFailed):
+            assert tango_context.device.Disallowed() == False
+
 
     # PROTECTED REGION ID(SKABaseDevice.test_buildState_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKABaseDevice.test_buildState_decorators

@@ -67,7 +67,6 @@ class BaseCommand:
         self.target = target
         self.state_model = state_model
         self.logger = logger or module_logger
-        print(f"BaseCommand.__init__ {self} name {self.name}, target {self.target}")
 
     def __call__(self, argin=None):
         """
@@ -79,7 +78,6 @@ class BaseCommand:
             present
         :type argin: ANY
         """
-        print(f"BaseCommand.__call__ {self} {argin}, name {self.name}, target {self.target}")
         try:
             return self._call_do(argin)
         except Exception:

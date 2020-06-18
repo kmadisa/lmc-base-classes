@@ -822,16 +822,12 @@ class SKABaseDevice(Device):
         )
 
     def _init_command_objects(self):
-        self._get_version_info = self.GetVersionInfoCommand(self, self.state_model, self.logger)
-        # self.register_command(
-        #     "GetVersionInfo",
-        #     # self.ResetCommand(self, self.state_model, self.logger),
-        #     # dtype_out='DevVarLongStringArray',
-        #     # doc_out="(ReturnType, 'informational message')",
-        #     self.GetVersionInfoCommand(self, self.state_model, self.logger),
-        #     dtype_out=('str',),
-        #     doc_out="Version strings",
-        # )
+        self.register_command(
+            "GetVersionInfo",
+            self.GetVersionInfoCommand(self, self.state_model, self.logger),
+            dtype_out=('str',),
+            doc_out="Version strings",
+        )
         self.register_command(
             "Reset",
             self.ResetCommand(self, self.state_model, self.logger),
@@ -839,20 +835,30 @@ class SKABaseDevice(Device):
             doc_out="(ReturnType, 'informational message')",
         )
 
-    def register_command(self, name, command_object, **decorator_args):
-        command_object.__name__ = name
-        if name == "Reset":
-            command_handler = command(f=command_object, **decorator_args)
-        else: 
-            command_handler = command(f=command_object.GetVersionInfo, **decorator_args)
-        # command_handler = command(**decorator_args)(command_object)
-        #setattr(self, name, command_handler)
-        setattr(self, name, command_handler)
-        if hasattr(command_object, "check_allowed"):
-            setattr(self, f"is_{name}_allowed", command_object.check_allowed)
+        self.register_command(  ## FIXME
+            "Echo",
+            self.EchoCommand(self, self.state_model, self.logger),
+            dtype_in='str',
+            dtype_out='str',
+        )
+        self.register_command(  ## FIXME
+            "Disallowed",
+            self.DisallowedCommand(self, self.state_model, self.logger),
+            dtype_out='bool',
+        )
 
+    def register_command(self, name, command_object, **decorator_args):
+
+        def cmd_handler(device, argin=None):
+            return command_object(argin)
+
+        cmd_handler.__name__ = name
+        command_handler = command(f=cmd_handler, **decorator_args)
+        cls = self.__class__
+        setattr(cls, name, command_handler)
+        if hasattr(command_object, "check_allowed"):
+            setattr(cls, f"is_{name}_allowed", command_object.check_allowed)
         self.add_command(command_handler, device_level=False)
-        print(f"Added command {name}, command object {command_object}, handler {command_handler}")
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKABaseDevice.always_executed_hook) ENABLED START #
@@ -1089,12 +1095,8 @@ class SKABaseDevice(Device):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            print(f"GetVersionInfoCommand.do self {self}")
             device = self.target
             return [f"{device.__class__.__name__}, {device.read_buildState()}"]
-
-        def GetVersionInfo(self):
-            return self()
 
     class ResetCommand(ActionCommand):
         """
@@ -1139,16 +1141,25 @@ class SKABaseDevice(Device):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    # @command(
-    #     dtype_out=('str',),
-    #     doc_out="Version strings",
-    # )
-    # def GetVersionInfo(self):
-    #     
-    GetVersionInfo = lambda self: command(
-        dtype_out=('str',),
-        doc_out="Version strings",
-    )(self._get_version_info())
+    class EchoCommand(BaseCommand):  ## FIXME
+        def do(self, argin):
+            print(f"EchoCommand.do self {self} argin {argin}")
+            return f"Echo {argin}"
+
+    class DisallowedCommand(BaseCommand):  ## FIXME
+        def do(self):
+            print(f"DisallowedCommand.do self {self} called - UNEXPECTED!")
+            return True
+
+        def check_allowed(self):
+            print(f"**** DisallowedCommand.check_allowed self {self}")
+            return False
+
+    @attribute(dtype=str)  ## FIXME
+    def force_state(self):
+        print(f"**** force state to 'FAULT (ENABLED)'")
+        self.state_model._state = 'FAULT (ENABLED)'
+        return self.state_model.state
 
 # ----------
 # Run server
