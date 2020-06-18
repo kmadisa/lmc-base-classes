@@ -6,7 +6,7 @@ __all__ = (
     "SKALogger",
     "SKAMaster",
     "SKAObsDevice", "SKAObsDeviceStateModel",
-    "SKASubarray", "SKASubarrayStateModel",
+    "SKASubarray", "SKASubarrayStateModel", "SKASubarrayResourceManager"
     "SKATelState"
 )
 
@@ -22,4 +22,6 @@ from .tel_state_device import SKATelState
 # SKAObsDevice, and then classes that inherit from it
 from .obs_device import SKAObsDevice, SKAObsDeviceStateModel
 from .capability_device import SKACapability
-from .subarray_device import SKASubarray, SKASubarrayStateModel
+from .subarray_device import (
+    SKASubarray, SKASubarrayStateModel, SKASubarrayResourceManager
+)

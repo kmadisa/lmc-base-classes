@@ -33,19 +33,19 @@ class SKASubarrayStateModel(SKAObsDeviceStateModel):
     _subarray_transitions = {
         ('OFF', 'on_succeeded'): (
             "EMPTY",
-            lambda self: self._set_state(DevState.ON)
+            lambda self: self._set_dev_state(DevState.ON)
         ),
         ('OFF', 'on_failed'): (
             "FAULT",
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
         ('EMPTY', 'off_succeeded'): (
             "OFF",
-            lambda self: self._set_state(DevState.OFF)
+            lambda self: self._set_dev_state(DevState.OFF)
         ),
         ('EMPTY', 'off_failed'): (
             "FAULT",
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
         ('EMPTY', 'assign_started'): (
             "RESOURCING",
@@ -217,17 +217,70 @@ class SKASubarrayStateModel(SKAObsDeviceStateModel):
         ),
     }
 
-    def __init__(self, admin_mode_callback=None, state_callback=None, obs_state_callback=None):
+    def __init__(self, dev_state_callback=None):
         """
         Initialises the model. Note that this does not imply moving to
         INIT state. The INIT state is managed by the model itself.
         """
         super().__init__(
-            admin_mode_callback=admin_mode_callback,
-            state_callback=state_callback,
-            obs_state_callback=obs_state_callback
+            dev_state_callback=dev_state_callback,
         )
         self.update_transitions(self._subarray_transitions)
+
+
+class SKASubarrayResourceManager:
+    """
+    A simple class for managing subarray resources
+    """
+    def __init__(self):
+        """
+        Constructor for SKASubarrayResourceManager
+        """
+        self._resources = set()
+
+    def assign(self, resources):
+        """
+        Assign some resources
+
+        :param resources: resources to releae
+        :type resources: collection of string
+        """
+        self._resources |= set(resources)
+
+    def release(self, resources):
+        """
+        Release some resources
+
+        :param resources: resources to releae
+        :type resources: collection of string
+        """
+        self._resources -= set(resources)
+
+    def release_all(self):
+        """
+        Release all resources
+        """
+        self._resources.clear()
+
+    def size(self):
+        """
+        Returns the number of resources currently assigned. Note that
+        this also functions as a boolean method for whether there are
+        any assigned resources: ``if size()``.
+
+        :return: whether this SKASubarrayResourceManager has any resources
+        :rtype: boolean
+        """
+        return len(self._resources)
+
+    def get(self):
+        """
+        Get current resources
+
+        :return: a set of current resources.
+        :rtype: set of string
+        """
+        return set(self._resources)
 
 
 class SKASubarray(SKAObsDevice):
@@ -253,9 +306,10 @@ class SKASubarray(SKAObsDevice):
             """
             (return_code, message) = super().do(target)
 
+            target.resource_manager = SKASubarrayResourceManager()
+
             # Initialize attribute values.
             target._activation_time = 0.0
-            target._assigned_resources = []
 
             # device._configured_capabilities is kept as a
             # dictionary internally. The keys and values will represent
@@ -365,7 +419,7 @@ class SKASubarray(SKAObsDevice):
             Action to take on successful completion of a resourcing
             command.
             """
-            if self.target.is_resourced():
+            if self.target.size():
                 action = "resourcing_succeeded_some_resources"
             else:
                 action = "resourcing_succeeded_no_resources"
@@ -416,7 +470,7 @@ class SKASubarray(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target._assign_resources(argin)
+            target.assign(argin)
 
             message = "AssignResources command completed OK"
             self.logger.info(message)
@@ -454,14 +508,14 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param argin: The resources to be assigned
+            :param argin: The resources to be released
             :type argin: list of str
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target._release_resources(argin)
+            target.release(argin)
 
             message = "ReleaseResources command completed OK"
             self.logger.info(message)
@@ -479,14 +533,12 @@ class SKASubarray(SKAObsDevice):
                 example, the SKASubarray device for which this class
                 implements the command
             :type target: object
-            :param argin: The resources to be assigned
-            :type argin: list of str
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target._release_all_resources()
+            target.release_all()
 
             message = "ReleaseAllResources command completed OK"
             self.logger.info(message)
@@ -818,7 +870,7 @@ class SKASubarray(SKAObsDevice):
             target._deconfigure()
 
             # and release all resources
-            target._release_all_resources()
+            target.resource_manager.release_all()
 
             message = "Restart command completed OK"
             self.logger.info(message)
@@ -830,9 +882,7 @@ class SKASubarray(SKAObsDevice):
         Sets up the state model for the device
         """
         self.state_model = SKASubarrayStateModel(
-            admin_mode_callback=self._update_admin_mode,
-            state_callback=self._update_state,
-            obs_state_callback=self._update_obs_state
+            dev_state_callback=self._update_state,
         )
 
     def _init_command_objects(self):
@@ -841,58 +891,27 @@ class SKASubarray(SKAObsDevice):
         """
         super()._init_command_objects()
 
-        args = (self, self.state_model, self.logger)
-        self._on_command = self.OnCommand(*args)
-        self._off_command = self.OffCommand(*args)
-        self._assign_resources_command = self.AssignResourcesCommand(*args)
-        self._release_resources_command = self.ReleaseResourcesCommand(*args)
-        self._release_all_resources_command = self.ReleaseAllResourcesCommand(
-            *args
+        device_args = (self, self.state_model, self.logger)
+        resource_args = (self.resource_manager, self.state_model, self.logger)
+
+        self._on_command = self.OnCommand(*device_args)
+        self._off_command = self.OffCommand(*device_args)
+        self._assign_resources_command = self.AssignResourcesCommand(
+            *resource_args
         )
-        self._configure_command = self.ConfigureCommand(*args)
-        self._scan_command = self.ScanCommand(*args)
-        self._end_scan_command = self.EndScanCommand(*args)
-        self._end_command = self.EndCommand(*args)
-        self._abort_command = self.AbortCommand(*args)
-        self._obs_reset_command = self.ObsResetCommand(*args)
-        self._restart_command = self.RestartCommand(*args)
-
-    def _assign_resources(self, resources):
-        """
-        Assign some resources
-
-        :param resources: resources to assign
-        :type resources: list of string
-        """
-        for resource in resources:
-            if resource not in self._assigned_resources[:]:
-                self._assigned_resources.append(resource)
-
-    def _release_resources(self, resources):
-        """
-        Release some resources
-
-        :param resources: resources to releae
-        :type resources: list of string
-        """
-        for resource in resources:
-            if resource in self._assigned_resources:
-                self._assigned_resources.remove(resource)
-
-    def _release_all_resources(self):
-        """
-        Release all resources
-        """
-        self._assigned_resources.clear()
-
-    def is_resourced(self):
-        """
-        Whether this subarray has any resources
-
-        :returns: whether this subarray has any resources
-        :rtype: boolean
-        """
-        return self._assigned_resources
+        self._release_resources_command = self.ReleaseResourcesCommand(
+            *resource_args
+        )
+        self._release_all_resources_command = self.ReleaseAllResourcesCommand(
+            *resource_args
+        )
+        self._configure_command = self.ConfigureCommand(*device_args)
+        self._scan_command = self.ScanCommand(*device_args)
+        self._end_scan_command = self.EndScanCommand(*device_args)
+        self._end_command = self.EndCommand(*device_args)
+        self._abort_command = self.AbortCommand(*device_args)
+        self._obs_reset_command = self.ObsResetCommand(*device_args)
+        self._restart_command = self.RestartCommand(*device_args)
 
     def _validate_capability_types(self, capability_types):
         """
@@ -994,7 +1013,7 @@ class SKASubarray(SKAObsDevice):
 
         :return: Resources assigned to the device.
         """
-        return self._assigned_resources
+        return sorted(self.resource_manager.get())
         # PROTECTED REGION END #    //  SKASubarray.assignedResources_read
 
     def read_configuredCapabilities(self):

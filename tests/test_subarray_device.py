@@ -18,13 +18,11 @@ from tango import DevState, DevSource, DevFailed
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
 )
+from ska.base import SKASubarrayResourceManager
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
 
 
-# Device test case
-# PROTECTED REGION ID(SKASubarray.test_SKASubarray_decorators) ENABLED START #
 @pytest.mark.usefixtures("tango_context", "initialize_device")
-# PROTECTED REGION END #    //  SKASubarray.test_SKASubarray_decorators
 class TestSKASubarray(object):
     """Test case for packet generation."""
 
@@ -485,3 +483,70 @@ class TestSKASubarray(object):
             with pytest.raises(DevFailed):
                 perform_action(action_under_test)
             assert_state(state_under_test)
+
+class TestSKASubarrayResourceManager:
+    def test_ResourceManager_assign(self):
+        # create a resource manager and check that it is empty
+        resource_manager = SKASubarrayResourceManager()
+        assert not resource_manager.size()
+        assert resource_manager.get() == set()
+
+        resource_manager.assign(["A"])
+        assert resource_manager.size() == 1
+        assert resource_manager.get() == set(["A"])
+
+        resource_manager.assign(["A"])
+        assert resource_manager.size() == 1
+        assert resource_manager.get() == set(["A"])
+
+        resource_manager.assign(["A", "B"])
+        assert resource_manager.size() == 2
+        assert resource_manager.get() == set(["A", "B"])
+
+        resource_manager.assign(["A"])
+        assert resource_manager.size() == 2
+        assert resource_manager.get() == set(["A", "B"])
+
+        resource_manager.assign(["A", "C"])
+        assert resource_manager.size() == 3
+        assert resource_manager.get() == set(["A", "B", "C"])
+
+        resource_manager.assign(["D"])
+        assert resource_manager.size() == 4
+        assert resource_manager.get() == set(["A", "B", "C", "D"])
+
+    def test_ResourceManager_release(self):
+        resource_manager = SKASubarrayResourceManager()
+        resource_manager.assign(["A", "B", "C", "D"])
+
+        # okay to release resources not assigned; does nothing
+        resource_manager.release(["E"])
+        assert resource_manager.size() == 4
+        assert resource_manager.get() == set(["A", "B", "C", "D"])
+
+        # check release does what it should
+        resource_manager.release(["D"])
+        assert resource_manager.size() == 3
+        assert resource_manager.get() == set(["A", "B", "C"])
+
+        # okay to release resources both assigned and not assigned
+        resource_manager.release(["C", "D"])
+        assert resource_manager.size() == 2
+        assert resource_manager.get() == set(["A", "B"])
+
+        # check release all does what it should
+        resource_manager.release_all()
+        assert resource_manager.size() == 0
+        assert resource_manager.get() == set()
+
+        # okay to call release_all when already empty
+        resource_manager.release_all()
+        assert resource_manager.size() == 0
+        assert resource_manager.get() == set()
+
+    # def test_AssignCommand(self):
+    #     resource_manager = SKASubarrayResourceManager()
+    #     state_model = SKASubarrayStateModel()
+    #     assign_command = SKASubarray.AssignResourcesCommand(
+    #         resource_manager
+    #     )

@@ -16,77 +16,12 @@ from tango import DevState
 from ska.base import SKASubarrayStateModel
 from ska.base.control_model import AdminMode, ObsState
 
-
 @pytest.fixture(scope="function")
-def model_runner():
+def state_model():
     """
     Yields an SKASubarrayStateModel.
     """
-    class Runner:
-        """
-        A runner class for the SKASubarrayStateModel. It gives the model
-        and target for callbacks
-        """
-        def __init__(self):
-            """
-            Constructor for the Runner
-            """
-            self._state = None
-            self._admin_mode = None
-            self._obs_state = None
-
-            self.model = SKASubarrayStateModel(
-                state_callback=self._set_state,
-                obs_state_callback=self._set_obs_state,
-                admin_mode_callback=self._set_admin_mode
-            )
-
-        def _set_state(self, state):
-            """
-            State callback for the model
-            """
-            self._state = state
-
-        def _set_obs_state(self, obs_state):
-            """
-            Obs state callback for the model
-            """
-            self._obs_state = obs_state
-
-        def _set_admin_mode(self, admin_mode):
-            """
-            Admin mode callback for the model
-            """
-            self._admin_mode = admin_mode
-
-        def get_admin_mode(self):
-            """
-            Returns this runner's admin mode
-            """
-            return self._admin_mode
-
-        def get_obs_state(self):
-            """
-            Returns this runner's obs state
-            """
-            return self._obs_state
-
-        def get_state(self):
-            """
-            Returns this runner's state
-            """
-            return self._state
-
-        def perform_action(self, action):
-            """
-            Perform an action on the model
-
-            :param action: the name of the action
-            :type action: string
-            """
-            self.model.perform_action(action)
-
-    yield Runner()
+    yield SKASubarrayStateModel()
 
 
 class TestSKASubarrayStateModel():
@@ -115,7 +50,7 @@ class TestSKASubarrayStateModel():
              "restart_failed"]
         )
     )
-    def test_state_machine(self, model_runner,
+    def test_state_machine(self, state_model,
                            state_under_test, action_under_test):
         """
         Test the subarray state machine: for a given initial state and
@@ -170,11 +105,11 @@ class TestSKASubarrayStateModel():
         def assert_state(state):
             (admin_modes, state, obs_state) = states[state]
             if admin_modes is not None:
-                assert model_runner.get_admin_mode() in admin_modes
+                assert state_model.admin_mode in admin_modes
             if state is not None:
-                assert model_runner.get_state() == state
+                assert state_model.dev_state == state
             if obs_state is not None:
-                assert model_runner.get_obs_state() == obs_state
+                assert state_model.obs_state == obs_state
 
         transitions = {
             ('UNINITIALISED', 'init_started'): "INIT_ENABLED",
@@ -326,7 +261,7 @@ class TestSKASubarrayStateModel():
 
         # Put the device into the state under test
         for action in setups[state_under_test]:
-            model_runner.perform_action(action)
+            state_model.perform_action(action)
             # state = transitions[state, action]  # for test debugging only
             # assert_state(state)  # for test debugging only
 
@@ -336,10 +271,10 @@ class TestSKASubarrayStateModel():
         # Test that the action under test does what we expect it to
         if (state_under_test, action_under_test) in transitions:
             # Action should succeed
-            model_runner.perform_action(action_under_test)
+            state_model.perform_action(action_under_test)
             assert_state(transitions[(state_under_test, action_under_test)])
         else:
             # Action should fail and the state should not change
             with pytest.raises(ValueError):
-                model_runner.perform_action(action_under_test)
+                state_model.perform_action(action_under_test)
             assert_state(state_under_test)

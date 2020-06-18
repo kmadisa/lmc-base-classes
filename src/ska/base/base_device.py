@@ -24,10 +24,8 @@ from urllib.parse import urlparse
 from urllib.request import url2pathname
 
 # Tango imports
-from tango import DebugIt
+from tango import AttrWriteType, DebugIt, DevState
 from tango.server import run, Device, attribute, command, device_property
-from tango import AttrWriteType
-from tango import DevState
 
 # SKA specific imports
 import ska.logging as ska_logging
@@ -320,20 +318,20 @@ class SKABaseDeviceStateModel(DeviceStateModel):
             "INIT (ENABLED)",
             lambda self: (
                 self._set_admin_mode(AdminMode.MAINTENANCE),
-                self._set_state(DevState.INIT),
+                self._set_dev_state(DevState.INIT),
             )
         ),
         ('INIT (ENABLED)', 'init_succeeded'): (
             'OFF',
-            lambda self: self._set_state(DevState.OFF)
+            lambda self: self._set_dev_state(DevState.OFF)
         ),
         ('INIT (ENABLED)', 'init_failed'): (
             'FAULT (ENABLED)',
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
         ('INIT (ENABLED)', 'fatal_error'): (
             "FAULT (ENABLED)",
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
         ('INIT (ENABLED)', 'to_notfitted'): (
             "INIT (DISABLED)",
@@ -353,15 +351,15 @@ class SKABaseDeviceStateModel(DeviceStateModel):
         ),
         ('INIT (DISABLED)', 'init_succeeded'): (
             'DISABLED',
-            lambda self: self._set_state(DevState.DISABLE)
+            lambda self: self._set_dev_state(DevState.DISABLE)
         ),
         ('INIT (DISABLED)', 'init_failed'): (
             'FAULT (DISABLED)',
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
         ('INIT (DISABLED)', 'fatal_error'): (
             "FAULT (DISABLED)",
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
         ('INIT (DISABLED)', 'to_notfitted'): (
             "INIT (DISABLED)",
@@ -381,7 +379,7 @@ class SKABaseDeviceStateModel(DeviceStateModel):
         ),
         ('FAULT (DISABLED)', 'reset_succeeded'): (
             "DISABLED",
-            lambda self: self._set_state(DevState.DISABLE)
+            lambda self: self._set_dev_state(DevState.DISABLE)
         ),
         ('FAULT (DISABLED)', 'reset_failed'): ("FAULT (DISABLED)", None),
         ('FAULT (DISABLED)', 'fatal_error'): ("FAULT (DISABLED)", None),
@@ -403,7 +401,7 @@ class SKABaseDeviceStateModel(DeviceStateModel):
         ),
         ('FAULT (ENABLED)', 'reset_succeeded'): (
             "OFF",
-            lambda self: self._set_state(DevState.OFF)
+            lambda self: self._set_dev_state(DevState.OFF)
         ),
         ('FAULT (ENABLED)', 'reset_failed'): ("FAULT (ENABLED)", None),
         ('FAULT (ENABLED)', 'fatal_error'): ("FAULT (ENABLED)", None),
@@ -429,14 +427,14 @@ class SKABaseDeviceStateModel(DeviceStateModel):
             "OFF",
             lambda self: (
                 self._set_admin_mode(AdminMode.ONLINE),
-                self._set_state(DevState.OFF)
+                self._set_dev_state(DevState.OFF)
             )
         ),
         ('DISABLED', 'to_maintenance'): (
             "OFF",
             lambda self: (
                 self._set_admin_mode(AdminMode.MAINTENANCE),
-                self._set_state(DevState.OFF)
+                self._set_dev_state(DevState.OFF)
             )
         ),
         ('DISABLED', 'to_notfitted'): (
@@ -445,19 +443,19 @@ class SKABaseDeviceStateModel(DeviceStateModel):
         ),
         ('DISABLED', 'fatal_error'): (
             "FAULT (DISABLED)",
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
         ('OFF', 'to_notfitted'): (
             "DISABLED",
             lambda self: (
                 self._set_admin_mode(AdminMode.NOT_FITTED),
-                self._set_state(DevState.DISABLE)
+                self._set_dev_state(DevState.DISABLE)
             )
         ),
         ('OFF', 'to_offline'): (
             "DISABLED", lambda self: (
                 self._set_admin_mode(AdminMode.OFFLINE),
-                self._set_state(DevState.DISABLE)
+                self._set_dev_state(DevState.DISABLE)
             )
         ),
         ('OFF', 'to_online'): (
@@ -470,25 +468,33 @@ class SKABaseDeviceStateModel(DeviceStateModel):
         ),
         ('OFF', 'fatal_error'): (
             "FAULT (ENABLED)",
-            lambda self: self._set_state(DevState.FAULT)
+            lambda self: self._set_dev_state(DevState.FAULT)
         ),
     }
 
-    def __init__(self, admin_mode_callback=None, state_callback=None):
+    def __init__(self, dev_state_callback=None):
         """
         Initialises the state model.
 
-        :param admin_mode_callback: A callback to be called when a
-            transition implies a change to admin_mode
-        :type admin_mode_callback: callable
-        :param state_callback: A callback to be called when a transition
-            implies a change to device state
-        :type admin_mode_callback: callable
+        :param dev_state_callback: A callback to be called when a
+            transition implies a change to device state
+        :type dev_state_callback: tango.DevState
         """
         super().__init__(self._base_transitions, "UNINITIALISED")
 
-        self._admin_mode_callback = admin_mode_callback
-        self._state_callback = state_callback
+        self._admin_mode = None
+        self._dev_state = None
+        self._dev_state_callback = dev_state_callback
+
+    @property
+    def admin_mode(self):
+        """
+        Returns the admin_mode
+
+        :returns: admin_mode of this state model
+        :rtype: AdminMode
+        """
+        return self._admin_mode
 
     def _set_admin_mode(self, admin_mode):
         """
@@ -497,18 +503,30 @@ class SKABaseDeviceStateModel(DeviceStateModel):
         :param admin_mode: the new admin_mode value
         :type admin_mode: AdminMode
         """
-        if self._admin_mode_callback is not None:
-            self._admin_mode_callback(admin_mode)
+        self._admin_mode = admin_mode
 
-    def _set_state(self, state):
+    @property
+    def dev_state(self):
         """
-        Helper method: calls the state callback if one exists
+        Returns the dev_state
 
-        :param state: the new state value
+        :returns: dev_state of this state model
+        :rtype: DevState
+        """
+        return self._dev_state
+
+    def _set_dev_state(self, dev_state):
+        """
+        Helper method: sets this state models dev_state, and calls the
+        dev_state callback if one exists
+
+        :param dev_state: the new state value
         :type admin_mode: DevState
         """
-        if self._state_callback is not None:
-            self._state_callback(state)
+        if self._dev_state != dev_state:
+            self._dev_state = dev_state
+            if self._dev_state_callback is not None:
+                self._dev_state_callback(self._dev_state)
 
 
 class SKABaseDevice(Device):
@@ -792,20 +810,6 @@ class SKABaseDevice(Device):
     # General methods
     # ---------------
 
-    def _update_admin_mode(self, mode):
-        """
-        Helper method for changing admin_mode; passed to the state model
-        as a callback
-
-        :param mode: the new admin_mode value
-        :type admin_mode: AdminMode
-        """
-        if mode != self._admin_mode:
-            self.logger.info(
-                f"Device adminMode changed from {self._admin_mode!s} to {mode!s}"
-            )
-            self._admin_mode = mode
-
     def _update_state(self, state):
         """
         Helper method for changing state; passed to the state model as a
@@ -836,11 +840,13 @@ class SKABaseDevice(Device):
             super().init_device()
 
             self._init_logging()
-            self._init_state()
             self._init_state_model()
-            self._init_command_objects()
 
+            self._init_command = self.InitCommand(
+                self, self.state_model, self.logger
+            )
             self._init_command()
+            self._init_command_objects()
         except Exception as exc:
             self.set_state(DevState.FAULT)
             self.set_status("The device is in FAULT state - init_device failed.")
@@ -849,25 +855,15 @@ class SKABaseDevice(Device):
             else:
                 print(f"ERROR: init_device failed, and no logger: {exc}.")
 
-    def _init_state(self):
-        """
-        Creates initial state attributes for the device
-        """
-        self._admin_mode = None
-
     def _init_state_model(self):
         """
         Creates the state model for the device
         """
         self.state_model = SKABaseDeviceStateModel(
-            admin_mode_callback=self._update_admin_mode,
-            state_callback=self._update_state
+            dev_state_callback=self._update_state
         )
 
     def _init_command_objects(self):
-        self._init_command = self.InitCommand(
-            self, self.state_model, self.logger
-        )
         self._reset_command = self.ResetCommand(
             self, self.state_model, self.logger
         )
@@ -999,7 +995,7 @@ class SKABaseDevice(Device):
         :return: Admin Mode of the device
         :rtype: AdminMode
         """
-        return self._admin_mode
+        return self.state_model.admin_mode
         # PROTECTED REGION END #    //  SKABaseDevice.adminMode_read
 
     def write_adminMode(self, value):
