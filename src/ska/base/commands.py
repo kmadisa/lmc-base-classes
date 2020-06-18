@@ -121,7 +121,7 @@ class ActionCommand(BaseCommand):
     running, sends an action to that state model, thus driving device
     state.
     """
-    def __init__(self, target, state_model, action_hook, logger=None):
+    def __init__(self, target, state_model, action_hook=None, logger=None):
         """
         Create a new ActionCommand for a device.
 
@@ -137,7 +137,10 @@ class ActionCommand(BaseCommand):
             actions that will be sent to the state model; for example,
             if the hook is "scan", then success of the command will
             result in action "scan_succeeded" being sent to the state
-            model
+            model. If the action_hook argument is omitted, then this
+            ActionCommand will drive state only if it errors, in which
+            case the "fatal_error" action will be performed on the stat
+            model.
         :type action_hook: string
         :param logger: the logger to be used by this Command. If not
             provided, then a default module logger will be used.
@@ -146,8 +149,12 @@ class ActionCommand(BaseCommand):
         """
         super().__init__(target, logger=logger)
         self.state_model = state_model
-        self._succeeded_hook = f"{action_hook}_succeeded"
-        self._failed_hook = f"{action_hook}_failed"
+
+        self._succeeded_hook = None
+        self._failed_hook = None
+        if action_hook is not None:
+            self._succeeded_hook = f"{action_hook}_succeeded"
+            self._failed_hook = f"{action_hook}_failed"
 
     def __call__(self, argin=None):
         """
@@ -201,6 +208,8 @@ class ActionCommand(BaseCommand):
         :returns: True if the command is allowed to be run
         :raises StateModelError: if the command is not allowed to be run
         """
+        if self._succeeded_hook is None:
+            return True
         return self._try_action(self._succeeded_hook)
 
     def is_allowed(self):
@@ -211,19 +220,23 @@ class ActionCommand(BaseCommand):
         :returns: whether this command is allowed to run
         :rtype: boolean
         """
+        if self._succeeded_hook is None:
+            return True
         return self._is_action_allowed(self._succeeded_hook)
 
     def succeeded(self):
         """
         Callback for the successful completion of the command.
         """
-        self._perform_action(self._succeeded_hook)
+        if self._succeeded_hook is not None:
+            self._perform_action(self._succeeded_hook)
 
     def failed(self):
         """
         Callback for the failed completion of the command.
         """
-        self._perform_action(self._failed_hook)
+        if self._failed_hook is not None:
+            self._perform_action(self._failed_hook)
 
     def fatal_error(self):
         """
@@ -272,10 +285,10 @@ class DualActionCommand(ActionCommand):
     Abstract base class for a tango command ActionCommand, which
     additionally sends a "started" action to the state model to advise
     the the action has been started. It thus supports commands with
-    transient DOING states.  For example, a "configure" action
+    transient DOING states; for example, a "configure" action
     which moves from CONFIGURING to CONFIGURED.
     """
-    def __init__(self, target, state_model, action_hook, logger=None):
+    def __init__(self, target, state_model, action_hook=None, logger=None):
         """
         Create a new DualActionCommand
 
@@ -291,7 +304,10 @@ class DualActionCommand(ActionCommand):
             actions that will be sent to the state model; for example,
             if the hook is "scan", then success of the command will
             result in action "scan_succeeded" being sent to the state
-            model
+            model. If the action_hook argument is omitted, then this
+            DualActionCommand will drive state only if it errors, in
+            which case the "fatal_error" action will be performed on the
+            state model.
         :type action_hook: string
         :param logger: the logger to be used by this Command. If not
             provided, then a default module logger will be used.
@@ -299,7 +315,9 @@ class DualActionCommand(ActionCommand):
             logger interface
         """
         super().__init__(target, state_model, action_hook, logger=logger)
-        self._started_hook = f"{action_hook}_started"
+        self._started_hook = None
+        if action_hook is not None:
+            self._started_hook = f"{action_hook}_started"
 
     def __call__(self, argin=None):
         """
@@ -338,6 +356,8 @@ class DualActionCommand(ActionCommand):
         :returns: whether this command is allowed to run
         :rtype: boolean
         """
+        if self._started_hook is None:
+            return True
         return self._is_action_allowed(self._started_hook)
 
     def check_allowed(self):
@@ -348,13 +368,16 @@ class DualActionCommand(ActionCommand):
         :returns: True if the command is allowed to be run
         :raises StateModelError: if the command is not allowed to be run
         """
+        if self._started_hook is None:
+            return True
         return self._try_action(self._started_hook)
 
     def started(self):
         """
         Lets the state model know that the command has started
         """
-        self._perform_action(self._started_hook)
+        if self._started_hook is not None:
+            self._perform_action(self._started_hook)
 
     def _returned(self, return_code):
         """
@@ -371,3 +394,7 @@ class DualActionCommand(ActionCommand):
             self.succeeded()
         elif return_code == ReturnCode.FAILED:
             self.failed()
+        # else do nothing -- other returncodes are permitted here but no
+        # action is taken -- it is the responsibility of the completion
+        # callback to ensure that succeeded() or failed() are eventually
+        # called

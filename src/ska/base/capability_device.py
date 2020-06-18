@@ -15,7 +15,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice
-from ska.base.commands import ReturnCode
+from ska.base.commands import ActionCommand, ReturnCode
 # PROTECTED REGION END #    //  SKACapability.additionnal_imports
 
 __all__ = ["SKACapability", "main"]
@@ -25,6 +25,15 @@ class SKACapability(SKAObsDevice):
     """
     A Subarray handling device. It exposes the instances of configured capabilities.
     """
+    def _init_command_objects(self):
+        """
+        Sets up the command objects
+        """
+        super()._init_command_objects()
+        self._configure_instances_command = self.ConfigureInstancesCommand(
+            self, self.state_model, self.logger
+        )
+
     class InitCommand(SKAObsDevice.InitCommand):
         def do(self, target):
             """
@@ -140,6 +149,50 @@ class SKACapability(SKAObsDevice):
     # Commands
     # --------
 
+    class ConfigureInstancesCommand(ActionCommand):
+        """
+        A class for the SKALoggerDevice's SetLoggingLevel() command.
+        """
+        def __init__(self, target, state_model, logger=None):
+            """
+            Constructor for ConfigureInstancesCommand
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param state_model: the state model that this command uses
+                 to check that it is allowed to run, and that it drives
+                 with actions.
+            :type state_model: SKABaseClassStateModel or a subclass of
+                same
+            :param logger: the logger to be used by this Command. If not
+                provided, then a default module logger will be used.
+            :type logger: a logger that implements the standard library
+                logger interface
+            """
+            super().__init__(target, state_model, logger=logger)
+
+        def do(self, target, argin):
+            """
+            Stateless hook for ConfigureInstances()) command
+            functionality.
+
+            :param target: the object that this command acts upon; for
+                example, the SKALogger device for which this class
+                implements the command
+            :type target: object
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            target._configured_instances = argin
+
+            message = "ConfigureInstances command completed OK"
+            self.logger.info(message)
+            return (ReturnCode.OK, message)
+
     @command(
         dtype_in='uint16',
         doc_in="The number of instances to configure for this Capability.",
@@ -153,7 +206,7 @@ class SKACapability(SKAObsDevice):
         :param argin: Number of instances to configure
         :return: None.
         """
-        self._configured_instances = argin
+        self._configure_instances_command(argin)
         # PROTECTED REGION END #    //  SKACapability.ConfigureInstances
 
 

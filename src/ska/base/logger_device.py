@@ -17,6 +17,7 @@ from tango.server import run, command
 
 # SKA specific imports
 from ska.base import SKABaseDevice
+from ska.base.commands import ActionCommand, ReturnCode
 from ska.base.control_model import LoggingLevel
 # PROTECTED REGION END #    //  SKALogger.additionnal_import
 
@@ -41,6 +42,14 @@ class SKALogger(SKABaseDevice):
     # ---------------
     # General methods
     # ---------------
+    def _init_command_objects(self):
+        """
+        Sets up the command objects
+        """
+        super()._init_command_objects()
+        self._set_logging_level_command = self.SetLoggingLevelCommand(
+            None, self.state_model, self.logger
+        )
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKALogger.always_executed_hook) ENABLED START #
@@ -59,6 +68,57 @@ class SKALogger(SKABaseDevice):
     # --------
     # Commands
     # --------
+    class SetLoggingLevelCommand(ActionCommand):
+        """
+        A class for the SKALoggerDevice's SetLoggingLevel() command.
+        """
+        def __init__(self, target, state_model, logger=None):
+            """
+            Constructor for SetLoggingLevelCommand
+
+            :param target: the object that this command acts upon; for
+                example, the SKASubarray device for which this class
+                implements the command
+            :type target: object
+            :param state_model: the state model that this command uses
+                 to check that it is allowed to run, and that it drives
+                 with actions.
+            :type state_model: SKABaseClassStateModel or a subclass of
+                same
+            :param logger: the logger to be used by this Command. If not
+                provided, then a default module logger will be used.
+            :type logger: a logger that implements the standard library
+                logger interface
+            """
+            super().__init__(target, state_model, logger=logger)
+
+        def do(self, target, argin):
+            """
+            Stateless hook for SetLoggingLevel() command functionality.
+
+            :param target: the object that this command acts upon; for
+                example, the SKALogger device for which this class
+                implements the command
+            :type target: object
+            :return: A tuple containing a return code and a string
+                message indicating status. The message is for
+                information purpose only.
+            :rtype: (ReturnCode, str)
+            """
+            logging_levels = argin[0][:]
+            logging_devices = argin[1][:]
+            for level, device in zip(logging_levels, logging_devices):
+                try:
+                    new_level = LoggingLevel(level)
+                    self.logger.info("Setting logging level %s for %s", new_level, device)
+                    dev_proxy = DeviceProxy(device)
+                    dev_proxy.loggingLevel = new_level
+                except DevFailed:
+                    self.logger.exception("Failed to set logging level %s for %s", level, device)
+
+            message = "SetLoggingLevel command completed OK"
+            self.logger.info(message)
+            return (ReturnCode.OK, message)
 
     @command(dtype_in='DevVarLongStringArray',
              doc_in="Logging level for selected devices:"
@@ -79,16 +139,7 @@ class SKALogger(SKABaseDevice):
 
         :returns: None.
         """
-        logging_levels = argin[0][:]
-        logging_devices = argin[1][:]
-        for level, device in zip(logging_levels, logging_devices):
-            try:
-                new_level = LoggingLevel(level)
-                self.logger.info("Setting logging level %s for %s", new_level, device)
-                dev_proxy = DeviceProxy(device)
-                dev_proxy.loggingLevel = new_level
-            except DevFailed:
-                self.logger.exception("Failed to set logging level %s for %s", level, device)
+        self._set_logging_level_command(argin)
         # PROTECTED REGION END #    //  SKALogger.SetLoggingLevel
 
 # ----------
