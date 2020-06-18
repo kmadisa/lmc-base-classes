@@ -14,10 +14,7 @@ other useful enumerations.
 """
 
 import enum
-import logging
 from ska.base.faults import StateModelError
-
-module_logger = logging.getLogger(__name__)
 
 # ---------------------------------
 # Core SKA Control Model attributes

@@ -3,7 +3,10 @@ This module provides abstract base classes for device commands, and a
 ReturnCode enum.
 """
 import enum
+import logging
 from ska.base.faults import ReturnCodeError
+
+module_logger = logging.getLogger(__name__)
 
 class ReturnCode(enum.IntEnum):
     """
