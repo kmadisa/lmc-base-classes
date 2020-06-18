@@ -51,7 +51,7 @@ class SKACapability(SKAObsDevice):
             device._configured_instances = 0
             device._used_components = [""]
 
-            message = "SKACapability initialisation completed OK"
+            message = "SKACapability Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 

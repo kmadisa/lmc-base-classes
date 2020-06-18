@@ -325,7 +325,7 @@ class SKASubarray(SKAObsDevice):
                 # Might need to have the device property be mandatory in the database.
                 device._configured_capabilities = {}
 
-            message = "SKASubarray initialisation completed OK"
+            message = "SKASubarray Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 

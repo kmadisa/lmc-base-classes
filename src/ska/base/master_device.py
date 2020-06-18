@@ -68,7 +68,7 @@ class SKAMaster(SKABaseDevice):
                     device._max_capabilities[capability_type] = int(max_capability_instances)
             device._available_capabilities = device._max_capabilities.copy()
 
-            message = "Init command completed OK"
+            message = "SKAMaster Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 

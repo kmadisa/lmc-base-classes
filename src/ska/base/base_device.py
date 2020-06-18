@@ -604,7 +604,7 @@ class SKABaseDevice(Device):
                     )
                 )
 
-            message = "Init command completed OK"
+            message = "SKABaseDevice Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 

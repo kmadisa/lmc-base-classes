@@ -90,7 +90,7 @@ class SKAObsDevice(SKABaseDevice):
             device._config_progress = 0
             device._config_delay_expected = 0
 
-            message = "Init command completed OK"
+            message = "SKAObsDevice Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
