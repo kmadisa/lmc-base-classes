@@ -166,7 +166,7 @@ class BaseCommand:
         self.state_model.perform_action(action)
 
 
-class ReturnCodeCommand(BaseCommand):
+class ResponseCommand(BaseCommand):
     def __call__(self, argin=None):
         """
         What to do when the command is called. This base class simply
@@ -208,7 +208,7 @@ class ReturnCodeCommand(BaseCommand):
         return (return_code, message)
 
 
-class ActionCommand(ReturnCodeCommand):
+class ActionCommand(ResponseCommand):
     """
     Abstract base class for a tango command, which checks a state model
     to find out whether the command is allowed to be run, and after
