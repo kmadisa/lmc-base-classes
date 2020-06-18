@@ -317,7 +317,6 @@ class TestLoggingUtils:
             LoggingUtils.create_logging_handler = orig_create_logging_handler
 
 
-@pytest.mark.usefixtures("tango_context", "initialize_device")
 # PROTECTED REGION END #    //  SKABaseDevice.test_SKABaseDevice_decorators
 class TestSKABaseDevice(object):
     """Test case for packet generation."""

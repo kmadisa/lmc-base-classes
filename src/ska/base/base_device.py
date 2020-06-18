@@ -558,7 +558,7 @@ class SKABaseDevice(Device):
                 logger interface
             """
             super().__init__(
-                target, state_model, "init", start_action=True, logger
+                target, state_model, "init", start_action=True, logger=logger
             )
 
         def do(self):
@@ -822,12 +822,37 @@ class SKABaseDevice(Device):
         )
 
     def _init_command_objects(self):
-        self._reset_command = self.ResetCommand(
-            self, self.state_model, self.logger
+        self._get_version_info = self.GetVersionInfoCommand(self, self.state_model, self.logger)
+        # self.register_command(
+        #     "GetVersionInfo",
+        #     # self.ResetCommand(self, self.state_model, self.logger),
+        #     # dtype_out='DevVarLongStringArray',
+        #     # doc_out="(ReturnType, 'informational message')",
+        #     self.GetVersionInfoCommand(self, self.state_model, self.logger),
+        #     dtype_out=('str',),
+        #     doc_out="Version strings",
+        # )
+        self.register_command(
+            "Reset",
+            self.ResetCommand(self, self.state_model, self.logger),
+            dtype_out='DevVarLongStringArray',
+            doc_out="(ReturnType, 'informational message')",
         )
-        self._get_version_info_command = self.GetVersionInfoCommand(
-            self, self.state_model, self.logger
-        )
+
+    def register_command(self, name, command_object, **decorator_args):
+        command_object.__name__ = name
+        if name == "Reset":
+            command_handler = command(f=command_object, **decorator_args)
+        else: 
+            command_handler = command(f=command_object.GetVersionInfo, **decorator_args)
+        # command_handler = command(**decorator_args)(command_object)
+        #setattr(self, name, command_handler)
+        setattr(self, name, command_handler)
+        if hasattr(command_object, "check_allowed"):
+            setattr(self, f"is_{name}_allowed", command_object.check_allowed)
+
+        self.add_command(command_handler, device_level=False)
+        print(f"Added command {name}, command object {command_object}, handler {command_handler}")
 
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKABaseDevice.always_executed_hook) ENABLED START #
@@ -1053,7 +1078,7 @@ class SKABaseDevice(Device):
 
     class GetVersionInfoCommand(BaseCommand):
         """
-        A class for the SKABaseDevice's Reset() command.
+        A class for the SKABaseDevice's GetVersionInfoCommand() command.
         """
         def do(self):
             """
@@ -1064,20 +1089,12 @@ class SKABaseDevice(Device):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
+            print(f"GetVersionInfoCommand.do self {self}")
             device = self.target
             return [f"{device.__class__.__name__}, {device.read_buildState()}"]
 
-    @command(dtype_out=('str',), doc_out="Version strings",)
-    @DebugIt()
-    def GetVersionInfo(self):
-        # PROTECTED REGION ID(SKABaseDevice.GetVersionInfo) ENABLED START #
-        """
-        Returns the version information of the device.
-
-        :return: Version details of the device.
-        """
-        return self._get_version_info_command()
-        # PROTECTED REGION END #    //  SKABaseDevice.GetVersionInfo
+        def GetVersionInfo(self):
+            return self()
 
     class ResetCommand(ActionCommand):
         """
@@ -1122,34 +1139,16 @@ class SKABaseDevice(Device):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    def is_Reset_allowed(self):
-        """
-        Whether the ``Reset()`` command is allowed to be run in the
-        current state
-
-        :returns: whether the ``Reset()`` command is allowed to be run in the
-            current state
-        :rtype: boolean
-        """
-        return self._reset_command.is_allowed()
-
-    @command(
-        dtype_out='DevVarLongStringArray',
-        doc_out="(ReturnType, 'informational message')",
-    )
-    @DebugIt()
-    def Reset(self):
-        """
-        Reset the device from the FAULT state.
-
-        Subclasses that have no need to override the default
-        implementation of state management may leave ``Reset()`` alone
-        and override method ``do_Reset()`` instead.
-
-        :return: None
-        """
-        (return_code, message) = self._reset_command()
-        return [[return_code],[message]]
+    # @command(
+    #     dtype_out=('str',),
+    #     doc_out="Version strings",
+    # )
+    # def GetVersionInfo(self):
+    #     
+    GetVersionInfo = lambda self: command(
+        dtype_out=('str',),
+        doc_out="Version strings",
+    )(self._get_version_info())
 
 # ----------
 # Run server

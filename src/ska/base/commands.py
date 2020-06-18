@@ -67,6 +67,7 @@ class BaseCommand:
         self.target = target
         self.state_model = state_model
         self.logger = logger or module_logger
+        print(f"BaseCommand.__init__ {self} name {self.name}, target {self.target}")
 
     def __call__(self, argin=None):
         """
@@ -78,6 +79,7 @@ class BaseCommand:
             present
         :type argin: ANY
         """
+        print(f"BaseCommand.__call__ {self} {argin}, name {self.name}, target {self.target}")
         try:
             return self._call_do(argin)
         except Exception:
@@ -181,7 +183,7 @@ class ReturnCodeCommand(BaseCommand):
             )
             self.fatal_error()
             raise
-        return (return_code, message)
+        return [[return_code], [message]]
 
     def _call_do(self, argin=None):
         """
@@ -198,7 +200,7 @@ class ReturnCodeCommand(BaseCommand):
             (return_code, message) = self.do(argin=argin)
 
         self.logger.info(
-            f"Exiting command {self.name} with return_code {ReturnCode!s}, "
+            f"Exiting command {self.name} with return_code {return_code!s}, "
             f"message: '{message}'"
         )
         return (return_code, message)
@@ -266,7 +268,7 @@ class ActionCommand(ReturnCodeCommand):
             )
             self.fatal_error()
             raise
-        return (return_code, message)
+        return [[return_code], [message]]
 
     def _returned(self, return_code):
         """
