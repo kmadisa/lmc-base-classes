@@ -421,7 +421,9 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().init(self, target, state_model, start_action=True, logger)
+            super().init(
+                self, target, state_model, start_action=True, logger=logger
+            )
 
         def succeeded(self):
             """
@@ -567,7 +569,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "configure", start_action=True, logger
+                target, state_model, "configure", start_action=True, logger=logger
             )
 
         @staticmethod
@@ -634,7 +636,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "scan", start_action=True, logger
+                target, state_model, "scan", start_action=True, logger=logger
             )
 
         def do(self, argin):
@@ -752,7 +754,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "abort", start_action=True, logger
+                target, state_model, "abort", start_action=True, logger=logger
             )
 
         def do(self):
@@ -791,7 +793,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "obs_reset", start_action=True, logger
+                target, state_model, "obs_reset", start_action=True, logger=logger
             )
 
         def do(self):
@@ -838,7 +840,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "restart", start_action=True, logger
+                target, state_model, "restart", start_action=True, logger=logger
             )
 
         def do(self):

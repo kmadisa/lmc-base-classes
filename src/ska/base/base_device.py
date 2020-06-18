@@ -558,7 +558,7 @@ class SKABaseDevice(Device):
                 logger interface
             """
             super().__init__(
-                target, state_model, "init", start_action=True, logger
+                target, state_model, "init", start_action=True, logger=logger
             )
 
         def do(self):
