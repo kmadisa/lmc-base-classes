@@ -37,7 +37,7 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
       <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
@@ -46,25 +46,7 @@
         <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argin>
       <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argout>
-      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-    </commands>
-    <commands name="DeconfigureAllCapabilities" description="Deconfigure all instances of the given Capability type. If the capability type does not exist an exception will be raised, &#xA;otherwise it sets the configured instances for that capability type to zero." execMethod="deconfigure_all_capabilities" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
-      <argin description="Capability type">
-        <type xsi:type="pogoDsl:StringType"/>
-      </argin>
-      <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argout>
-      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-    </commands>
-    <commands name="DeconfigureCapability" description="Deconfigures a given number of instances for each capability. If the capability exists, &#xA;it decrements the configured instances by the number of instances requested,&#xA;otherwise an exceptioin will be raised.&#xA;Note: The two lists arguments must be of equal length or an exception will be raised" execMethod="deconfigure_capability" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
-      <argin description="[Number of instances to remove][Capability types]">
         <type xsi:type="pogoDsl:LongStringArrayType"/>
-      </argin>
-      <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
@@ -99,17 +81,17 @@
       <argin description="List of Resources to add to subarray.">
         <type xsi:type="pogoDsl:StringArrayType"/>
       </argin>
-      <argout description="A list of Resources added to the subarray.">
-        <type xsi:type="pogoDsl:StringArrayType"/>
+      <argout description="">
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-    <commands name="EndSB" description="Change obsState to IDLE." execMethod="end_sb" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
+    <commands name="End" description="Change obsState to IDLE." execMethod="end_sb" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
       <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
@@ -118,7 +100,7 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
       <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
@@ -126,8 +108,8 @@
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
-      <argout description="List of resources removed from the subarray.">
-        <type xsi:type="pogoDsl:StringArrayType"/>
+      <argout description="">
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
@@ -135,8 +117,8 @@
       <argin description="List of resources to remove from the subarray.">
         <type xsi:type="pogoDsl:StringArrayType"/>
       </argin>
-      <argout description="List of resources removed from the subarray.">
-        <type xsi:type="pogoDsl:StringArrayType"/>
+      <argout description="">
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
@@ -145,16 +127,34 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
       <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="true" concrete="true" concreteHere="false"/>
+    </commands>
+    <commands name="ObsReset" description="Reset observation state machine to its default state" execMethod="obsreset" displayLevel="OPERATOR" polledPeriod="0">
+      <argin description="">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argin>
+      <argout description="">
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
+      </argout>
+      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
+    </commands>
+    <commands name="Restart" description="Restart the observation state machine" execMethod="restart" displayLevel="OPERATOR" polledPeriod="0">
+      <argin description="">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argin>
+      <argout description="">
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
+      </argout>
+      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
     <commands name="Scan" description="Starts the scan." execMethod="scan" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
       <argin description="">
         <type xsi:type="pogoDsl:StringArrayType"/>
       </argin>
       <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
+        <type xsi:type="pogoDsl:LongStringArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>

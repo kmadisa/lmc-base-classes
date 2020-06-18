@@ -1110,7 +1110,10 @@ class SKABaseDevice(Device):
         """
         return self._reset_command.is_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def Reset(self):
         """
@@ -1122,7 +1125,8 @@ class SKABaseDevice(Device):
 
         :return: None
         """
-        self._reset_command()
+        (return_code, message) = self._reset_command()
+        return [[return_code],[message]]
 
 # ----------
 # Run server

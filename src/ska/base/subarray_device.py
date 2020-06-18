@@ -1004,13 +1004,17 @@ class SKASubarray(SKAObsDevice):
         """
         return self._on_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def On(self):
         """
         Turn subarray on
         """
-        self._on_command()
+        (return_code, message) = self._on_command()
+        return [[return_code],[message]]
 
     def is_Off_allowed(self):
         """
@@ -1022,13 +1026,17 @@ class SKASubarray(SKAObsDevice):
         """
         return self._off_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def Off(self):
         """
         Turn the subarray of
         """
-        self._off_command()
+        (return_code, message) = self._off_command()
+        return [[return_code],[message]]
 
     def is_AssignResources_allowed(self):
         """
@@ -1044,6 +1052,8 @@ class SKASubarray(SKAObsDevice):
     @command(
         dtype_in=('str',),
         doc_in="List of Resources to add to subarray.",
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
     )
     @DebugIt()
     def AssignResources(self, argin):
@@ -1053,7 +1063,8 @@ class SKASubarray(SKAObsDevice):
         :param argin: the resources to be assigned
         :type argin: list of str
         """
-        self._assign_resources_command(argin)
+        (return_code, message) = self._assign_resources_command(argin)
+        return [[return_code],[message]]
 
     def is_ReleaseResources_allowed(self):
         """
@@ -1068,7 +1079,9 @@ class SKASubarray(SKAObsDevice):
 
     @command(
         dtype_in=('str',),
-        doc_in="List of resources to remove from the subarray."
+        doc_in="List of resources to remove from the subarray.",
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
     )
     @DebugIt()
     def ReleaseResources(self, argin):
@@ -1078,7 +1091,8 @@ class SKASubarray(SKAObsDevice):
         :param argin: the resources to be released
         :type argin: list of str
         """
-        self._release_resources_command(argin)
+        (return_code, message) = self._release_resources_command(argin)
+        return [[return_code],[message]]
 
     def is_ReleaseAllResources_allowed(self):
         """
@@ -1091,7 +1105,10 @@ class SKASubarray(SKAObsDevice):
         """
         return self._release_all_resources_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def ReleaseAllResources(self):
         """
@@ -1100,7 +1117,8 @@ class SKASubarray(SKAObsDevice):
         :return: list of resources removed
         :rtype: list of string
         """
-        self._release_all_resources_command()
+        (return_code, message) = self._release_all_resources_command()
+        return [[return_code],[message]]
 
     def is_Configure_allowed(self):
         """
@@ -1116,6 +1134,8 @@ class SKASubarray(SKAObsDevice):
     @command(
         dtype_in='DevVarLongStringArray',
         doc_in="[Number of instances to add][Capability types]",
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
     )
     @DebugIt()
     def Configure(self, argin):
@@ -1125,7 +1145,8 @@ class SKASubarray(SKAObsDevice):
         :param argin: configuration specification
         :type argin: string
         """
-        self._configure_command(argin)
+        (return_code, message) = self._configure_command(argin)
+        return [[return_code],[message]]
 
     def is_Scan_allowed(self):
         """
@@ -1137,7 +1158,11 @@ class SKASubarray(SKAObsDevice):
         """
         return self._scan_command.check_allowed()
 
-    @command(dtype_in=('str',),)
+    @command(
+        dtype_in=('str',),
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def Scan(self, argin):
         """
@@ -1146,7 +1171,8 @@ class SKASubarray(SKAObsDevice):
         :param argin: Information about the scan
         :type argin: Array of str
         """
-        self._scan_command(argin)
+        (return_code, message) = self._scan_command(argin)
+        return [[return_code],[message]]
 
     def is_EndScan_allowed(self):
         """
@@ -1158,13 +1184,17 @@ class SKASubarray(SKAObsDevice):
         """
         return self._end_scan_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def EndScan(self):
         """
         End the scan
         """
-        self._end_scan_command()
+        (return_code, message) = self._end_scan_command()
+        return [[return_code],[message]]
 
     def is_End_allowed(self):
         """
@@ -1176,14 +1206,18 @@ class SKASubarray(SKAObsDevice):
         """
         return self._end_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def End(self):
         # PROTECTED REGION ID(SKASubarray.EndSB) ENABLED START #
         """
         End the scan block.
         """
-        self._end_command()
+        (return_code, message) = self._end_command()
+        return [[return_code],[message]]
 
     def is_Abort_allowed(self):
         """
@@ -1195,14 +1229,18 @@ class SKASubarray(SKAObsDevice):
         """
         return self._abort_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def Abort(self):
         """
         Abort any long-running command such as ``Configure()`` or
         ``Scan()``.
         """
-        self._abort_command()
+        (return_code, message) = self._abort_command()
+        return [[return_code],[message]]
 
     def is_ObsReset_allowed(self):
         """
@@ -1215,13 +1253,17 @@ class SKASubarray(SKAObsDevice):
         """
         return self._obs_reset_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def ObsReset(self):
         """
         Reset the current observation process.
         """
-        self._obs_reset_command()
+        (return_code, message) = self._obs_reset_command()
+        return [[return_code],[message]]
 
     def is_Restart_allowed(self):
         """
@@ -1234,14 +1276,18 @@ class SKASubarray(SKAObsDevice):
         """
         return self._restart_command.check_allowed()
 
-    @command()
+    @command(
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def Restart(self):
         """
         Restart the subarray. That is, deconfigure and release
         all resources.
         """
-        self._restart_command()
+        (return_code, message) = self._restart_command()
+        return [[return_code],[message]]
 
 
 # ----------

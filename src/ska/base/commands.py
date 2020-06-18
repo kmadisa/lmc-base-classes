@@ -72,8 +72,7 @@ class BaseCommand:
             present
         :type argin: ANY
         """
-        (return_code, message) = self._call_do(argin)
-        return ((return_code,), (message,))
+        return self._call_do(argin)
 
     def _call_do(self, argin=None):
         """

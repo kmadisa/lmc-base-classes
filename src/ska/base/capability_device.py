@@ -190,6 +190,8 @@ class SKACapability(SKAObsDevice):
     @command(
         dtype_in='uint16',
         doc_in="The number of instances to configure for this Capability.",
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
     )
     @DebugIt()
     def ConfigureInstances(self, argin):
@@ -200,7 +202,8 @@ class SKACapability(SKAObsDevice):
         :param argin: Number of instances to configure
         :return: None.
         """
-        self._configure_instances_command(argin)
+        (return_code, message) = self._configure_instances_command(argin)
+        return [[return_code], [message]]
         # PROTECTED REGION END #    //  SKACapability.ConfigureInstances
 
 

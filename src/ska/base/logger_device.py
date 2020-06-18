@@ -116,10 +116,14 @@ class SKALogger(SKABaseDevice):
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
-    @command(dtype_in='DevVarLongStringArray',
-             doc_in="Logging level for selected devices:"
-                    "(0=OFF, 1=FATAL, 2=ERROR, 3=WARNING, 4=INFO, 5=DEBUG)."
-                    "Example: [[4, 5], ['my/dev/1', 'my/dev/2']].")
+    @command(
+        dtype_in='DevVarLongStringArray',
+        doc_in="Logging level for selected devices:"
+               "(0=OFF, 1=FATAL, 2=ERROR, 3=WARNING, 4=INFO, 5=DEBUG)."
+               "Example: [[4, 5], ['my/dev/1', 'my/dev/2']].",
+        dtype_out='DevVarLongStringArray',
+        doc_out="(ReturnType, 'informational message')",
+    )
     @DebugIt()
     def SetLoggingLevel(self, argin):
         # PROTECTED REGION ID(SKALogger.SetLoggingLevel) ENABLED START #
@@ -135,7 +139,9 @@ class SKALogger(SKABaseDevice):
 
         :returns: None.
         """
-        self._set_logging_level_command(argin)
+        (return_code, message) = self._set_logging_level_command(argin)
+        return [[return_code], [message]]
+
         # PROTECTED REGION END #    //  SKALogger.SetLoggingLevel
 
 # ----------

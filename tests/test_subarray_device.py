@@ -58,7 +58,9 @@ class TestSKASubarray(object):
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
-        assert tango_context.device.Abort() is None
+        assert tango_context.device.Abort() == [
+            [ReturnCode.OK,], ["Abort command completed OK",]
+        ]
         # PROTECTED REGION END #    //  SKASubarray.test_Abort
 
     # PROTECTED REGION ID(SKASubarray.test_Configure_decorators) ENABLED START #
@@ -125,7 +127,9 @@ class TestSKASubarray(object):
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
-        assert tango_context.device.End() is None
+        assert tango_context.device.End() == [
+            [ReturnCode.OK,], ["End command completed OK",]
+        ]
         # PROTECTED REGION END #    //  SKASubarray.test_EndSB
 
     # PROTECTED REGION ID(SKASubarray.test_EndScan_decorators) ENABLED START #
@@ -137,7 +141,9 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
         tango_context.device.Scan([""])
-        assert tango_context.device.EndScan() is None
+        assert tango_context.device.EndScan() == [
+            [ReturnCode.OK,], ["EndScan command completed OK",]
+        ]
         # PROTECTED REGION END #    //  SKASubarray.test_EndScan
 
     # PROTECTED REGION ID(SKASubarray.test_ReleaseAllResources_decorators) ENABLED START #
@@ -175,7 +181,9 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
         tango_context.device.Abort()
-        assert tango_context.device.ObsReset() is None
+        assert tango_context.device.ObsReset() == [
+            [ReturnCode.OK,], ["ObsReset command completed OK",]
+        ]
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
 
     # PROTECTED REGION ID(SKASubarray.test_Scan_decorators) ENABLED START #
@@ -186,7 +194,9 @@ class TestSKASubarray(object):
         tango_context.device.On()
         tango_context.device.AssignResources(["BAND1"])
         tango_context.device.Configure([[2], ["BAND1"]])
-        assert tango_context.device.Scan([""]) is None
+        assert tango_context.device.Scan([""]) == [
+            [ReturnCode.STARTED,], ["Scan command STARTED",]
+        ]
         # PROTECTED REGION END #    //  SKASubarray.test_Scan
 
     # PROTECTED REGION ID(SKASubarray.test_activationTime_decorators) ENABLED START #
