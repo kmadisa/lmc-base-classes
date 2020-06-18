@@ -85,9 +85,9 @@ class BaseCommand:
         :type argin: ANY
         """
         if argin is None:
-            (return_code, message) = self.do(self.target)
+            (return_code, message) = self.do()
         else:
-            (return_code, message) = self.do(self.target, argin=argin)
+            (return_code, message) = self.do(argin=argin)
 
         self.logger.info(
             f"Exiting command {self.name} with return code {return_code!s}, "
@@ -95,16 +95,12 @@ class BaseCommand:
         )
         return (return_code, message)
 
-    def do(self, target, argin=None):
+    def do(self, argin=None):
         """
         Hook for the functionality that the command implements. This
         class provides stub functionality; subclasses should subclass
         this method with their command functionality.
 
-        :param target: the object that this base command acts upon. For
-            example, the device that this BaseCommand implements the
-            command for.
-        :type target: object
         :param argin: the argument passed to the Tango command, if
             present
         :type argin: ANY

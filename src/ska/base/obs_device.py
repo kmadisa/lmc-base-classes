@@ -74,7 +74,7 @@ class SKAObsDevice(SKABaseDevice):
         """
         A class for the SKAObsDevice's init_device() "command".
         """
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for device initialisation.
 
@@ -83,11 +83,12 @@ class SKAObsDevice(SKABaseDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do(target)
+            (return_code, message) = super().do()
+            device = self.target
 
-            target._obs_mode = ObsMode.IDLE
-            target._config_progress = 0
-            target._config_delay_expected = 0
+            device._obs_mode = ObsMode.IDLE
+            device._config_progress = 0
+            device._config_delay_expected = 0
 
             message = "Init command completed OK"
             self.logger.info(message)

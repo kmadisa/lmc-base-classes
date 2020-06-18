@@ -92,14 +92,10 @@ class SKALogger(SKABaseDevice):
             """
             super().__init__(target, state_model, logger=logger)
 
-        def do(self, target, argin):
+        def do(self, argin):
             """
             Stateless hook for SetLoggingLevel() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKALogger device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.

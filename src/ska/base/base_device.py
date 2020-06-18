@@ -557,52 +557,52 @@ class SKABaseDevice(Device):
             """
             super().__init__(target, state_model, "init", logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for device initialisation.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target._health_state = HealthState.OK
-            target._control_mode = ControlMode.REMOTE
-            target._simulation_mode = SimulationMode.FALSE
-            target._test_mode = TestMode.NONE
+            device = self.target
 
-            target._build_state = '{}, {}, {}'.format(release.name,
+            device._health_state = HealthState.OK
+            device._control_mode = ControlMode.REMOTE
+            device._simulation_mode = SimulationMode.FALSE
+            device._test_mode = TestMode.NONE
+
+            device._build_state = '{}, {}, {}'.format(release.name,
                                                       release.version,
                                                       release.description)
-            target._version_id = release.version
+            device._version_id = release.version
 
             try:
                 # create TANGO Groups dict, according to property
                 self.logger.debug(
                     "Groups definitions: {}".format(
-                        target.GroupDefinitions
+                        device.GroupDefinitions
                     )
                 )
-                target.groups = get_groups_from_json(
-                    target.GroupDefinitions
+                device.groups = get_groups_from_json(
+                    device.GroupDefinitions
                 )
                 self.logger.info(
                     "Groups loaded: {}".format(
-                        sorted(target.groups.keys())
+                        sorted(device.groups.keys())
                     )
                 )
             except GroupDefinitionsError:
                 self.logger.debug(
                     "No Groups loaded for device: {}".format(
-                        target.get_name()
+                        device.get_name()
                     )
                 )
 
-            return (ReturnCode.OK, "init_device executed")
+            message = "Init command completed OK"
+            self.logger.info(message)
+            return (ReturnCode.OK, message)
 
     class ResetCommand(ActionCommand):
         """
@@ -628,23 +628,20 @@ class SKABaseDevice(Device):
             """
             super().__init__(target, state_model, "reset", logger=logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for device reset.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target._health_state = HealthState.OK
-            target._control_mode = ControlMode.REMOTE
-            target._simulation_mode = SimulationMode.FALSE
-            target._test_mode = TestMode.NONE
+            device = self.target
+            device._health_state = HealthState.OK
+            device._control_mode = ControlMode.REMOTE
+            device._simulation_mode = SimulationMode.FALSE
+            device._test_mode = TestMode.NONE
 
             message = "Reset command completed OK"
             self.logger.info(message)

@@ -291,38 +291,35 @@ class SKASubarray(SKAObsDevice):
         """
         A class for the SKASubarray's init_device() "command".
         """
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for device initialisation.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do(target)
+            (return_code, message) = super().do()
+            device = self.target
 
-            target.resource_manager = SKASubarrayResourceManager()
+            device.resource_manager = SKASubarrayResourceManager()
 
             # Initialize attribute values.
-            target._activation_time = 0.0
+            device._activation_time = 0.0
 
             # device._configured_capabilities is kept as a
             # dictionary internally. The keys and values will represent
             # the capability type name and the number of instances,
             # respectively.
             try:
-                target._configured_capabilities = dict.fromkeys(
-                    target.CapabilityTypes,
+                device._configured_capabilities = dict.fromkeys(
+                    device.CapabilityTypes,
                     0
                 )
             except TypeError:
                 # Might need to have the device property be mandatory in the database.
-                target._configured_capabilities = {}
+                device._configured_capabilities = {}
 
             message = "SKASubarray initialisation completed OK"
             self.logger.info(message)
@@ -352,14 +349,10 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "on", logger=logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for On() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -393,14 +386,10 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "off", logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for Off() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -455,14 +444,10 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "assign", logger)
 
-        def do(self, target, argin):
+        def do(self, argin):
             """
             Stateless hook for AssignResources() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :param argin: The resources to be assigned
             :type argin: list of str
             :return: A tuple containing a return code and a string
@@ -470,7 +455,8 @@ class SKASubarray(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target.assign(argin)
+            resource_manager = self.target
+            resource_manager.assign(argin)
 
             message = "AssignResources command completed OK"
             self.logger.info(message)
@@ -500,14 +486,10 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "release", logger)
 
-        def do(self, target, argin):
+        def do(self, argin):
             """
             Stateless hook for ReleaseResources() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :param argin: The resources to be released
             :type argin: list of str
             :return: A tuple containing a return code and a string
@@ -515,7 +497,8 @@ class SKASubarray(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target.release(argin)
+            resource_manager = self.target
+            resource_manager.release(argin)
 
             message = "ReleaseResources command completed OK"
             self.logger.info(message)
@@ -525,20 +508,17 @@ class SKASubarray(SKAObsDevice):
         """
         A class for SKASubarray's ReleaseAllResources() command.
         """
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for ReleaseAllResources() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target.release_all()
+            resource_manager = self.target
+            resource_manager.release_all()
 
             message = "ReleaseAllResources command completed OK"
             self.logger.info(message)
@@ -583,14 +563,10 @@ class SKASubarray(SKAObsDevice):
             if len(capabilities_instances) != len(capability_types):
                 raise ValueError("Argin value lists size mismatch.")
 
-        def do(self, target, argin):
+        def do(self, argin):
             """
             Stateless hook for Configure() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :param argin: The configuration
             :type argin: [list of int, list of str]
             :return: A tuple containing a return code and a string
@@ -598,14 +574,16 @@ class SKASubarray(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
+            device = self.target
+
             capabilities_instances, capability_types = argin
-            target._validate_capability_types(capability_types)
+            device._validate_capability_types(capability_types)
             self._validate_input_sizes(argin)
 
             # Perform the configuration.
             for capability_instances, capability_type in zip(
                     capabilities_instances, capability_types):
-                target._configured_capabilities[capability_type] += capability_instances
+                device._configured_capabilities[capability_type] += capability_instances
 
             message = "Configure command completed OK"
             self.logger.info(message)
@@ -635,14 +613,10 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "scan", logger)
 
-        def do(self, target, argin):
+        def do(self, argin):
             """
             Stateless hook for Scan() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :param argin: Scan info
             :type argin: str
             :return: A tuple containing a return code and a string
@@ -678,14 +652,10 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "end_scan", logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for EndScan() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -719,20 +689,17 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "end", logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for End() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target._deconfigure()
+            device = self.target
+            device._deconfigure()
 
             message = "End command completed OK"
             self.logger.info(message)
@@ -762,14 +729,10 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "abort", logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for Abort() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -803,24 +766,22 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "obs_reset", logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for ObsReset() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
+            device = self.target
+
             # We might have interrupted a long-running command such as a Configure
             # or a Scan, so we need to clean up from that.
 
             # Now totally deconfigure
-            target._deconfigure()
+            device._deconfigure()
 
             message = "ObsReset command completed OK"
             self.logger.info(message)
@@ -850,27 +811,25 @@ class SKASubarray(SKAObsDevice):
             """
             super().__init__(target, state_model, "restart", logger)
 
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for Restart() command functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
+            device = self.target
+
             # We might have interrupted a long-running command such as a Configure
             # or a Scan, so we need to clean up from that.
 
             # Now totally deconfigure
-            target._deconfigure()
+            device._deconfigure()
 
             # and release all resources
-            target.resource_manager.release_all()
+            device.resource_manager.release_all()
 
             message = "Restart command completed OK"
             self.logger.info(message)

@@ -35,24 +35,21 @@ class SKACapability(SKAObsDevice):
         )
 
     class InitCommand(SKAObsDevice.InitCommand):
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for device initialisation.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do(target)
+            (return_code, message) = super().do()
 
-            target._activation_time = 0.0
-            target._configured_instances = 0
-            target._used_components = [""]
+            device = self.target
+            device._activation_time = 0.0
+            device._configured_instances = 0
+            device._used_components = [""]
 
             message = "SKACapability initialisation completed OK"
             self.logger.info(message)
@@ -173,21 +170,18 @@ class SKACapability(SKAObsDevice):
             """
             super().__init__(target, state_model, logger=logger)
 
-        def do(self, target, argin):
+        def do(self, argin):
             """
             Stateless hook for ConfigureInstances()) command
             functionality.
 
-            :param target: the object that this command acts upon; for
-                example, the SKALogger device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            target._configured_instances = argin
+            device = self.target
+            device._configured_instances = argin
 
             message = "ConfigureInstances command completed OK"
             self.logger.info(message)

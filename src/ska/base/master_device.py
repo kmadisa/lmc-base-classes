@@ -33,34 +33,31 @@ class SKAMaster(SKABaseDevice):
         """
         A class for the SKAMaster's init_device() "command".
         """
-        def do(self, target):
+        def do(self):
             """
             Stateless hook for device initialisation.
 
-            :param target: the object that this command acts upon; for
-                example, the SKASubarray device for which this class
-                implements the command
-            :type target: object
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do(target)
+            (return_code, message) = super().do()
 
-            target._element_logger_address = ""
-            target._element_alarm_address = ""
-            target._element_tel_state_address = ""
-            target._element_database_address = ""
-            target._element_alarm_device = ""
-            target._element_tel_state_device = ""
-            target._element_database_device = ""
-            target._max_capabilities = {}
-            if target.MaxCapabilities:
-                for max_capability in target.MaxCapabilities:
+            device = self.target
+            device._element_logger_address = ""
+            device._element_alarm_address = ""
+            device._element_tel_state_address = ""
+            device._element_database_address = ""
+            device._element_alarm_device = ""
+            device._element_tel_state_device = ""
+            device._element_database_device = ""
+            device._max_capabilities = {}
+            if device.MaxCapabilities:
+                for max_capability in device.MaxCapabilities:
                     capability_type, max_capability_instances = max_capability.split(":")
-                    target._max_capabilities[capability_type] = int(max_capability_instances)
-            target._available_capabilities = target._max_capabilities.copy()
+                    device._max_capabilities[capability_type] = int(max_capability_instances)
+            device._available_capabilities = device._max_capabilities.copy()
 
             message = "Init command completed OK"
             self.logger.info(message)
