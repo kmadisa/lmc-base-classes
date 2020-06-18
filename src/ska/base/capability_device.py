@@ -44,14 +44,14 @@ class SKACapability(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do()
+            super().do()
 
             device = self.target
             device._activation_time = 0.0
             device._configured_instances = 0
             device._used_components = [""]
 
-            message = "SKACapability initialisation completed OK"
+            message = "SKACapability Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 

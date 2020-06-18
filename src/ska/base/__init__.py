@@ -7,8 +7,8 @@ __all__ = (
     "SKALogger",
     "SKAMaster",
     "SKAObsDevice", "SKAObsDeviceStateModel",
-    "SKASubarray", "SKASubarrayStateModel", "SKASubarrayResourceManager"
-    "SKATelState"
+    "SKASubarray", "SKASubarrayStateModel", "SKASubarrayResourceManager",
+    "SKATelState",
 )
 
 # Note: order of imports is important - start with lowest in the hierarchy

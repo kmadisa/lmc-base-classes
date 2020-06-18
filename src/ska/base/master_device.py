@@ -51,7 +51,7 @@ class SKAMaster(SKABaseDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do()
+            super().do()
 
             device = self.target
             device._element_logger_address = ""
@@ -68,7 +68,7 @@ class SKAMaster(SKABaseDevice):
                     device._max_capabilities[capability_type] = int(max_capability_instances)
             device._available_capabilities = device._max_capabilities.copy()
 
-            message = "Init command completed OK"
+            message = "SKAMaster Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 

@@ -11,6 +11,8 @@ into/from Subarray, configuring capabilities, and exposes the related
 information like assigned resources, configured capabilities, etc.
 """
 # PROTECTED REGION ID(SKASubarray.additionnal_import) ENABLED START #
+import json
+
 from tango import DebugIt
 from tango import DevState
 from tango.server import run, attribute, command
@@ -23,7 +25,7 @@ from ska.base.control_model import ObsState
 from ska.base.faults import CapabilityValidationError
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 
-__all__ = ["SKASubarray", "SKASubarrayStateModel", "main"]
+__all__ = ["SKASubarray", "SKASubarrayResourceManager", "SKASubarrayStateModel", "main"]
 
 
 class SKASubarrayStateModel(SKAObsDeviceStateModel):
@@ -242,19 +244,23 @@ class SKASubarrayResourceManager:
         """
         Assign some resources
 
-        :param resources: resources to releae
+        :param resources: resources to assign
         :type resources: collection of string
         """
-        self._resources |= set(resources)
+        resources_dict = json.loads(resources)
+        add_resources = resources_dict['example']
+        self._resources |= set(add_resources)
 
     def release(self, resources):
         """
         Release some resources
 
-        :param resources: resources to releae
+        :param resources: resources to release
         :type resources: collection of string
         """
-        self._resources -= set(resources)
+        resources_dict = json.loads(resources)
+        drop_resources = resources_dict['example']
+        self._resources -= set(drop_resources)
 
     def release_all(self):
         """
@@ -300,12 +306,10 @@ class SKASubarray(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            (return_code, message) = super().do()
+            super().do()
+
             device = self.target
-
             device.resource_manager = SKASubarrayResourceManager()
-
-            # Initialize attribute values.
             device._activation_time = 0.0
 
             # device._configured_capabilities is kept as a
@@ -321,7 +325,7 @@ class SKASubarray(SKAObsDevice):
                 # Might need to have the device property be mandatory in the database.
                 device._configured_capabilities = {}
 
-            message = "SKASubarray initialisation completed OK"
+            message = "SKASubarray Init command completed OK"
             self.logger.info(message)
             return (ReturnCode.OK, message)
 
@@ -384,7 +388,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "off", logger)
+            super().__init__(target, state_model, "off", logger=logger)
 
         def do(self):
             """
@@ -403,7 +407,7 @@ class SKASubarray(SKAObsDevice):
         """
         An abstract base class for SKASubarray's resourcing commands.
         """
-        def __init__(self, target, state_model, logger=None):
+        def __init__(self, target, state_model, action_hook, logger=None):
             """
             Constructor for _ResourcingCommand
 
@@ -416,12 +420,20 @@ class SKASubarray(SKAObsDevice):
                  with actions.
             :type state_model: SKABaseClassStateModel or a subclass of
                 same
+            :param action_hook: a hook for the command, used to build
+                actions that will be sent to the state model; for example,
+                if the hook is "scan", then success of the command will
+                result in action "scan_succeeded" being sent to the state
+                model.
+            :type action_hook: string
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().init(self, target, state_model, start_action=True, logger)
+            super().__init__(
+                target, state_model, action_hook, start_action=True, logger=logger
+            )
 
         def succeeded(self):
             """
@@ -438,7 +450,7 @@ class SKASubarray(SKAObsDevice):
             """
             Action to take on failed completion of a resourcing command.
             """
-            self._state_model.perform_action("resourcing_failed")
+            self.state_model.perform_action("resourcing_failed")
 
     class AssignResourcesCommand(_ResourcingCommand):
         """
@@ -462,7 +474,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "assign", logger)
+            super().__init__(target, state_model, "assign", logger=logger)
 
         def do(self, argin):
             """
@@ -504,7 +516,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "release", logger)
+            super().__init__(target, state_model, "release", logger=logger)
 
         def do(self, argin):
             """
@@ -567,30 +579,15 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "configure", start_action=True, logger
+                target, state_model, "configure", start_action=True, logger=logger
             )
-
-        @staticmethod
-        def _validate_input_sizes(argin):
-            """
-            Check the validity of the input parameters passed to the
-            Configure command.
-
-            :param argin: A tuple of two lists representing [number of
-                instances][capability types]
-            :type argin: tango.DevVarLongStringArray
-            :raises ValueError: If the two lists are not equal in length.
-            """
-            capabilities_instances, capability_types = argin
-            if len(capabilities_instances) != len(capability_types):
-                raise ValueError("Argin value lists size mismatch.")
 
         def do(self, argin):
             """
             Stateless hook for Configure() command functionality.
 
-            :param argin: The configuration
-            :type argin: [list of int, list of str]
+            :param argin: The configuration as JSON
+            :type argin: str
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -598,13 +595,16 @@ class SKASubarray(SKAObsDevice):
             """
             device = self.target
 
-            capabilities_instances, capability_types = argin
+            # In this example implementation, the keys of the dict
+            # are the capability types, and the values are the
+            # integer number of instances required.
+            # E.g., config = {"BAND1": 5, "BAND2": 3}
+            config = json.loads(argin)
+            capability_types = list(config.keys())
             device._validate_capability_types(capability_types)
-            self._validate_input_sizes(argin)
 
             # Perform the configuration.
-            for capability_instances, capability_type in zip(
-                    capabilities_instances, capability_types):
+            for capability_type, capability_instances in config.items():
                 device._configured_capabilities[capability_type] += capability_instances
 
             message = "Configure command completed OK"
@@ -634,7 +634,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "scan", start_action=True, logger
+                target, state_model, "scan", start_action=True, logger=logger
             )
 
         def do(self, argin):
@@ -648,7 +648,8 @@ class SKASubarray(SKAObsDevice):
                 information purpose only.
             :rtype: (ReturnCode, str)
             """
-            message = "Scan command STARTED"
+            # we do a json.loads just for basic string validation
+            message = f"Scan command STARTED - config {json.loads(argin)}"
             self.logger.info(message)
             return (ReturnCode.STARTED, message)
 
@@ -674,7 +675,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "end_scan", logger)
+            super().__init__(target, state_model, "end_scan", logger=logger)
 
         def do(self):
             """
@@ -711,7 +712,7 @@ class SKASubarray(SKAObsDevice):
             :type logger: a logger that implements the standard library
                 logger interface
             """
-            super().__init__(target, state_model, "end", logger)
+            super().__init__(target, state_model, "end", logger=logger)
 
         def do(self):
             """
@@ -752,7 +753,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "abort", start_action=True, logger
+                target, state_model, "abort", start_action=True, logger=logger
             )
 
         def do(self):
@@ -791,7 +792,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "obs_reset", start_action=True, logger
+                target, state_model, "obs_reset", start_action=True, logger=logger
             )
 
         def do(self):
@@ -838,7 +839,7 @@ class SKASubarray(SKAObsDevice):
                 logger interface
             """
             super().__init__(
-                target, state_model, "restart", start_action=True, logger
+                target, state_model, "restart", start_action=True, logger=logger
             )
 
         def do(self):
@@ -1080,8 +1081,8 @@ class SKASubarray(SKAObsDevice):
         return self._assign_resources_command.check_allowed()
 
     @command(
-        dtype_in=('str',),
-        doc_in="List of Resources to add to subarray.",
+        dtype_in="DevString",
+        doc_in="JSON-encoded string with the resources to add to subarray",
         dtype_out='DevVarLongStringArray',
         doc_out="(ReturnType, 'informational message')",
     )
@@ -1108,8 +1109,8 @@ class SKASubarray(SKAObsDevice):
         return self._release_resources_command.check_allowed()
 
     @command(
-        dtype_in=('str',),
-        doc_in="List of resources to remove from the subarray.",
+        dtype_in="DevString",
+        doc_in="JSON-encoded string with the resources to remove from the subarray",
         dtype_out='DevVarLongStringArray',
         doc_out="(ReturnType, 'informational message')",
     )
@@ -1162,8 +1163,8 @@ class SKASubarray(SKAObsDevice):
         return self._configure_command.check_allowed()
 
     @command(
-        dtype_in='DevVarLongStringArray',
-        doc_in="[Number of instances to add][Capability types]",
+        dtype_in="DevString",
+        doc_in="JSON-encoded string with the scan configuration",
         dtype_out='DevVarLongStringArray',
         doc_out="(ReturnType, 'informational message')",
     )
@@ -1189,8 +1190,9 @@ class SKASubarray(SKAObsDevice):
         return self._scan_command.check_allowed()
 
     @command(
-        dtype_in=('str',),
-        dtype_out='DevVarLongStringArray',
+        dtype_in="DevString",
+        doc_in="JSON-encoded string with the per-scan configuration",
+        dtype_out="DevVarLongStringArray",
         doc_out="(ReturnType, 'informational message')",
     )
     @DebugIt()
