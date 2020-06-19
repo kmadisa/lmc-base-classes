@@ -19,7 +19,7 @@ from tango.server import run, attribute
 
 # SKA specific imports
 from ska.base import SKABaseDevice, SKABaseDeviceStateModel
-from ska.base.commands import ReturnCode
+from ska.base.commands import ResultCode
 from ska.base.control_model import AdminMode, ObsMode, ObsState
 # PROTECTED REGION END #    //  SKAObsDevice.additionnal_imports
 
@@ -81,7 +81,7 @@ class SKAObsDevice(SKABaseDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             super().do()
 
@@ -92,7 +92,7 @@ class SKAObsDevice(SKABaseDevice):
 
             message = "SKAObsDevice Init command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     # PROTECTED REGION ID(SKAObsDevice.class_variable) ENABLED START #
 

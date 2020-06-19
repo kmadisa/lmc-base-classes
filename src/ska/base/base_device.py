@@ -31,7 +31,7 @@ from tango.server import run, Device, attribute, command, device_property
 import ska.logging as ska_logging
 from ska.base import release
 from ska.base.commands import (
-    ActionCommand, BaseCommand, ReturnCode
+    ActionCommand, BaseCommand, ResultCode
 )
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode, HealthState,
@@ -568,7 +568,7 @@ class SKABaseDevice(Device):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
 
@@ -606,7 +606,7 @@ class SKABaseDevice(Device):
 
             message = "SKABaseDevice Init command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     _logging_config_lock = threading.Lock()
     _logging_configured = False
@@ -1062,7 +1062,7 @@ class SKABaseDevice(Device):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
             return [f"{device.__class__.__name__}, {device.read_buildState()}"]
@@ -1110,7 +1110,7 @@ class SKABaseDevice(Device):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
             device._health_state = HealthState.OK
@@ -1120,7 +1120,7 @@ class SKABaseDevice(Device):
 
             message = "Reset command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     def is_Reset_allowed(self):
         """

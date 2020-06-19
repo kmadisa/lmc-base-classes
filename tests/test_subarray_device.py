@@ -16,7 +16,7 @@ from tango import DevState, DevSource, DevFailed
 
 # PROTECTED REGION ID(SKASubarray.test_additional_imports) ENABLED START #
 from ska.base import SKASubarray, SKASubarrayResourceManager
-from ska.base.commands import ReturnCode
+from ska.base.commands import ResultCode
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
 )
@@ -59,7 +59,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
         assert tango_context.device.Abort() == [
-            [ReturnCode.OK], ["Abort command completed OK"]
+            [ResultCode.OK], ["Abort command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_Abort
 
@@ -130,7 +130,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
         assert tango_context.device.End() == [
-            [ReturnCode.OK], ["End command completed OK"]
+            [ResultCode.OK], ["End command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_EndSB
 
@@ -144,7 +144,7 @@ class TestSKASubarray(object):
         tango_context.device.Configure('{"BAND1": 2}')
         tango_context.device.Scan('{"id": 123}')
         assert tango_context.device.EndScan() == [
-            [ReturnCode.OK], ["EndScan command completed OK"]
+            [ResultCode.OK], ["EndScan command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_EndScan
 
@@ -183,7 +183,7 @@ class TestSKASubarray(object):
         tango_context.device.Configure('{"BAND1": 2}')
         tango_context.device.Abort()
         assert tango_context.device.ObsReset() == [
-            [ReturnCode.OK], ["ObsReset command completed OK"]
+            [ResultCode.OK], ["ObsReset command completed OK"]
         ]
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
 
@@ -196,7 +196,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
         assert tango_context.device.Scan('{"id": 123}') == [
-            [ReturnCode.STARTED], ["Scan command STARTED - config {'id': 123}"]
+            [ResultCode.STARTED], ["Scan command STARTED - config {'id': 123}"]
         ]
         tango_context.device.EndScan()
         with pytest.raises(DevFailed):
@@ -594,7 +594,7 @@ class TestSKASubarray_commands:
         # should see the result in the resource manager
         assert assign_resources.is_allowed()
         assert assign_resources('{"example": ["foo"]}') == (
-            ReturnCode.OK, "AssignResources command completed OK"
+            ResultCode.OK, "AssignResources command completed OK"
         )
         assert resource_manager.size() == 1
         assert resource_manager.get() == set(["foo"])

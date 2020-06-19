@@ -17,7 +17,7 @@ from tango.server import run, command
 
 # SKA specific imports
 from ska.base import SKABaseDevice
-from ska.base.commands import ResponseCommand, ReturnCode
+from ska.base.commands import ResponseCommand, ResultCode
 from ska.base.control_model import LoggingLevel
 # PROTECTED REGION END #    //  SKALogger.additionnal_import
 
@@ -99,7 +99,7 @@ class SKALogger(SKABaseDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             logging_levels = argin[0][:]
             logging_devices = argin[1][:]
@@ -114,7 +114,7 @@ class SKALogger(SKABaseDevice):
 
             message = "SetLoggingLevel command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     @command(
         dtype_in='DevVarLongStringArray',

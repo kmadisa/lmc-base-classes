@@ -15,7 +15,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice
-from ska.base.commands import ResponseCommand, ReturnCode
+from ska.base.commands import ResponseCommand, ResultCode
 # PROTECTED REGION END #    //  SKACapability.additionnal_imports
 
 __all__ = ["SKACapability", "main"]
@@ -42,7 +42,7 @@ class SKACapability(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             super().do()
 
@@ -53,7 +53,7 @@ class SKACapability(SKAObsDevice):
 
             message = "SKACapability Init command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     # PROTECTED REGION ID(SKACapability.class_variable) ENABLED START #
     # PROTECTED REGION END #    //  SKACapability.class_variable
@@ -158,14 +158,14 @@ class SKACapability(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
             device._configured_instances = argin
 
             message = "ConfigureInstances command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     @command(
         dtype_in='uint16',

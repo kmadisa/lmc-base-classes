@@ -20,7 +20,7 @@ from tango.server import device_property
 
 # SKA specific imports
 from ska.base import SKAObsDevice, SKAObsDeviceStateModel
-from ska.base.commands import ActionCommand, ReturnCode
+from ska.base.commands import ActionCommand, ResultCode
 from ska.base.control_model import ObsState
 from ska.base.faults import CapabilityValidationError
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
@@ -304,7 +304,7 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             super().do()
 
@@ -327,7 +327,7 @@ class SKASubarray(SKAObsDevice):
 
             message = "SKASubarray Init command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class OnCommand(ActionCommand):
         """
@@ -360,11 +360,11 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             message = "On command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class OffCommand(ActionCommand):
         """
@@ -397,11 +397,11 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             message = "Off command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class _ResourcingCommand(ActionCommand):
         """
@@ -485,14 +485,14 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             resource_manager = self.target
             resource_manager.assign(argin)
 
             message = "AssignResources command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class ReleaseResourcesCommand(_ResourcingCommand):
         """
@@ -527,14 +527,14 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             resource_manager = self.target
             resource_manager.release(argin)
 
             message = "ReleaseResources command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class ReleaseAllResourcesCommand(ReleaseResourcesCommand):
         """
@@ -547,14 +547,14 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             resource_manager = self.target
             resource_manager.release_all()
 
             message = "ReleaseAllResources command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class ConfigureCommand(ActionCommand):
         """
@@ -591,7 +591,7 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
 
@@ -609,7 +609,7 @@ class SKASubarray(SKAObsDevice):
 
             message = "Configure command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class ScanCommand(ActionCommand):
         """
@@ -646,12 +646,12 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             # we do a json.loads just for basic string validation
             message = f"Scan command STARTED - config {json.loads(argin)}"
             self.logger.info(message)
-            return (ReturnCode.STARTED, message)
+            return (ResultCode.STARTED, message)
 
     class EndScanCommand(ActionCommand):
         """
@@ -684,11 +684,11 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             message = "EndScan command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class EndCommand(ActionCommand):
         """
@@ -721,14 +721,14 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
             device._deconfigure()
 
             message = "End command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class AbortCommand(ActionCommand):
         """
@@ -763,11 +763,11 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             message = "Abort command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class ObsResetCommand(ActionCommand):
         """
@@ -802,7 +802,7 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
 
@@ -814,7 +814,7 @@ class SKASubarray(SKAObsDevice):
 
             message = "ObsReset command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     class RestartCommand(ActionCommand):
         """
@@ -849,7 +849,7 @@ class SKASubarray(SKAObsDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             device = self.target
 
@@ -864,7 +864,7 @@ class SKASubarray(SKAObsDevice):
 
             message = "Restart command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     # PROTECTED REGION ID(SKASubarray.class_variable) ENABLED START #
     def _init_state_model(self):

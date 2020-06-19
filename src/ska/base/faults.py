@@ -17,7 +17,7 @@ class LoggingTargetError(SKABaseError):
     """Error parsing logging target string."""
 
 
-class ReturnCodeError(ValueError):
+class ResultCodeError(ValueError):
     """A method has returned an invalid return code."""
 
 

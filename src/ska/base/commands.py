@@ -1,15 +1,15 @@
 """
 This module provides abstract base classes for device commands, and a
-ReturnCode enum.
+ResultCode enum.
 """
 import enum
 import logging
-from ska.base.faults import CommandError, ReturnCodeError, StateModelError
+from ska.base.faults import CommandError, ResultCodeError, StateModelError
 
 module_logger = logging.getLogger(__name__)
 
 
-class ReturnCode(enum.IntEnum):
+class ResultCode(enum.IntEnum):
     """
     Python enumerated type for command return codes.
     """
@@ -281,15 +281,15 @@ class ActionCommand(ResponseCommand):
 
         :param return_code: The return_code returned by the ``do()``
             method
-        :type return_code: ReturnCode
+        :type return_code: ResultCode
         """
-        if return_code == ReturnCode.OK:
+        if return_code == ResultCode.OK:
             self.succeeded()
-        elif return_code == ReturnCode.FAILED:
+        elif return_code == ResultCode.FAILED:
             self.failed()
         else:
             if self._started_hook is None:
-                raise ReturnCodeError(
+                raise ResultCodeError(
                     f"ActionCommands that do not have a started action may"
                     f"only return with code OK or FAILED, not {return_code!s}."
                 )

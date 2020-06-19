@@ -16,7 +16,7 @@ from tango.server import run, attribute, command, device_property
 
 # SKA specific imports
 from ska.base import SKABaseDevice
-from ska.base.commands import BaseCommand, ReturnCode
+from ska.base.commands import BaseCommand, ResultCode
 from ska.base.utils import validate_capability_types, validate_input_sizes, convert_dict_to_list
 
 
@@ -49,7 +49,7 @@ class SKAMaster(SKABaseDevice):
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
-            :rtype: (ReturnCode, str)
+            :rtype: (ResultCode, str)
             """
             super().do()
 
@@ -70,7 +70,7 @@ class SKAMaster(SKABaseDevice):
 
             message = "SKAMaster Init command completed OK"
             self.logger.info(message)
-            return (ReturnCode.OK, message)
+            return (ResultCode.OK, message)
 
     # PROTECTED REGION ID(SKAMaster.class_variable) ENABLED START #
     # PROTECTED REGION END #    //  SKAMaster.class_variable
