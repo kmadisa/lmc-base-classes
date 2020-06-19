@@ -1074,6 +1074,9 @@ class SKABaseDevice(Device):
         """
         Returns the version information of the device.
 
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :return: Version details of the device.
         """
         return self._get_version_info_command()
@@ -1122,6 +1125,7 @@ class SKABaseDevice(Device):
             self.logger.info(message)
             return (ResultCode.OK, message)
 
+
     def is_Reset_allowed(self):
         """
         Whether the ``Reset()`` command is allowed to be run in the
@@ -1142,14 +1146,14 @@ class SKABaseDevice(Device):
         """
         Reset the device from the FAULT state.
 
-        Subclasses that have no need to override the default
-        implementation of state management may leave ``Reset()`` alone
-        and override method ``do_Reset()`` instead.
+        To modify behaviour for this command, modify the do() method of
+        the command class.
 
         :return: None
         """
         (return_code, message) = self._reset_command()
         return [[return_code],[message]]
+
 
 # ----------
 # Run server

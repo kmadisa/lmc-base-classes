@@ -1043,6 +1043,9 @@ class SKASubarray(SKAObsDevice):
     def On(self):
         """
         Turn subarray on
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
         """
         (return_code, message) = self._on_command()
         return [[return_code], [message]]
@@ -1064,7 +1067,10 @@ class SKASubarray(SKAObsDevice):
     @DebugIt()
     def Off(self):
         """
-        Turn the subarray of
+        Turn the subarray off
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
         """
         (return_code, message) = self._off_command()
         return [[return_code], [message]]
@@ -1090,6 +1096,9 @@ class SKASubarray(SKAObsDevice):
     def AssignResources(self, argin):
         """
         Assign resources to this subarray
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
 
         :param argin: the resources to be assigned
         :type argin: list of str
@@ -1119,6 +1128,9 @@ class SKASubarray(SKAObsDevice):
         """
         Delta removal of assigned resources.
 
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :param argin: the resources to be released
         :type argin: list of str
         """
@@ -1144,6 +1156,9 @@ class SKASubarray(SKAObsDevice):
     def ReleaseAllResources(self):
         """
         Remove all resources to tear down to an empty subarray.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
 
         :return: list of resources removed
         :rtype: list of string
@@ -1173,6 +1188,9 @@ class SKASubarray(SKAObsDevice):
         """
         Configures the capabilities of this subarray
 
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :param argin: configuration specification
         :type argin: string
         """
@@ -1200,6 +1218,9 @@ class SKASubarray(SKAObsDevice):
         """
         Start scanning
 
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :param argin: Information about the scan
         :type argin: Array of str
         """
@@ -1224,6 +1245,9 @@ class SKASubarray(SKAObsDevice):
     def EndScan(self):
         """
         End the scan
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
         """
         (return_code, message) = self._end_scan_command()
         return [[return_code], [message]]
@@ -1247,6 +1271,9 @@ class SKASubarray(SKAObsDevice):
         # PROTECTED REGION ID(SKASubarray.EndSB) ENABLED START #
         """
         End the scan block.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
         """
         (return_code, message) = self._end_command()
         return [[return_code], [message]]
@@ -1270,6 +1297,9 @@ class SKASubarray(SKAObsDevice):
         """
         Abort any long-running command such as ``Configure()`` or
         ``Scan()``.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
         """
         (return_code, message) = self._abort_command()
         return [[return_code], [message]]
@@ -1293,6 +1323,9 @@ class SKASubarray(SKAObsDevice):
     def ObsReset(self):
         """
         Reset the current observation process.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
         """
         (return_code, message) = self._obs_reset_command()
         return [[return_code], [message]]
@@ -1317,6 +1350,9 @@ class SKASubarray(SKAObsDevice):
         """
         Restart the subarray. That is, deconfigure and release
         all resources.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
         """
         (return_code, message) = self._restart_command()
         return [[return_code], [message]]

@@ -220,18 +220,18 @@ class SKAMaster(SKABaseDevice):
         """
         Checks of provided capabilities can be achieved by the resource(s).
 
-        :param argin: DevVarLongStringArray.
+        To modify behaviour for this command, modify the do() method of
+        the command class.
 
-            An array consisting pair of
-                    [nrInstances]: DevLong. Number of instances of the capability.
+        :param argin: An array consisting pair of
 
-                    [Capability types]: DevString. Type of capability.
+            * [nrInstances]: DevLong. Number of instances of the capability.
+            * [Capability types]: DevString. Type of capability.
 
-        :return: DevBoolean
+        :type argin: DevVarLongStringArray.
 
-            True if capability can be achieved.
-
-            False if cannot.
+        :return: True if capability can be achieved, False if cannot
+        :rtype: DevBoolean
         """
         return self._is_capability_achievable_command(argin)
         # PROTECTED REGION END #    //  SKAMaster.isCapabilityAchievable

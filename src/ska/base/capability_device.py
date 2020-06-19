@@ -179,6 +179,10 @@ class SKACapability(SKAObsDevice):
         """
         This function indicates how many number of instances of the current capacity
         should to be configured.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :param argin: Number of instances to configure
         :return: None.
         """

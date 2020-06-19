@@ -264,6 +264,10 @@ class SKAAlarmHandler(SKABaseDevice):
         # PROTECTED REGION ID(SKAAlarmHandler.GetAlarmRule) ENABLED START #
         """
         Get all configuration info of the alarm, e.g. rule, defined action, etc.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :param argin: Name of the alarm
         :retur: JSON string containing configuration information of the alarm
         """
@@ -277,6 +281,10 @@ class SKAAlarmHandler(SKABaseDevice):
         """
         Get list of current value, quality factor and status of
         all attributes participating in the alarm rule.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :param argin: Name of the alarm
         :return: JSON string containing alarm data
         """
@@ -289,6 +297,10 @@ class SKAAlarmHandler(SKABaseDevice):
         # PROTECTED REGION ID(SKAAlarmHandler.GetAlarmAdditionalInfo) ENABLED START #
         """
         Get additional alarm information.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :param argin: Name of the alarm
         :return: JSON string containing additional alarm information
         """
@@ -301,6 +313,10 @@ class SKAAlarmHandler(SKABaseDevice):
         # PROTECTED REGION ID(SKAAlarmHandler.GetAlarmStats) ENABLED START #
         """
         Get current alarm stats.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :return: JSON string containing alarm statistics
         """
         return self._get_alarm_stats_command()
@@ -312,6 +328,10 @@ class SKAAlarmHandler(SKABaseDevice):
         # PROTECTED REGION ID(SKAAlarmHandler.GetAlertStats) ENABLED START #
         """
         Get current alert stats.
+
+        To modify behaviour for this command, modify the do() method of
+        the command class.
+
         :return: JSON string containing alert statistics
         """
         return self._get_alert_stats_command()

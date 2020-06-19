@@ -130,12 +130,15 @@ class SKALogger(SKABaseDevice):
         """
         Sets logging level of the specified devices.
 
-        :parameter: argin: DevVarLongStringArray
-            Array consisting of
+        To modify behaviour for this command, modify the do() method of
+        the command class.
 
-            argin[0]: list of DevLong. Desired logging level.
+        :param argin: Array consisting of
 
-            argin[1]: list of DevString. Desired tango device.
+            * argin[0]: list of DevLong. Desired logging level.
+            * argin[1]: list of DevString. Desired tango device.
+
+        :type argin: DevVarLongStringArray
 
         :returns: None.
         """
