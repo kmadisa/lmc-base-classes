@@ -29,13 +29,16 @@ class SKAMaster(SKABaseDevice):
     """
     Master device
     """
-    def _init_command_objects(self):
+    def init_command_objects(self):
         """
         Sets up the command objects
         """
-        super()._init_command_objects()
-        self._is_capability_achievable_command = self.IsCapabilityAchievableCommand(
-            self, self.state_model, self.logger
+        super().init_command_objects()
+        self.register_command_object(
+            "IsCapabilityAchievable",
+            self.IsCapabilityAchievableCommand(
+                self, self.state_model, self.logger
+            )
         )
 
     class InitCommand(SKABaseDevice.InitCommand):
@@ -233,7 +236,8 @@ class SKAMaster(SKABaseDevice):
         :return: True if capability can be achieved, False if cannot
         :rtype: DevBoolean
         """
-        return self._is_capability_achievable_command(argin)
+        command = self.get_command_object("IsCapabilityAchievable")
+        return command(argin)
         # PROTECTED REGION END #    //  SKAMaster.isCapabilityAchievable
 
 

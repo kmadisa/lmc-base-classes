@@ -25,13 +25,15 @@ class SKACapability(SKAObsDevice):
     """
     A Subarray handling device. It exposes the instances of configured capabilities.
     """
-    def _init_command_objects(self):
+    def init_command_objects(self):
         """
         Sets up the command objects
         """
-        super()._init_command_objects()
-        self._configure_instances_command = self.ConfigureInstancesCommand(
-            self, self.state_model, self.logger
+        super().init_command_objects()
+        self.register_command_object(
+            "ConfigureInstances", self.ConfigureInstancesCommand(
+                self, self.state_model, self.logger
+            )
         )
 
     class InitCommand(SKAObsDevice.InitCommand):
@@ -186,7 +188,8 @@ class SKACapability(SKAObsDevice):
         :param argin: Number of instances to configure
         :return: None.
         """
-        (return_code, message) = self._configure_instances_command(argin)
+        command = self.get_command_object("ConfigureInstances")
+        (return_code, message) = command(argin)
         return [[return_code], [message]]
         # PROTECTED REGION END #    //  SKACapability.ConfigureInstances
 

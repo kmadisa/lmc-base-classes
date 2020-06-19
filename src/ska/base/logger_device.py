@@ -42,13 +42,14 @@ class SKALogger(SKABaseDevice):
     # ---------------
     # General methods
     # ---------------
-    def _init_command_objects(self):
+    def init_command_objects(self):
         """
         Sets up the command objects
         """
-        super()._init_command_objects()
-        self._set_logging_level_command = self.SetLoggingLevelCommand(
-            None, self.state_model, self.logger
+        super().init_command_objects()
+        self.register_command_object(
+            "SetLoggingLevel",
+            self.SetLoggingLevelCommand(self, self.state_model, self.logger)
         )
 
     def always_executed_hook(self):
@@ -142,7 +143,8 @@ class SKALogger(SKABaseDevice):
 
         :returns: None.
         """
-        (return_code, message) = self._set_logging_level_command(argin)
+        command = self.get_command_object("SetLoggingLevel")
+        (return_code, message) = command(argin)
         return [[return_code], [message]]
 
         # PROTECTED REGION END #    //  SKALogger.SetLoggingLevel

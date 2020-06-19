@@ -800,11 +800,11 @@ class SKABaseDevice(Device):
             self._init_logging()
             self._init_state_model()
 
-            self._init_command = self.InitCommand(
-                self, self.state_model, self.logger
-            )
-            self._init_command()
-            self._init_command_objects()
+            self._command_objects = {}
+
+            self.InitCommand(self, self.state_model, self.logger)()
+
+            self.init_command_objects()
         except Exception as exc:
             self.set_state(DevState.FAULT)
             self.set_status("The device is in FAULT state - init_device failed.")
@@ -821,12 +821,19 @@ class SKABaseDevice(Device):
             dev_state_callback=self._update_state
         )
 
-    def _init_command_objects(self):
-        self._reset_command = self.ResetCommand(
-            self, self.state_model, self.logger
+    def register_command_object(self, command_name, command_object):
+        self._command_objects[command_name] = command_object
+
+    def get_command_object(self, command_name):
+        return self._command_objects[command_name]
+
+    def init_command_objects(self):
+        self.register_command_object(
+            "Reset", self.ResetCommand(self, self.state_model, self.logger)
         )
-        self._get_version_info_command = self.GetVersionInfoCommand(
-            self, self.state_model, self.logger
+        self.register_command_object(
+            "GetVersionInfo",
+            self.GetVersionInfoCommand(self, self.state_model, self.logger)
         )
 
     def always_executed_hook(self):
@@ -1079,7 +1086,8 @@ class SKABaseDevice(Device):
 
         :return: Version details of the device.
         """
-        return self._get_version_info_command()
+        command = self.get_command_object("GetVersionInfo")
+        return command()
         # PROTECTED REGION END #    //  SKABaseDevice.GetVersionInfo
 
     class ResetCommand(ActionCommand):
@@ -1125,7 +1133,6 @@ class SKABaseDevice(Device):
             self.logger.info(message)
             return (ResultCode.OK, message)
 
-
     def is_Reset_allowed(self):
         """
         Whether the ``Reset()`` command is allowed to be run in the
@@ -1135,7 +1142,8 @@ class SKABaseDevice(Device):
             current state
         :rtype: boolean
         """
-        return self._reset_command.is_allowed()
+        command = self.get_command_object("Reset")
+        return command.is_allowed()
 
     @command(
         dtype_out='DevVarLongStringArray',
@@ -1151,8 +1159,9 @@ class SKABaseDevice(Device):
 
         :return: None
         """
-        (return_code, message) = self._reset_command()
-        return [[return_code],[message]]
+        command = self.get_command_object("Reset")
+        (return_code, message) = command()
+        return [[return_code], [message]]
 
 
 # ----------
