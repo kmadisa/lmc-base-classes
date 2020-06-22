@@ -274,7 +274,7 @@ class SKAAlarmHandler(SKABaseDevice):
         the command class.
 
         :param argin: Name of the alarm
-        :retur: JSON string containing configuration information of the alarm
+        :return: JSON string containing configuration information of the alarm
         """
         command = self.get_command_object("GetAlarmRule")
         return command(argin)
