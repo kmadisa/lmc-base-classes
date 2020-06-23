@@ -505,31 +505,31 @@ def resource_manager():
 class TestSKASubarrayResourceManager:
     def test_ResourceManager_assign(self, resource_manager):
         # create a resource manager and check that it is empty
-        assert not resource_manager.size()
+        assert not len(resource_manager)
         assert resource_manager.get() == set()
 
         resource_manager.assign('{"example": ["A"]}')
-        assert resource_manager.size() == 1
+        assert len(resource_manager) == 1
         assert resource_manager.get() == set(["A"])
 
         resource_manager.assign('{"example": ["A"]}')
-        assert resource_manager.size() == 1
+        assert len(resource_manager) == 1
         assert resource_manager.get() == set(["A"])
 
         resource_manager.assign('{"example": ["A", "B"]}')
-        assert resource_manager.size() == 2
+        assert len(resource_manager) == 2
         assert resource_manager.get() == set(["A", "B"])
 
         resource_manager.assign('{"example": ["A"]}')
-        assert resource_manager.size() == 2
+        assert len(resource_manager) == 2
         assert resource_manager.get() == set(["A", "B"])
 
         resource_manager.assign('{"example": ["A", "C"]}')
-        assert resource_manager.size() == 3
+        assert len(resource_manager) == 3
         assert resource_manager.get() == set(["A", "B", "C"])
 
         resource_manager.assign('{"example": ["D"]}')
-        assert resource_manager.size() == 4
+        assert len(resource_manager) == 4
         assert resource_manager.get() == set(["A", "B", "C", "D"])
 
     def test_ResourceManager_release(self, resource_manager):
@@ -538,27 +538,27 @@ class TestSKASubarrayResourceManager:
 
         # okay to release resources not assigned; does nothing
         resource_manager.release('{"example": ["E"]}')
-        assert resource_manager.size() == 4
+        assert len(resource_manager) == 4
         assert resource_manager.get() == set(["A", "B", "C", "D"])
 
         # check release does what it should
         resource_manager.release('{"example": ["D"]}')
-        assert resource_manager.size() == 3
+        assert len(resource_manager) == 3
         assert resource_manager.get() == set(["A", "B", "C"])
 
         # okay to release resources both assigned and not assigned
         resource_manager.release('{"example": ["C", "D"]}')
-        assert resource_manager.size() == 2
+        assert len(resource_manager) == 2
         assert resource_manager.get() == set(["A", "B"])
 
         # check release all does what it should
         resource_manager.release_all()
-        assert resource_manager.size() == 0
+        assert len(resource_manager) == 0
         assert resource_manager.get() == set()
 
         # okay to call release_all when already empty
         resource_manager.release_all()
-        assert resource_manager.size() == 0
+        assert len(resource_manager) == 0
         assert resource_manager.get() == set()
 
 
@@ -584,7 +584,7 @@ class TestSKASubarray_commands:
             assert not assign_resources.is_allowed()
             with pytest.raises(CommandError):
                 assign_resources('{"example": ["foo"]}')
-            assert not resource_manager.size()
+            assert not len(resource_manager)
             assert resource_manager.get() == set()
 
             state_model.perform_action(action)
@@ -596,5 +596,5 @@ class TestSKASubarray_commands:
         assert assign_resources('{"example": ["foo"]}') == (
             ResultCode.OK, "AssignResources command completed OK"
         )
-        assert resource_manager.size() == 1
+        assert len(resource_manager) == 1
         assert resource_manager.get() == set(["foo"])

@@ -240,6 +240,17 @@ class SKASubarrayResourceManager:
         """
         self._resources = set()
 
+    def __len__(self):
+        """
+        Returns the number of resources currently assigned. Note that
+        this also functions as a boolean method for whether there are
+        any assigned resources: ``if len()``.
+
+        :return: number of resources assigned
+        :rtype: int
+        """
+        return len(self._resources)
+
     def assign(self, resources):
         """
         Assign some resources
@@ -275,17 +286,6 @@ class SKASubarrayResourceManager:
         Release all resources
         """
         self._resources.clear()
-
-    def size(self):
-        """
-        Returns the number of resources currently assigned. Note that
-        this also functions as a boolean method for whether there are
-        any assigned resources: ``if size()``.
-
-        :return: whether this SKASubarrayResourceManager has any resources
-        :rtype: boolean
-        """
-        return len(self._resources)
 
     def get(self):
         """
@@ -448,7 +448,7 @@ class SKASubarray(SKAObsDevice):
             Action to take on successful completion of a resourcing
             command.
             """
-            if self.target.size():
+            if len(self.target):
                 action = "resourcing_succeeded_some_resources"
             else:
                 action = "resourcing_succeeded_no_resources"
@@ -560,9 +560,14 @@ class SKASubarray(SKAObsDevice):
             resource_manager = self.target
             resource_manager.release_all()
 
-            message = "ReleaseAllResources command completed OK"
-            self.logger.info(message)
-            return (ResultCode.OK, message)
+            if len(resource_manager):
+                message = "ReleaseAllResources command failed to release all."
+                self.logger.info(message)
+                return (ResultCode.FAILED, message)
+            else:
+                message = "ReleaseAllResources command completed OK"
+                self.logger.info(message)
+                return (ResultCode.OK, message)
 
     class ConfigureCommand(ActionCommand):
         """
