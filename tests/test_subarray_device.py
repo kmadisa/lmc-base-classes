@@ -578,7 +578,7 @@ class TestSKASubarray_commands:
 
         # until the state_model is in the right state for it, the
         # command's is_allowed() method will return False, and an
-        # attempt to call the command will raise a StateModelError, and
+        # attempt to call the command will raise a CommandError, and
         # there will be no side-effect on the resource manager
         for action in ["init_started", "init_succeeded", "on_succeeded"]:
             assert not assign_resources.is_allowed()

@@ -32,7 +32,7 @@ class SKASubarrayStateModel(SKAObsDeviceStateModel):
     """
     Implements the state model for the SKASubarray
     """
-    _subarray_transitions = {
+    __transitions = {
         ('OFF', 'on_succeeded'): (
             "EMPTY",
             lambda self: self._set_dev_state(DevState.ON)
@@ -227,7 +227,7 @@ class SKASubarrayStateModel(SKAObsDeviceStateModel):
         super().__init__(
             dev_state_callback=dev_state_callback,
         )
-        self.update_transitions(self._subarray_transitions)
+        self.update_transitions(self.__transitions)
 
 
 class SKASubarrayResourceManager:
@@ -244,8 +244,12 @@ class SKASubarrayResourceManager:
         """
         Assign some resources
 
-        :param resources: resources to assign
-        :type resources: collection of string
+        :todo: Currently implemented for testing purposes to take a JSON
+            string encoding a dictionary with key 'example'. In future this
+            will take a collection of resources.
+        :param resources: JSON-encoding of a dictionary, with resources to
+            assign under key 'example'
+        :type resources: JSON string
         """
         resources_dict = json.loads(resources)
         add_resources = resources_dict['example']
@@ -255,8 +259,12 @@ class SKASubarrayResourceManager:
         """
         Release some resources
 
-        :param resources: resources to release
-        :type resources: collection of string
+        :todo: Currently implemented for testing purposes to take a JSON
+            string encoding a dictionary with key 'example'. In future this
+            will take a collection of resources.
+        :param resources: JSON-encoding of a dictionary, with resources to
+            assign under key 'example'
+        :type resources: JSON string
         """
         resources_dict = json.loads(resources)
         drop_resources = resources_dict['example']

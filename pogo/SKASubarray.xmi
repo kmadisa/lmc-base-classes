@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
   <classes name="SKASubarray" pogoRevision="9.6">
-    <description description="SubArray handling device" title="SKASubarray" sourcePath="/home/osboxes/lmc-base-classes/pogo" language="PythonHL" filestogenerate="XMI   file" license="none" copyright="" hasMandatoryProperty="false" hasConcreteProperty="true" hasAbstractCommand="false" hasAbstractAttribute="false">
+    <description description="SubArray handling device" title="SKASubarray" sourcePath="/home/tango/src/lmc-base-classes/pogo" language="PythonHL" filestogenerate="XMI   file" license="none" copyright="" hasMandatoryProperty="false" hasConcreteProperty="true" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <inheritances classname="SKAObsDevice" sourcePath="./"/>
       <identification contact="at ska.ac.za - cam" author="cam" emailDomain="ska.ac.za" classFamily="SkaBase" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
@@ -41,9 +41,9 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-    <commands name="ConfigureCapability" description="Configures number of instances for each capability. If the capability exists, &#xA;it increments the configured instances by the number of instances requested, &#xA;otherwise an exception will be raised.&#xA;Note: The two lists arguments must be of equal length or an exception will be raised." execMethod="configure_capability" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
-      <argin description="[Number of instances to add][Capability types]">
-        <type xsi:type="pogoDsl:LongStringArrayType"/>
+    <commands name="Configure" description="Configures the scan for this subarray" execMethod="configure" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
+      <argin description="The scan configuration, formatted as a JSON string">
+        <type xsi:type="pogoDsl:StringType"/>
       </argin>
       <argout description="">
         <type xsi:type="pogoDsl:LongStringArrayType"/>
@@ -86,7 +86,7 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-    <commands name="End" description="Change obsState to IDLE." execMethod="end_sb" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
+    <commands name="End" description="Change obsState to IDLE." execMethod="end" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>

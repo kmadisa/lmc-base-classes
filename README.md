@@ -27,21 +27,19 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
 
 #### 0.6.0
 - Breaking change: State management
-  - Introduction of `@control_model.guard` decorator and related methods
-    methods to simplify command gatekeeping
+  - SKASubarray implements full (synchronous) subarray state machine
   - Classes provide subclassing code hooks that separate management of
     device state and (eventually) asynchrony from other device
-    functionality. Thus, subclasses that prefer not to have to manage
-    their own state etc may:
-    - leave `init_device()` alone and place their initialisation code in
-      `do_init_device` instead.
-    - leave `ConfigureCapability()` alone and place their configuration
-      code in `do_configure_capability()` instead.
-    - And so on for `AssignResources()`, `Scan()`, `Reset()`, `Abort()
-      instead.
+    functionality. Thus, subclasses are encouraged to leave state
+    management in the care of the base classes by:
+    - leaving `init_device()` alone and placing their (stateless)
+      initialisation code in the `do()` method of the `InitCommand` object instead.
+    - leaving `Configure()` alone and placing their (stateless)
+      configuration code in the `ConfigureCommand.do()` instead.
+    - And so on for `AssignResources()`, `Scan()`, `Reset()`, `Abort()`
+      etc.
     In each of these cases, the base class will call any subclass code
     but manage state and asynchrony itself.
-  - SKASubarray implements full (synchronous) subarray state machine
 
 #### 0.5.4
 - Remove `ObsState` command from SKACapability, SKAObsDevice and SKASubarray Pogo XMI files.  It should not

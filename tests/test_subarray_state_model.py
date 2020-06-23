@@ -14,6 +14,7 @@ import pytest
 from tango import DevState
 
 from ska.base.control_model import AdminMode, ObsState
+from ska.base.faults import StateModelError
 
 
 class TestSKASubarrayStateModel():
@@ -267,6 +268,6 @@ class TestSKASubarrayStateModel():
             assert_state(transitions[(state_under_test, action_under_test)])
         else:
             # Action should fail and the state should not change
-            with pytest.raises(ValueError):
+            with pytest.raises(StateModelError):
                 state_model.perform_action(action_under_test)
             assert_state(state_under_test)

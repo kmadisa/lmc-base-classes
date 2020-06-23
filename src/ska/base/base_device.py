@@ -315,7 +315,7 @@ class SKABaseDeviceStateModel(DeviceStateModel):
     Implements the state model for the SKABaseDevice
     """
 
-    _base_transitions = {
+    __transitions = {
         ('UNINITIALISED', 'init_started'): (
             "INIT (ENABLED)",
             lambda self: (
@@ -482,7 +482,7 @@ class SKABaseDeviceStateModel(DeviceStateModel):
             transition implies a change to device state
         :type dev_state_callback: tango.DevState
         """
-        super().__init__(self._base_transitions, "UNINITIALISED")
+        super().__init__(self.__transitions, "UNINITIALISED")
 
         self._admin_mode = None
         self._dev_state = None
