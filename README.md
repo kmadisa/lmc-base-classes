@@ -25,6 +25,11 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
 
 ## Version History
 
+#### 0.6.1
+- Add ON state to SKABaseDeviceStateModel
+- Move On() and Off() commands to SKABaseDevice
+- Add event pushing for device state, admin mode and obs state
+
 #### 0.6.0
 - Breaking change: State management
   - SKABaseDevice implements a simple state machine with states

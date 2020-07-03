@@ -3,7 +3,9 @@ A module defining a list of fixtures that are shared across all ska.base tests.
 """
 import importlib
 import pytest
+import time
 
+from tango import EventType
 from tango.test_context import DeviceTestContext
 
 from ska.base import SKASubarrayStateModel
@@ -71,3 +73,69 @@ def state_model():
     Yields an SKASubarrayStateModel.
     """
     yield SKASubarrayStateModel()
+
+
+@pytest.fixture(scope="function")
+def tango_change_event_helper(tango_context):
+    """
+    Helper for testing tango change events. To use it, call the subscribe
+    method with the name of the attribute for which you want change events.
+    The returned value will be a callback handler that you can interrogate
+    with ``called`` and ``expect_call_with`` methods.::
+
+    .. code-block:: python
+
+        state_callback = tango_change_event_helper.subscribe("State")
+        assert state_callback.expect_call_with(DevState.OFF)
+
+        # Check that we can't turn off a device that isn't on
+        with pytest.raises(DevFailed):
+            tango_context.device.Off()
+        assert not state_callback.called()
+
+        # Now turn it on and check that we can turn it off
+        tango_context.device.On()
+        assert state_callback.expect_call_with(DevState.ON)
+
+    """
+    class _Callback:
+        @staticmethod
+        def subscribe(attribute_name):
+            return _Callback(attribute_name)
+
+        def __init__(self, attribute_name):
+            self._called = False
+            self._value = None
+
+            self._id = tango_context.device.subscribe_event(
+                attribute_name, EventType.CHANGE_EVENT, self
+            )
+
+        def __del__(self):
+            tango_context.device.unsubscribe_event(self._id)
+
+        def __call__(self, event_data):
+            self._value = event_data.attr_value.value
+            self._called = True
+
+        def called(self):
+            retries = 30
+            for _ in range(retries):
+                if self._called:
+                    break
+                time.sleep(0.05)
+            return self._called
+
+        @property
+        def value(self):
+            if self.called():
+                self._called = False
+            return self._value
+
+        def expect_call_with(self, value):
+            if not self.called():
+                return None
+            self._called = False
+            return self._value == value
+
+    yield _Callback

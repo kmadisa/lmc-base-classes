@@ -52,29 +52,42 @@ class TestSKASubarray(object):
 
     # PROTECTED REGION ID(SKASubarray.test_Abort_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_Abort_decorators
-    def test_Abort(self, tango_context):
+    def test_Abort(self, tango_context, tango_change_event_helper):
         """Test for Abort"""
         # PROTECTED REGION ID(SKASubarray.test_Abort) ENABLED START #
+
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.READY)
+
         assert tango_context.device.Abort() == [
             [ResultCode.OK], ["Abort command completed OK"]
         ]
+        assert obs_state_callback.expect_call_with(ObsState.ABORTED)
         # PROTECTED REGION END #    //  SKASubarray.test_Abort
 
     # PROTECTED REGION ID(SKASubarray.test_Configure_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_Configure_decorators
-    def test_Configure(self, tango_context):
+    def test_Configure(self, tango_context, tango_change_event_helper):
         """Test for Configure"""
         # PROTECTED REGION ID(SKASubarray.test_Configure) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
-        tango_context.device.Configure('{"BAND1": 2}')
+
         # The obsState attribute is changed by Configure, but
         # as it is a polled attribute the value in the cache may be stale,
         # so change source to ensure we read directly from the device
         tango_context.device.set_source(DevSource.DEV)
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+
+        tango_context.device.Configure('{"BAND1": 2}')
+
+        assert obs_state_callback.expect_call_with(ObsState.READY)
         assert tango_context.device.obsState == ObsState.READY
         assert tango_context.device.configuredCapabilities == ("BAND1:2", "BAND2:0")
         # PROTECTED REGION END #    //  SKASubarray.test_Configure
@@ -109,95 +122,144 @@ class TestSKASubarray(object):
 
     # PROTECTED REGION ID(SKASubarray.test_AssignResources_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_AssignResources_decorators
-    def test_AssignResources(self, tango_context):
+    def test_AssignResources(self, tango_context, tango_change_event_helper):
         """Test for AssignResources"""
         # PROTECTED REGION ID(SKASubarray.test_AssignResources) ENABLED START #
         tango_context.device.On()
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.EMPTY)
+
         tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
-        assert tango_context.device.State() == DevState.ON
+
+        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+        assert tango_context.device.ObsState == ObsState.IDLE
         assert tango_context.device.assignedResources == ('BAND1', 'BAND2')
+
         tango_context.device.ReleaseAllResources()
+        assert obs_state_callback.expect_call_with(ObsState.EMPTY)
+        assert tango_context.device.ObsState == ObsState.EMPTY
+
         with pytest.raises(DevFailed):
             tango_context.device.AssignResources('Invalid JSON')
         # PROTECTED REGION END #    //  SKASubarray.test_AssignResources
 
     # PROTECTED REGION ID(SKASubarray.test_EndSB_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_EndSB_decorators
-    def test_End(self, tango_context):
+    def test_End(self, tango_context, tango_change_event_helper):
         """Test for EndSB"""
         # PROTECTED REGION ID(SKASubarray.test_EndSB) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.READY)
+
         assert tango_context.device.End() == [
             [ResultCode.OK], ["End command completed OK"]
         ]
+        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+
         # PROTECTED REGION END #    //  SKASubarray.test_EndSB
 
     # PROTECTED REGION ID(SKASubarray.test_EndScan_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_EndScan_decorators
-    def test_EndScan(self, tango_context):
+    def test_EndScan(self, tango_context, tango_change_event_helper):
         """Test for EndScan"""
         # PROTECTED REGION ID(SKASubarray.test_EndScan) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
         tango_context.device.Scan('{"id": 123}')
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.SCANNING)
+
         assert tango_context.device.EndScan() == [
             [ResultCode.OK], ["EndScan command completed OK"]
         ]
+
+        assert obs_state_callback.expect_call_with(ObsState.READY)
+
         # PROTECTED REGION END #    //  SKASubarray.test_EndScan
 
     # PROTECTED REGION ID(SKASubarray.test_ReleaseAllResources_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_ReleaseAllResources_decorators
-    def test_ReleaseAllResources(self, tango_context):
+    def test_ReleaseAllResources(self, tango_context, tango_change_event_helper):
         """Test for ReleaseAllResources"""
         # PROTECTED REGION ID(SKASubarray.test_ReleaseAllResources) ENABLED START #
         # assert tango_context.device.ReleaseAllResources() == [""]
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+
         tango_context.device.ReleaseAllResources()
+
+        assert obs_state_callback.expect_call_with(ObsState.EMPTY)
         assert tango_context.device.assignedResources is None
         # PROTECTED REGION END #    //  SKASubarray.test_ReleaseAllResources
 
     # PROTECTED REGION ID(SKASubarray.test_ReleaseResources_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_ReleaseResources_decorators
-    def test_ReleaseResources(self, tango_context):
+    def test_ReleaseResources(self, tango_context, tango_change_event_helper):
         """Test for ReleaseResources"""
         # PROTECTED REGION ID(SKASubarray.test_ReleaseResources) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+
         tango_context.device.ReleaseResources('{"example": ["BAND1"]}')
-        assert tango_context.device.State() == DevState.ON and\
-               tango_context.device.assignedResources == ('BAND2',)
-        tango_context.device.ReleaseAllResources()
+
+        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+        assert tango_context.device.ObsState == ObsState.IDLE
+        assert tango_context.device.assignedResources == ('BAND2',)
         # PROTECTED REGION END #    //  SKASubarray.test_ReleaseResources
 
     # PROTECTED REGION ID(SKASubarray.test_Reset_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_Reset_decorators
-    def test_ObsReset(self, tango_context):
+    def test_ObsReset(self, tango_context, tango_change_event_helper):
         """Test for Reset"""
         # PROTECTED REGION ID(SKASubarray.test_Reset) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
         tango_context.device.Abort()
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.ABORTED)
+
         assert tango_context.device.ObsReset() == [
             [ResultCode.OK], ["ObsReset command completed OK"]
         ]
+
+        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+        assert tango_context.device.obsState == ObsState.IDLE
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
 
     # PROTECTED REGION ID(SKASubarray.test_Scan_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_Scan_decorators
-    def test_Scan(self, tango_context):
+    def test_Scan(self, tango_context, tango_change_event_helper):
         """Test for Scan"""
         # PROTECTED REGION ID(SKASubarray.test_Scan) ENABLED START #
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
+
+        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        assert obs_state_callback.expect_call_with(ObsState.READY)
+
         assert tango_context.device.Scan('{"id": 123}') == [
             [ResultCode.STARTED], ["Scan command STARTED - config {'id': 123}"]
         ]
+
+        assert obs_state_callback.expect_call_with(ObsState.SCANNING)
+        assert tango_context.device.obsState == ObsState.SCANNING
+
         tango_context.device.EndScan()
         with pytest.raises(DevFailed):
             tango_context.device.Scan('Invalid JSON')
@@ -213,14 +275,23 @@ class TestSKASubarray(object):
 
     # PROTECTED REGION ID(SKASubarray.test_adminMode_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKASubarray.test_adminMode_decorators
-    def test_adminMode(self, tango_context):
+    def test_adminMode(self, tango_context, tango_change_event_helper):
         """Test for adminMode"""
         # PROTECTED REGION ID(SKASubarray.test_adminMode) ENABLED START #
         assert tango_context.device.adminMode == AdminMode.MAINTENANCE
         assert tango_context.device.state() == DevState.OFF
+
+        admin_mode_callback = tango_change_event_helper.subscribe("AdminMode")
+        dev_state_callback = tango_change_event_helper.subscribe("State")
+        assert admin_mode_callback.expect_call_with(AdminMode.MAINTENANCE)
+        assert dev_state_callback.expect_call_with(DevState.OFF)
+
         tango_context.device.adminMode = AdminMode.OFFLINE
         assert tango_context.device.adminMode == AdminMode.OFFLINE
         assert tango_context.device.state() == DevState.DISABLE
+        assert admin_mode_callback.expect_call_with(AdminMode.OFFLINE)
+        assert dev_state_callback.expect_call_with(DevState.DISABLE)
+
         # PROTECTED REGION END #    //  SKASubarray.test_adminMode
 
     # PROTECTED REGION ID(SKASubarray.test_buildState_decorators) ENABLED START #
@@ -323,6 +394,7 @@ class TestSKASubarray(object):
         assert tango_context.device.configuredCapabilities == ("BAND1:0", "BAND2:0")
         # PROTECTED REGION END #    //  SKASubarray.test_configuredCapabilities
 
+    # @pytest.mark.skip(reason="slow")
     @pytest.mark.parametrize(
         'state_under_test, action_under_test',
         itertools.product(
@@ -343,8 +415,9 @@ class TestSKASubarray(object):
                 "restart"]
         )
     )
-    def test_state_machine(self, tango_context,
-                           state_under_test, action_under_test):
+    def test_state_machine(
+        self, tango_context, tango_change_event_helper, state_under_test, action_under_test
+    ):
         """
         Test the subarray state machine: for a given initial state and
         an action, does execution of that action, from that initial
@@ -353,6 +426,24 @@ class TestSKASubarray(object):
         exception? If the action was allowed, does it result in the
         correct state transition?
         """
+        # change this to True to test events across the entire state machine
+        # but be aware that it will make this test brutally slow.
+        TEST_EVENTS = True
+        if TEST_EVENTS:
+            dev_state_callback = tango_change_event_helper.subscribe("State")
+            admin_mode_callback = tango_change_event_helper.subscribe("AdminMode")
+            obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+
+        def assert_event_state(state):
+            """
+            Check that our change event callbacks have received events
+            consistent with the state we think we should be in
+            """
+            if TEST_EVENTS:
+                (admin_modes, dev_state, obs_state) = states[state]
+                assert admin_mode_callback.value in admin_modes
+                assert dev_state_callback.value == dev_state
+                assert obs_state_callback.value == obs_state
 
         states = {
             "DISABLED":
@@ -376,7 +467,10 @@ class TestSKASubarray(object):
                 ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.FAULT),
         }
 
-        def assert_state(state):
+        def assert_device_state(state):
+            """
+            Check that the device is in the state we think it should be in
+            """
             (admin_modes, dev_state, obs_state) = states[state]
             assert tango_context.device.adminMode in admin_modes
             assert tango_context.device.state() == dev_state
@@ -473,28 +567,33 @@ class TestSKASubarray(object):
         # in the polled attribute obsState
         tango_context.device.set_source(DevSource.DEV)
 
-        state = "OFF"  # debugging only
-        assert_state(state)  # debugging only
+        # state = "OFF"  # debugging only
+        # assert_device_state(state)  # debugging only
+        # assert_event_state(state)  # debugging only
 
         # Put the device into the state under test
         for action in setups[state_under_test]:
             perform_action(action)
-            state = transitions[state, action]  # debugging only
-            assert_state(state)  # debugging only
+            # state = transitions[state, action]  # debugging only
+            # assert_device_state(state)  # debugging only
+            # assert_event_state(state)  # debugging only
 
         # Check that we are in the state under test
-        assert_state(state_under_test)
+        assert_device_state(state_under_test)
+        assert_event_state(state_under_test)
 
         # Test that the action under test does what we expect it to
         if (state_under_test, action_under_test) in transitions:
             # Action should succeed
             perform_action(action_under_test)
-            assert_state(transitions[(state_under_test, action_under_test)])
+            assert_device_state(transitions[(state_under_test, action_under_test)])
+            assert_event_state(transitions[(state_under_test, action_under_test)])
         else:
             # Action should fail and the state should not change
             with pytest.raises(DevFailed):
                 perform_action(action_under_test)
-            assert_state(state_under_test)
+            assert_device_state(state_under_test)
+            assert_event_state(state_under_test)
 
 
 @pytest.fixture
