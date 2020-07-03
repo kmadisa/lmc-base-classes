@@ -18,6 +18,7 @@ import logging.handlers
 import socket
 import sys
 import threading
+from transitions import Machine
 import warnings
 
 from urllib.parse import urlparse
@@ -310,191 +311,197 @@ class LoggingUtils:
 __all__ = ["SKABaseDevice", "SKABaseDeviceStateModel", "main"]
 
 
-class SKABaseDeviceStateModel(DeviceStateModel):
+class SKABaseDeviceStateModel:
     """
     Implements the state model for the SKABaseDevice
     """
 
-    __transitions = {
-        ('UNINITIALISED', 'init_started'): (
-            "INIT (ENABLED)",
-            lambda self: (
+    __states = [
+        "INIT (DISABLED)", "INIT (ENABLED)", 
+        "FAULT (DISABLED)", "FAULT (ENABLED)", 
+        "DISABLED", "OFF", "ON"
+    ]
+    __transitions = [
+        {
+            "source": ["INIT (ENABLED)", "OFF", "FAULT", "ON"],
+            "trigger": "fatal_error",
+            "dest": "FAULT (ENABLED)",
+            "after": lambda self: self._set_dev_state(DevState.FAULT)
+        },
+        {
+            "source": ["INIT (DISABLED)", "DISABLED", "FAULT (DISABLED)"],
+            "trigger": "fatal_error",
+            "dest": "FAULT (DISABLED)",
+            "after": lambda self: self._set_dev_state(DevState.FAULT)
+        },
+        {
+            "source": "UNINITIALISED",
+            "trigger": "init_started",
+            "dest": "INIT (ENABLED)",
+            "after": lambda self: (
                 self._set_admin_mode(AdminMode.MAINTENANCE),
                 self._set_dev_state(DevState.INIT),
             )
-        ),
-        ('INIT (ENABLED)', 'init_succeeded'): (
-            'OFF',
-            lambda self: self._set_dev_state(DevState.OFF)
-        ),
-        ('INIT (ENABLED)', 'init_failed'): (
-            'FAULT (ENABLED)',
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('INIT (ENABLED)', 'fatal_error'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('INIT (ENABLED)', 'to_notfitted'): (
-            "INIT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
-        ),
-        ('INIT (ENABLED)', 'to_offline'): (
-            "INIT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
-        ),
-        ('INIT (ENABLED)', 'to_maintenance'): (
-            "INIT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
-        ),
-        ('INIT (ENABLED)', 'to_online'): (
-            "INIT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.ONLINE)
-        ),
-        ('INIT (DISABLED)', 'init_succeeded'): (
-            'DISABLED',
-            lambda self: self._set_dev_state(DevState.DISABLE)
-        ),
-        ('INIT (DISABLED)', 'init_failed'): (
-            'FAULT (DISABLED)',
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('INIT (DISABLED)', 'fatal_error'): (
-            "FAULT (DISABLED)",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('INIT (DISABLED)', 'to_notfitted'): (
-            "INIT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
-        ),
-        ('INIT (DISABLED)', 'to_offline'): (
-            "INIT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
-        ),
-        ('INIT (DISABLED)', 'to_maintenance'): (
-            "INIT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
-        ),
-        ('INIT (DISABLED)', 'to_online'): (
-            "INIT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.ONLINE)
-        ),
-        ('FAULT (DISABLED)', 'reset_succeeded'): (
-            "DISABLED",
-            lambda self: self._set_dev_state(DevState.DISABLE)
-        ),
-        ('FAULT (DISABLED)', 'reset_failed'): ("FAULT (DISABLED)", None),
-        ('FAULT (DISABLED)', 'fatal_error'): ("FAULT (DISABLED)", None),
-        ('FAULT (DISABLED)', 'to_notfitted'): (
-            "FAULT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
-        ),
-        ('FAULT (DISABLED)', 'to_offline'): (
-            "FAULT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
-        ),
-        ('FAULT (DISABLED)', 'to_maintenance'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
-        ),
-        ('FAULT (DISABLED)', 'to_online'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.ONLINE)
-        ),
-        ('FAULT (ENABLED)', 'reset_succeeded'): (
-            "OFF",
-            lambda self: self._set_dev_state(DevState.OFF)
-        ),
-        ('FAULT (ENABLED)', 'reset_failed'): ("FAULT (ENABLED)", None),
-        ('FAULT (ENABLED)', 'fatal_error'): ("FAULT (ENABLED)", None),
-        ('FAULT (ENABLED)', 'to_notfitted'): (
-            "FAULT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)),
-        ('FAULT (ENABLED)', 'to_offline'): (
-            "FAULT (DISABLED)",
-            lambda self: self._set_admin_mode(AdminMode.OFFLINE)),
-        ('FAULT (ENABLED)', 'to_maintenance'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
-        ),
-        ('FAULT (ENABLED)', 'to_online'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_admin_mode(AdminMode.ONLINE)
-        ),
-        ('DISABLED', 'to_offline'): (
-            "DISABLED",
-            lambda self: self._set_admin_mode(AdminMode.OFFLINE)
-        ),
-        ('DISABLED', 'to_online'): (
-            "OFF",
-            lambda self: (
-                self._set_admin_mode(AdminMode.ONLINE),
+        },
+        {
+            "source": "INIT (ENABLED)",
+            "trigger": "init_succeeded",
+            "dest": "OFF",
+            "after": lambda self: self._set_dev_state(DevState.OFF)
+        },
+        {
+            "source": "INIT (DISABLED)",
+            "trigger": "init_succeeded",
+            "dest": "DISABLE",
+            "after": lambda self: self._set_dev_state(DevState.DISABLE)
+        },
+        {
+            "source": "INIT (ENABLED)",
+            "trigger": "init_failed",
+            "dest": "FAULT (ENABLED)",
+            "after": lambda self: self._set_dev_state(DevState.FAULT)
+        },
+        {
+            "source": "INIT (DISABLED)",
+            "trigger": "init_failed",
+            "dest": "FAULT (DISABLED)",
+            "after": lambda self: self._set_dev_state(DevState.FAULT)
+        },
+        {
+            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
+            "trigger": "to_notfitted",
+            "dest": "INIT (DISABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
+        },
+        {
+            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
+            "trigger": "to_offline",
+            "dest": "INIT (DISABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.OFFLINE)
+        },
+        {
+            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
+            "trigger": "to_maintenance",
+            "dest": "INIT (ENABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
+        },
+        {
+            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
+            "trigger": "to_online",
+            "dest": "INIT (ENABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.ONLINE)
+        },
+        {
+            "source": "FAULT (DISABLED)",
+            "trigger": "reset_succeeded",
+            "dest": "DISABLED",
+            "after": lambda self: self._set_dev_state(DevState.DISABLE)
+        },
+        {
+            "source": "FAULT (ENABLED)",
+            "trigger": "reset_succeeded",
+            "dest": "OFF",
+            "after": lambda self: self._set_dev_state(DevState.OFF)
+        },
+        {
+            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
+            "trigger": "reset_failed",
+            "dest": None,
+        },
+        {
+            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
+            "trigger": "to_notfitted",
+            "dest": "FAULT (DISABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
+        },
+        {
+            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
+            "trigger": "to_offline",
+            "dest": "FAULT (DISABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.OFFLINE)
+        },
+        {
+            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
+            "trigger": "to_maintenance",
+            "dest": "FAULT (ENABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
+        },
+        {
+            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
+            "trigger": "to_online",
+            "dest": "FAULT (ENABLED)",
+            "after": lambda self: self._set_admin_mode(AdminMode.ONLINE)
+        },
+        {
+            "source": ["DISABLED", "OFF"],
+            "trigger": "to_notfitted",
+            "dest": "DISABLED",
+            "after": lambda self: (
+                self._set_admin_mode(AdminMode.NOTFITTED),
                 self._set_dev_state(DevState.OFF)
             )
-        ),
-        ('DISABLED', 'to_maintenance'): (
-            "OFF",
-            lambda self: (
-                self._set_admin_mode(AdminMode.MAINTENANCE),
-                self._set_dev_state(DevState.OFF)
-            )
-        ),
-        ('DISABLED', 'to_notfitted'): (
-            "DISABLED",
-            lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
-        ),
-        ('DISABLED', 'fatal_error'): (
-            "FAULT (DISABLED)",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('OFF', 'to_notfitted'): (
-            "DISABLED",
-            lambda self: (
-                self._set_admin_mode(AdminMode.NOT_FITTED),
-                self._set_dev_state(DevState.DISABLE)
-            )
-        ),
-        ('OFF', 'to_offline'): (
-            "DISABLED", lambda self: (
+        },
+        {
+            "source": ["DISABLED", "OFF"],
+            "trigger": "to_offline",
+            "dest": "DISABLED",
+            "after": lambda self: (
                 self._set_admin_mode(AdminMode.OFFLINE),
                 self._set_dev_state(DevState.DISABLE)
             )
-        ),
-        ('OFF', 'to_online'): (
-            "OFF",
-            lambda self: self._set_admin_mode(AdminMode.ONLINE)
-        ),
-        ('OFF', 'to_maintenance'): (
-            "OFF",
-            lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
-        ),
-        ('OFF', 'fatal_error'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('OFF', 'on_succeeded'): (
-            "ON",
-            lambda self: self._set_dev_state(DevState.ON)
-        ),
-        ('OFF', 'on_failed'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('ON', 'off_succeeded'): (
-            "OFF",
-            lambda self: self._set_dev_state(DevState.OFF)
-        ),
-        ('ON', 'off_failed'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('ON', 'fatal_error'): (
-            "FAULT (ENABLED)",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-
-    }
-
+        },
+        {
+            "source": ["DISABLED", "OFF"],
+            "trigger": "to_maintenance",
+            "dest": "OFF",
+            "after": lambda self: (
+                self._set_admin_mode(AdminMode.MAINTENANCE),
+                self._set_dev_state(DevState.OFF)
+            )
+        },
+        {
+            "source": ["DISABLED", "OFF"],
+            "trigger": "to_online",
+            "dest": "OFF",
+            "after": lambda self: (
+                self._set_admin_mode(AdminMode.ONLINE),
+                self._set_dev_state(DevState.OFF)
+            )
+        },
+        {
+            "source": "OFF",
+            "trigger": "on_succeeded",
+            "dest": "ON",
+            "after": lambda self: (
+                self._set_dev_state(DevState.ON)
+            )
+        },
+        {
+            "source": "OFF",
+            "trigger": "on_failed",
+            "dest": "FAULT (ENABLED)",
+            "after": lambda self: (
+                self._set_dev_state(DevState.FAULT)
+            )
+        },
+        {
+            "source": "ON",
+            "trigger": "off_succeeded",
+            "dest": "OFF",
+            "after": lambda self: (
+                self._set_dev_state(DevState.ON)
+            )
+        },
+        {
+            "source": "ON",
+            "trigger": "off_failed",
+            "dest": "FAULT (ENABLED)",
+            "after": lambda self: (
+                self._set_dev_state(DevState.FAULT)
+            )
+        },
+    ]
+    
     def __init__(self, dev_state_callback=None, admin_mode_callback=None):
         """
         Initialises the state model.
@@ -506,7 +513,12 @@ class SKABaseDeviceStateModel(DeviceStateModel):
             transition causes a change to device admin_mode
         :type admin_mode_callback: callable
         """
-        super().__init__(self.__transitions, "UNINITIALISED")
+
+        self.state_machine = Machine(
+            states=self.__states,
+            initial="UNINITIALISED",
+            transitions=self.__transitions
+        )
 
         self._admin_mode = None
         self._admin_mode_callback = admin_mode_callback
@@ -557,6 +569,46 @@ class SKABaseDeviceStateModel(DeviceStateModel):
             self._dev_state = dev_state
             if self._dev_state_callback is not None:
                 self._dev_state_callback(self._dev_state)
+
+    # def _register_state(self, state):
+    #     if state not in self.state_machine.states:
+    #         self.state_machine.add_state(state)
+
+    # def _register_transition(self, action, from_states, to_state, condition=None):
+    #     self.state_machine.add_transition(action, from_states, to_state, condition=condition)
+
+    # def _register_transition_for_outcome(self, command, from_states, outcome, arg):
+    #     if is_instance(arg, dict):
+    #         for (condition, true_state, false_state) in arg.items():
+    #             self._register_state(to_state)
+    #             self._register_transition(f"{command}_{outcome}", from_states, to_state, condition=condition)
+    #     else:
+    #         self._register_state(to_state)
+    #         self._register_transition(f"{command}_{outcome}", from_states, to_state)
+
+    # def add_command(
+    #     self,
+    #     name,
+    #     allowed=None,
+    #     started=None,
+    #     succeeded=None,
+    #     failed=None):
+    # if allowed is None:
+    #     allowed = "*"
+    # else:
+    #     for allowed_state in allowed:
+    #         self._register_state(allowed_state)
+    
+    # if started is None:
+    #     started = allowed
+    # else:
+    #     self._register_state(started)
+    #     self.state_machine.register_transition(f"{name}_started", allowed, started)
+    
+    # self._register_transition_for_outcome(name, started, "succeeded", succeeded)
+    # self._register_transition_for_outcome(name, started, "failed", failed)
+
+
 
 
 class SKABaseDevice(Device):
