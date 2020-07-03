@@ -60,7 +60,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.READY)
 
         assert tango_context.device.Abort() == [
@@ -82,7 +82,7 @@ class TestSKASubarray(object):
         # so change source to ensure we read directly from the device
         tango_context.device.set_source(DevSource.DEV)
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.IDLE)
 
         tango_context.device.Configure('{"BAND1": 2}')
@@ -127,7 +127,7 @@ class TestSKASubarray(object):
         # PROTECTED REGION ID(SKASubarray.test_AssignResources) ENABLED START #
         tango_context.device.On()
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.EMPTY)
 
         tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
@@ -153,7 +153,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.READY)
 
         assert tango_context.device.End() == [
@@ -173,7 +173,7 @@ class TestSKASubarray(object):
         tango_context.device.Configure('{"BAND1": 2}')
         tango_context.device.Scan('{"id": 123}')
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.SCANNING)
 
         assert tango_context.device.EndScan() == [
@@ -193,7 +193,7 @@ class TestSKASubarray(object):
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.IDLE)
 
         tango_context.device.ReleaseAllResources()
@@ -210,7 +210,7 @@ class TestSKASubarray(object):
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.IDLE)
 
         tango_context.device.ReleaseResources('{"example": ["BAND1"]}')
@@ -230,7 +230,7 @@ class TestSKASubarray(object):
         tango_context.device.Configure('{"BAND1": 2}')
         tango_context.device.Abort()
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.ABORTED)
 
         assert tango_context.device.ObsReset() == [
@@ -250,7 +250,7 @@ class TestSKASubarray(object):
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
         tango_context.device.Configure('{"BAND1": 2}')
 
-        obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+        obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.READY)
 
         assert tango_context.device.Scan('{"id": 123}') == [
@@ -281,8 +281,8 @@ class TestSKASubarray(object):
         assert tango_context.device.adminMode == AdminMode.MAINTENANCE
         assert tango_context.device.state() == DevState.OFF
 
-        admin_mode_callback = tango_change_event_helper.subscribe("AdminMode")
-        dev_state_callback = tango_change_event_helper.subscribe("State")
+        admin_mode_callback = tango_change_event_helper.subscribe("adminMode")
+        dev_state_callback = tango_change_event_helper.subscribe("state")
         assert admin_mode_callback.expect_call_with(AdminMode.MAINTENANCE)
         assert dev_state_callback.expect_call_with(DevState.OFF)
 
@@ -430,9 +430,9 @@ class TestSKASubarray(object):
         # but be aware that it will make this test brutally slow.
         TEST_EVENTS = False
         if TEST_EVENTS:
-            dev_state_callback = tango_change_event_helper.subscribe("State")
-            admin_mode_callback = tango_change_event_helper.subscribe("AdminMode")
-            obs_state_callback = tango_change_event_helper.subscribe("ObsState")
+            dev_state_callback = tango_change_event_helper.subscribe("state")
+            admin_mode_callback = tango_change_event_helper.subscribe("adminMode")
+            obs_state_callback = tango_change_event_helper.subscribe("obsState")
 
         def assert_event_state(state):
             """

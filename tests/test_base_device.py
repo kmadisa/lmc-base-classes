@@ -397,7 +397,7 @@ class TestSKABaseDevice(object):
         Test for On command
         """
 
-        state_callback = tango_change_event_helper.subscribe("State")
+        state_callback = tango_change_event_helper.subscribe("state")
         assert state_callback.expect_call_with(DevState.OFF)
 
         # Check that we can turn a freshly initialised device on
@@ -420,7 +420,7 @@ class TestSKABaseDevice(object):
         """
         Test for On command
         """
-        state_callback = tango_change_event_helper.subscribe("State")
+        state_callback = tango_change_event_helper.subscribe("state")
         assert state_callback.expect_call_with(DevState.OFF)
 
         # Check that we can't turn off a device that isn't on
@@ -540,7 +540,7 @@ class TestSKABaseDevice(object):
         # PROTECTED REGION ID(SKABaseDevice.test_adminMode) ENABLED START #
         assert tango_context.device.adminMode == AdminMode.MAINTENANCE
 
-        admin_mode_callback = tango_change_event_helper.subscribe("AdminMode")
+        admin_mode_callback = tango_change_event_helper.subscribe("adminMode")
         assert admin_mode_callback.expect_call_with(AdminMode.MAINTENANCE)
 
         tango_context.device.adminMode = AdminMode.ONLINE

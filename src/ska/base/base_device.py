@@ -596,8 +596,8 @@ class SKABaseDevice(Device):
             """
             device = self.target
 
-            device.set_change_event('AdminMode', True, True)
-            device.set_change_event('State', True, True)
+            device.set_change_event("adminMode", True, True)
+            device.set_change_event("state", True, True)
 
             device._health_state = HealthState.OK
             device._control_mode = ControlMode.REMOTE
@@ -803,7 +803,7 @@ class SKABaseDevice(Device):
         :param admin_mode: the new admin_mode value
         :type admin_mode: AdminMode
         """
-        self.push_change_event('AdminMode', admin_mode)
+        self.push_change_event("adminMode", admin_mode)
 
     def _update_state(self, state):
         """
@@ -819,7 +819,7 @@ class SKABaseDevice(Device):
             )
             self.set_state(state)
             self.set_status(f"The device is in {state} state.")
-            self.push_change_event('State')
+            self.push_change_event("state")
 
     def init_device(self):
         """
@@ -1206,7 +1206,7 @@ class SKABaseDevice(Device):
 
     class OnCommand(ActionCommand):
         """
-        A class for the SKASubarray's On() command.
+        A class for the SKABaseDevice's On() command.
         """
         def __init__(self, target, state_model, logger=None):
             """
@@ -1259,7 +1259,7 @@ class SKABaseDevice(Device):
     @DebugIt()
     def On(self):
         """
-        Turn subarray on
+        Turn device on
 
         To modify behaviour for this command, modify the do() method of
         the command class.
@@ -1270,7 +1270,7 @@ class SKABaseDevice(Device):
 
     class OffCommand(ActionCommand):
         """
-        A class for the SKASubarray's Off() command.
+        A class for the SKABaseDevice's Off() command.
         """
         def __init__(self, target, state_model, logger=None):
             """
@@ -1323,7 +1323,7 @@ class SKABaseDevice(Device):
     @DebugIt()
     def Off(self):
         """
-        Turn the subarray off
+        Turn the device off
 
         To modify behaviour for this command, modify the do() method of
         the command class.
