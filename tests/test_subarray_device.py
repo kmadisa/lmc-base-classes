@@ -428,7 +428,7 @@ class TestSKASubarray(object):
         """
         # change this to True to test events across the entire state machine
         # but be aware that it will make this test brutally slow.
-        TEST_EVENTS = True
+        TEST_EVENTS = False
         if TEST_EVENTS:
             dev_state_callback = tango_change_event_helper.subscribe("State")
             admin_mode_callback = tango_change_event_helper.subscribe("AdminMode")
