@@ -132,7 +132,6 @@ class SKAObsDevice(SKABaseDevice):
 
     obsState = attribute(
         dtype=ObsState,
-        polling_period=1000,
         doc="Observing State",
     )
 

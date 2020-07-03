@@ -77,11 +77,6 @@ class TestSKASubarray(object):
         tango_context.device.On()
         tango_context.device.AssignResources('{"example": ["BAND1"]}')
 
-        # The obsState attribute is changed by Configure, but
-        # as it is a polled attribute the value in the cache may be stale,
-        # so change source to ensure we read directly from the device
-        tango_context.device.set_source(DevSource.DEV)
-
         obs_state_callback = tango_change_event_helper.subscribe("obsState")
         assert obs_state_callback.expect_call_with(ObsState.IDLE)
 
@@ -562,10 +557,6 @@ class TestSKASubarray(object):
             "ABORTED":
                 ['on', 'assign', 'abort'],
         }
-
-        # bypass cache for this test because we are testing for a change
-        # in the polled attribute obsState
-        tango_context.device.set_source(DevSource.DEV)
 
         # state = "OFF"  # debugging only
         # assert_device_state(state)  # debugging only

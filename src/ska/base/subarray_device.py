@@ -829,7 +829,8 @@ class SKASubarray(SKAObsDevice):
         """
         self.state_model = SKASubarrayStateModel(
             dev_state_callback=self._update_state,
-            admin_mode_callback=self._update_admin_mode
+            admin_mode_callback=self._update_admin_mode,
+            obs_state_callback=self._update_obs_state
         )
 
     def init_command_objects(self):
