@@ -119,7 +119,7 @@ def tango_change_event_helper(tango_context):
             self._called = True
 
         def called(self):
-            retries = 30
+            retries = 60
             for _ in range(retries):
                 if self._called:
                     break
