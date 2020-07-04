@@ -66,7 +66,9 @@ class TestSKASubarray(object):
         assert tango_context.device.Abort() == [
             [ResultCode.OK], ["Abort command completed OK"]
         ]
-        assert obs_state_callback.expect_call_with(ObsState.ABORTED)
+        assert obs_state_callback.expect_calls_with(
+            [ObsState.ABORTING, ObsState.ABORTED]
+        )
         # PROTECTED REGION END #    //  SKASubarray.test_Abort
 
     # PROTECTED REGION ID(SKASubarray.test_Configure_decorators) ENABLED START #
@@ -82,7 +84,9 @@ class TestSKASubarray(object):
 
         tango_context.device.Configure('{"BAND1": 2}')
 
-        assert obs_state_callback.expect_call_with(ObsState.READY)
+        assert obs_state_callback.expect_calls_with(
+            [ObsState.CONFIGURING, ObsState.READY]
+        )
         assert tango_context.device.obsState == ObsState.READY
         assert tango_context.device.configuredCapabilities == ("BAND1:2", "BAND2:0")
         # PROTECTED REGION END #    //  SKASubarray.test_Configure
@@ -127,12 +131,16 @@ class TestSKASubarray(object):
 
         tango_context.device.AssignResources('{"example": ["BAND1", "BAND2"]}')
 
-        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+        assert obs_state_callback.expect_calls_with(
+            [ObsState.RESOURCING, ObsState.IDLE]
+        )
         assert tango_context.device.ObsState == ObsState.IDLE
         assert tango_context.device.assignedResources == ('BAND1', 'BAND2')
 
         tango_context.device.ReleaseAllResources()
-        assert obs_state_callback.expect_call_with(ObsState.EMPTY)
+        assert obs_state_callback.expect_calls_with(
+            [ObsState.RESOURCING, ObsState.EMPTY]
+        )
         assert tango_context.device.ObsState == ObsState.EMPTY
 
         with pytest.raises(DevFailed):
@@ -193,7 +201,9 @@ class TestSKASubarray(object):
 
         tango_context.device.ReleaseAllResources()
 
-        assert obs_state_callback.expect_call_with(ObsState.EMPTY)
+        assert obs_state_callback.expect_calls_with(
+            [ObsState.RESOURCING, ObsState.EMPTY]
+        )
         assert tango_context.device.assignedResources is None
         # PROTECTED REGION END #    //  SKASubarray.test_ReleaseAllResources
 
@@ -210,7 +220,9 @@ class TestSKASubarray(object):
 
         tango_context.device.ReleaseResources('{"example": ["BAND1"]}')
 
-        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+        assert obs_state_callback.expect_calls_with(
+            [ObsState.RESOURCING, ObsState.IDLE]
+        )
         assert tango_context.device.ObsState == ObsState.IDLE
         assert tango_context.device.assignedResources == ('BAND2',)
         # PROTECTED REGION END #    //  SKASubarray.test_ReleaseResources
@@ -232,7 +244,9 @@ class TestSKASubarray(object):
             [ResultCode.OK], ["ObsReset command completed OK"]
         ]
 
-        assert obs_state_callback.expect_call_with(ObsState.IDLE)
+        assert obs_state_callback.expect_calls_with(
+            [ObsState.RESETTING, ObsState.IDLE]
+        )
         assert tango_context.device.obsState == ObsState.IDLE
         # PROTECTED REGION END #    //  SKASubarray.test_Reset
 
