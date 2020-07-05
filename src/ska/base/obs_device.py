@@ -109,6 +109,7 @@ class SKAObsDevice(SKABaseDevice):
 
             device = self.target
             device.set_change_event("obsState", True, True)
+            device.set_archive_event("obsState", True, True)
 
             device._obs_mode = ObsMode.IDLE
             device._config_progress = 0
@@ -167,6 +168,7 @@ class SKAObsDevice(SKABaseDevice):
         :type obs_state: ObsState
         """
         self.push_change_event("obsState", obs_state)
+        self.push_archive_event("obsState", obs_state)
 
     def _init_state_model(self):
         """

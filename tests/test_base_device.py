@@ -398,42 +398,53 @@ class TestSKABaseDevice(object):
         """
 
         state_callback = tango_change_event_helper.subscribe("state")
+        status_callback = tango_change_event_helper.subscribe("status")
         assert state_callback.expect_call_with(DevState.OFF)
+        assert "OFF state" in status_callback.value
 
         # Check that we can turn a freshly initialised device on
         tango_context.device.On()
         assert state_callback.expect_call_with(DevState.ON)
+        assert "ON state" in status_callback.value
 
         # Check that we can't turn it on when it is already on
         with pytest.raises(DevFailed):
             tango_context.device.On()
         assert not state_callback.called()
+        assert not status_callback.called()
 
         # Now turn it off and check that we can turn it on again.
         tango_context.device.Off()
         assert state_callback.expect_call_with(DevState.OFF)
+        assert "OFF state" in status_callback.value
 
         tango_context.device.On()
         assert state_callback.expect_call_with(DevState.ON)
+        assert "ON state" in status_callback.value
 
     def test_Off(self, tango_context, tango_change_event_helper):
         """
         Test for On command
         """
         state_callback = tango_change_event_helper.subscribe("state")
+        status_callback = tango_change_event_helper.subscribe("status")
         assert state_callback.expect_call_with(DevState.OFF)
+        assert "OFF state" in status_callback.value
 
         # Check that we can't turn off a device that isn't on
         with pytest.raises(DevFailed):
             tango_context.device.Off()
         assert not state_callback.called()
+        assert not status_callback.called()
 
         # Now turn it on and check that we can turn it off
         tango_context.device.On()
         assert state_callback.expect_call_with(DevState.ON)
+        assert "ON state" in status_callback.value
 
         tango_context.device.Off()
         assert state_callback.expect_call_with(DevState.OFF)
+        assert "OFF state" in status_callback.value
 
     # PROTECTED REGION ID(SKABaseDevice.test_buildState_decorators) ENABLED START #
     # PROTECTED REGION END #    //  SKABaseDevice.test_buildState_decorators

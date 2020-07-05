@@ -597,7 +597,11 @@ class SKABaseDevice(Device):
             device = self.target
 
             device.set_change_event("adminMode", True, True)
+            device.set_archive_event("adminMode", True, True)
             device.set_change_event("state", True, True)
+            device.set_archive_event("state", True, True)
+            device.set_change_event("status", True, True)
+            device.set_archive_event("status", True, True)
 
             device._health_state = HealthState.OK
             device._control_mode = ControlMode.REMOTE
@@ -804,6 +808,7 @@ class SKABaseDevice(Device):
         :type admin_mode: AdminMode
         """
         self.push_change_event("adminMode", admin_mode)
+        self.push_archive_event("adminMode", admin_mode)
 
     def _update_state(self, state):
         """
@@ -819,7 +824,16 @@ class SKABaseDevice(Device):
             )
             self.set_state(state)
             self.set_status(f"The device is in {state} state.")
-            self.push_change_event("state")
+
+    def set_state(self, state):
+        super().set_state(state)
+        self.push_change_event('state')
+        self.push_archive_event('state')
+
+    def set_status(self, status):
+        super().set_status(status)
+        self.push_change_event('status')
+        self.push_archive_event('status')
 
     def init_device(self):
         """
