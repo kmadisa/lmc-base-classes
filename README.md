@@ -30,6 +30,7 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
 - Move On() and Off() commands to SKABaseDevice.
 - Add event pushing for device state, device status, admin mode and obs state
   (change and archive events).
+- Disable all attribute polling.
 
 #### 0.6.0
 - Breaking change: State management
