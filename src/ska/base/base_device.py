@@ -807,6 +807,7 @@ class SKABaseDevice(Device):
         :param admin_mode: the new admin_mode value
         :type admin_mode: AdminMode
         """
+        print("Pushing adminMode change event")
         self.push_change_event("adminMode", admin_mode)
         self.push_archive_event("adminMode", admin_mode)
 

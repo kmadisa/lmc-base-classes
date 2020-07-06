@@ -85,7 +85,7 @@ class TestSKAObsDevice(object):
         # Check that events are working by subscribing and checking for that
         # initial event
         obs_state_callback = tango_change_event_helper.subscribe("obsState")
-        assert obs_state_callback.expect_call_with(ObsState.EMPTY)
+        obs_state_callback.assert_call(ObsState.EMPTY)
         # PROTECTED REGION END #    //  SKAObsDevice.test_obsState
 
     # PROTECTED REGION ID(SKAObsDevice.test_obsMode_decorators) ENABLED START #

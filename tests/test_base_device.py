@@ -399,27 +399,27 @@ class TestSKABaseDevice(object):
 
         state_callback = tango_change_event_helper.subscribe("state")
         status_callback = tango_change_event_helper.subscribe("status")
-        assert state_callback.expect_call_with(DevState.OFF)
+        state_callback.assert_call(DevState.OFF)
         assert "OFF state" in status_callback.value
 
         # Check that we can turn a freshly initialised device on
         tango_context.device.On()
-        assert state_callback.expect_call_with(DevState.ON)
+        state_callback.assert_call(DevState.ON)
         assert "ON state" in status_callback.value
 
         # Check that we can't turn it on when it is already on
         with pytest.raises(DevFailed):
             tango_context.device.On()
-        assert not state_callback.called()
-        assert not status_callback.called()
+        state_callback.assert_not_called()
+        status_callback.assert_not_called()
 
         # Now turn it off and check that we can turn it on again.
         tango_context.device.Off()
-        assert state_callback.expect_call_with(DevState.OFF)
+        state_callback.assert_call(DevState.OFF)
         assert "OFF state" in status_callback.value
 
         tango_context.device.On()
-        assert state_callback.expect_call_with(DevState.ON)
+        state_callback.assert_call(DevState.ON)
         assert "ON state" in status_callback.value
 
     def test_Off(self, tango_context, tango_change_event_helper):
@@ -428,22 +428,22 @@ class TestSKABaseDevice(object):
         """
         state_callback = tango_change_event_helper.subscribe("state")
         status_callback = tango_change_event_helper.subscribe("status")
-        assert state_callback.expect_call_with(DevState.OFF)
+        state_callback.assert_call(DevState.OFF)
         assert "OFF state" in status_callback.value
 
         # Check that we can't turn off a device that isn't on
         with pytest.raises(DevFailed):
             tango_context.device.Off()
-        assert not state_callback.called()
-        assert not status_callback.called()
+        state_callback.assert_not_called()
+        status_callback.assert_not_called()
 
         # Now turn it on and check that we can turn it off
         tango_context.device.On()
-        assert state_callback.expect_call_with(DevState.ON)
+        state_callback.assert_call(DevState.ON)
         assert "ON state" in status_callback.value
 
         tango_context.device.Off()
-        assert state_callback.expect_call_with(DevState.OFF)
+        state_callback.assert_call(DevState.OFF)
         assert "OFF state" in status_callback.value
 
     # PROTECTED REGION ID(SKABaseDevice.test_buildState_decorators) ENABLED START #
@@ -552,11 +552,11 @@ class TestSKABaseDevice(object):
         assert tango_context.device.adminMode == AdminMode.MAINTENANCE
 
         admin_mode_callback = tango_change_event_helper.subscribe("adminMode")
-        assert admin_mode_callback.expect_call_with(AdminMode.MAINTENANCE)
+        admin_mode_callback.assert_call(AdminMode.MAINTENANCE)
 
         tango_context.device.adminMode = AdminMode.ONLINE
         assert tango_context.device.adminMode == AdminMode.ONLINE
-        assert admin_mode_callback.expect_call_with(AdminMode.ONLINE)
+        admin_mode_callback.assert_call(AdminMode.ONLINE)
 
         # PROTECTED REGION END #    //  SKABaseDevice.test_adminMode
 

@@ -3,7 +3,7 @@ A module defining a list of fixtures that are shared across all ska.base tests.
 """
 import importlib
 import pytest
-import threading
+from queue import Queue
 import time
 
 from tango import EventType
@@ -112,10 +112,9 @@ def tango_change_event_helper(tango_context):
             return _Callback(attribute_name)
 
         def __init__(self, attribute_name):
-            self._call_count = 0
-            self._values = []
+            self._value = None
+            self._values_queue = Queue()
             self._errors = []
-            self._lock = threading.Lock()
 
             # Subscription will result in an immediate
             # synchronous callback with the current value,
@@ -129,55 +128,38 @@ def tango_change_event_helper(tango_context):
                 tango_context.device.unsubscribe_event(self._id)
 
         def __call__(self, event_data):
-            with self._lock:
-                self._call_count += 1
-                if not event_data.err:
-                    self._values.append(event_data.attr_value.value)
-                    self._errors.append(None)
-                else:
-                    e = event_data.errors[0]
-                    self._values.append(None)
-                    self._errors.append("Event callback error: [%s] %s" % (e.reason, e.desc))
+            if event_data.err:
+                error = event_data.errors[0]
+                self._errors.append("Event callback error: [%s] %s" % (error.reason, error.desc))
+            else:
+                self._values_queue.put(event_data.attr_value.value)
 
-        def reset(self):
-            with self._lock:
-                self._call_count = 0
-                self._values = []
-                self._errors = []
+        def _next(self):
+            assert not self._errors, f"Some errors: {self._errors}"
 
-        def called(self, at_least=1):
             retries = 30
-            done = False
             for _ in range(retries):
-                with self._lock:
-                    done = self._call_count >= at_least
-                    if done:
-                        break
+                if self._values_queue.qsize():
+                    return self._values_queue.get()
                 time.sleep(0.05)
-            return done
-
-        def values(self, at_least=1):
-            self.called(at_least)
-            with self._lock:
-                values = self._values
-                errors = self._errors
-            self.reset()
-            assert not any(errors), f"Some errors: {errors}"
-            return values
+            return None
 
         @property
         def value(self):
-            values = self.values(at_least=1)
-            if not values:
-                return None
-            return values[0]
+            new_value = self._next()
+            while new_value is not None:
+                self._value = new_value
+                new_value = self._next()
+            return self._value
 
-        def expect_calls_with(self, values):
-            actual_values = self.values(at_least=len(values))
-            assert actual_values == values
-            return True
+        def assert_not_called(self):
+            assert not self._values_queue.qsize()
 
-        def expect_call_with(self, value):
-            return self.expect_calls_with([value])
+        def assert_call(self, value):
+            assert self._next() == value
+
+        def assert_calls(self, values):
+            for value in values:
+                self.assert_call(value)
 
     yield _Callback
