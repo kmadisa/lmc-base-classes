@@ -423,9 +423,7 @@ class TestSKASubarray(object):
                 "restart"]
         )
     )
-    def test_state_machine(
-        self, tango_context, tango_change_event_helper, state_under_test, action_under_test
-    ):
+    def test_state_machine(self, tango_context, state_under_test, action_under_test):
         """
         Test the subarray state machine: for a given initial state and
         an action, does execution of that action, from that initial
@@ -434,25 +432,6 @@ class TestSKASubarray(object):
         exception? If the action was allowed, does it result in the
         correct state transition?
         """
-        # change this to True to test events across the entire state machine
-        # but be aware that it will make this test brutally slow.
-        TEST_EVENTS = False
-        if TEST_EVENTS:
-            dev_state_callback = tango_change_event_helper.subscribe("state")
-            admin_mode_callback = tango_change_event_helper.subscribe("adminMode")
-            obs_state_callback = tango_change_event_helper.subscribe("obsState")
-
-        def assert_event_state(state):
-            """
-            Check that our change event callbacks have received events
-            consistent with the state we think we should be in
-            """
-            if TEST_EVENTS:
-                (admin_modes, dev_state, obs_state) = states[state]
-                assert admin_mode_callback.value in admin_modes
-                assert dev_state_callback.value == dev_state
-                assert obs_state_callback.value == obs_state
-
         states = {
             "DISABLED":
                 ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.DISABLE, ObsState.EMPTY),
@@ -475,7 +454,7 @@ class TestSKASubarray(object):
                 ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.FAULT),
         }
 
-        def assert_device_state(state):
+        def assert_state(state):
             """
             Check that the device is in the state we think it should be in
             """
@@ -571,33 +550,28 @@ class TestSKASubarray(object):
                 ['on', 'assign', 'abort'],
         }
 
-        state = "OFF"  # debugging only
-        assert_device_state(state)  # debugging only
-        assert_event_state(state)  # debugging only
+        # state = "OFF"  # debugging only
+        # assert_state(state)  # debugging only
 
         # Put the device into the state under test
         for action in setups[state_under_test]:
             perform_action(action)
-            state = transitions[state, action]  # debugging only
-            assert_device_state(state)  # debugging only
-            assert_event_state(state)  # debugging only
+            # state = transitions[state, action]  # debugging only
+            # assert_state(state)  # debugging only
 
         # Check that we are in the state under test
-        assert_device_state(state_under_test)
-        assert_event_state(state_under_test)
+        assert_state(state_under_test)
 
         # Test that the action under test does what we expect it to
         if (state_under_test, action_under_test) in transitions:
             # Action should succeed
             perform_action(action_under_test)
-            assert_device_state(transitions[(state_under_test, action_under_test)])
-            assert_event_state(transitions[(state_under_test, action_under_test)])
+            assert_state(transitions[(state_under_test, action_under_test)])
         else:
             # Action should fail and the state should not change
             with pytest.raises(DevFailed):
                 perform_action(action_under_test)
-            assert_device_state(state_under_test)
-            assert_event_state(state_under_test)
+            assert_state(state_under_test)
 
 
 @pytest.fixture

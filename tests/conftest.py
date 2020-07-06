@@ -3,8 +3,7 @@ A module defining a list of fixtures that are shared across all ska.base tests.
 """
 import importlib
 import pytest
-from queue import Queue
-import time
+from queue import Empty, Queue
 
 from tango import EventType
 from tango.test_context import DeviceTestContext
@@ -136,13 +135,10 @@ def tango_change_event_helper(tango_context):
 
         def _next(self):
             assert not self._errors, f"Some errors: {self._errors}"
-
-            retries = 30
-            for _ in range(retries):
-                if self._values_queue.qsize():
-                    return self._values_queue.get()
-                time.sleep(0.05)
-            return None
+            try:
+                return self._values_queue.get(timeout=1.5)
+            except Empty:
+                return None
 
         @property
         def value(self):
