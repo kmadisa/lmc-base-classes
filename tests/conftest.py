@@ -164,8 +164,9 @@ def tango_change_event_helper(tango_context):
             Gets the attribute value from the next event if there is
             one or if it arrives in time.
 
-            :return: an event, or None if there is no event
-            :rtype: tango.EventData
+            :return: the attribute value reported in next change event,
+                or None if there is no event
+            :rtype: same as attribute type
             """
             assert not self._errors, f"Some errors: {self._errors}"
             try:
@@ -173,30 +174,30 @@ def tango_change_event_helper(tango_context):
             except Empty:
                 return None
 
-        @property
-        def value(self):
-            """
-            The current value of the attribute according to received or
-            pending change events.
+        # @property
+        # def value(self):
+        #     """
+        #     The current value of the attribute according to received or
+        #     pending change events.
 
-            Note that reading this property consumes all pending events.
+        #     Note that reading this property consumes all pending events.
 
-            :return: the current value of the attribute according to
-            received or pending change events.
-            """
-            new_value = self._next()
-            while new_value is not None:
-                self._value = new_value
-                new_value = self._next()
-            return self._value
+        #     :return: the current value of the attribute according to
+        #     received or pending change events.
+        #     """
+        #     new_value = self._next()
+        #     while new_value is not None:
+        #         self._value = new_value
+        #         new_value = self._next()
+        #     return self._value
 
         def assert_not_called(self):
             """
-            Asserts that this callback has not been called with a
-            change event that has not already been consumed by ``value``,
-            ``assert_call`` or ``assert_calls`` methods.
+            Assert that there are no new callbacks calls. (That is,
+            there are no callback calls that have not already been
+            consumed by an ``assert_call`` or ``assert_calls``.)
             """
-            assert not self._values_queue.qsize()
+            assert self._values_queue.empty()
 
         def assert_call(self, value):
             """
@@ -219,7 +220,7 @@ def tango_change_event_helper(tango_context):
             given sequence of values.
 
             Note that this method consumes the events associated with
-            the given values, but may leave other subsequence events
+            the given values, but may leave subsequent events
             unconsumed.
 
             :param values: sequence of values that the attribute
