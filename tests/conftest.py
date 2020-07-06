@@ -174,23 +174,6 @@ def tango_change_event_helper(tango_context):
             except Empty:
                 return None
 
-        # @property
-        # def value(self):
-        #     """
-        #     The current value of the attribute according to received or
-        #     pending change events.
-
-        #     Note that reading this property consumes all pending events.
-
-        #     :return: the current value of the attribute according to
-        #     received or pending change events.
-        #     """
-        #     new_value = self._next()
-        #     while new_value is not None:
-        #         self._value = new_value
-        #         new_value = self._next()
-        #     return self._value
-
         def assert_not_called(self):
             """
             Assert that there are no new callbacks calls. (That is,
