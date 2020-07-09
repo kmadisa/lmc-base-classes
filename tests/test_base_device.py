@@ -589,6 +589,11 @@ class TestSKABaseDevice(object):
         # PROTECTED REGION END #    //  SKABaseDevice.test_testMode
 
 
+@pytest.fixture
+def state_model():
+    yield SKABaseDeviceStateModel()
+
+
 class TestSKABaseDeviceStateModel():
     """
     Test cases for SKABaseDeviceStateModel.
@@ -605,7 +610,9 @@ class TestSKABaseDeviceStateModel():
              "on_failed", "off_succeeded", "off_failed"]
         )
     )
-    def test_state_machine(self, state_under_test, action_under_test):
+    def test_state_machine(
+        self, state_model, state_under_test, action_under_test
+    ):
         """
         Test the subarray state machine: for a given initial state and
         an action, does execution of that action, from that initial
@@ -616,8 +623,6 @@ class TestSKABaseDeviceStateModel():
 
         :todo: support starting in different memorised adminModes
         """
-        state_model = SKABaseDeviceStateModel()
-
         states = {
             "UNINITIALISED":
                 (None, None),

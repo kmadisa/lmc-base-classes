@@ -578,6 +578,10 @@ class TestSKASubarray(object):
 def resource_manager():
     yield SKASubarrayResourceManager()
 
+@pytest.fixture
+def state_model():
+    yield SKASubarrayStateModel()
+
 
 class TestSKASubarrayResourceManager:
     def test_ResourceManager_assign(self, resource_manager):
