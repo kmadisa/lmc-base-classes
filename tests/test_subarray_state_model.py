@@ -18,7 +18,12 @@ from ska.base.control_model import AdminMode, ObsState
 from ska.base.faults import StateModelError
 
 
-class TestSKASubarrayStateModel():
+@pytest.fixture
+def state_model():
+    yield SKASubarrayStateModel()
+
+
+class TestSKASubarrayStateModel:
     """
     Test cases for SKASubarrayStateModel.
     """
@@ -44,7 +49,9 @@ class TestSKASubarrayStateModel():
              "restart_failed"]
         )
     )
-    def test_state_machine(self, state_under_test, action_under_test):
+    def test_state_machine(
+        self, state_model, state_under_test, action_under_test
+    ):
         """
         Test the subarray state machine: for a given initial state and
         an action, does execution of that action, from that initial
@@ -55,8 +62,6 @@ class TestSKASubarrayStateModel():
 
         :todo: support starting in different memorised adminModes
         """
-
-        state_model = SKASubarrayStateModel()
 
         states = {
             "UNINITIALISED":
