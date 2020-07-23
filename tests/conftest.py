@@ -2,11 +2,205 @@
 A module defining a list of fixtures that are shared across all ska.base tests.
 """
 import importlib
+import itertools
 import pytest
 from queue import Empty, Queue
+from transitions import MachineError
 
 from tango import EventType
 from tango.test_context import DeviceTestContext
+
+from ska.base import SKABaseDeviceStateModel, SKASubarrayStateModel
+
+
+def pytest_configure(config):
+    """
+    pytest hook, used here to register custom marks to get rid of spurious
+    warnings
+    """
+    config.addinivalue_line(
+        "markers",
+        "state_machine_test: indicate that the test is a state machine "
+        "test and should be parameterised by the states and actions in "
+        "its DAG"
+    )
+
+
+def pytest_generate_tests(metafunc):
+    """
+    pytest hook that generates tests; this hook ensures that any test
+    that is marked with `state_machine_test` custom marker will be
+    parameterised by the states and actions in its DAG
+    """
+    # called once per each test function
+    if metafunc.definition.get_closest_marker("state_machine_test"):
+        metafunc.parametrize(*metafunc.cls._parametrize())
+
+
+@pytest.mark.state_machine_test
+class StateMachineTester:
+    """
+    Abstract base class for a class for testing state machines
+    """
+
+    @classmethod
+    def _parametrize(cls):
+        """
+        Parametrizes the state machine tests to ensure that every action
+        in the DAG is tested from every state in the DAG.
+        """
+        states = set()
+        triggers = set()
+        expected = {}
+
+        for (from_state, trigger, to_state) in cls.dag:
+            states.add(from_state)
+            states.add(to_state)
+            triggers.add(trigger)
+            expected[(from_state, trigger)] = to_state
+
+        states = sorted(states)
+        triggers = sorted(triggers)
+
+        return (
+            "state_under_test, action_under_test, expected_state",
+            [
+                (
+                    state,
+                    trigger,
+                    expected[(state, trigger)] if (state, trigger) in expected else None
+                ) for (state, trigger) in itertools.product(states, triggers)
+            ]
+        )
+
+    def test_state_machine(
+        self, state_under_test, action_under_test, expected_state,
+    ):
+        """
+        Test the subarray state machine: for a given initial state and
+        an action, does execution of that action, from that initial
+        state, yield the expected results? If the action was not allowed
+        from that initial state, does the device raise a DevFailed
+        exception? If the action was allowed, does it result in the
+        correct state transition?
+
+        :todo: support starting in different memorised adminModes
+        """
+        # Put the device into the state under test
+        self.to_state(state_under_test)
+
+        # Check that we are in the state under test
+        self.assert_state(state_under_test)
+
+        # Test that the action under test does what we expect it to
+        if expected_state is None:
+            # Action should fail and the state should not change
+            self.assert_fails(action_under_test)
+            self.assert_state(state_under_test)
+        else:
+            # Action should succeed
+            self.perform_action(action_under_test)
+            self.assert_state(expected_state)
+
+    def assert_state(self, state):
+        """
+        Abstract method for asserting the current state of the state
+        machine under test
+
+        :param state: the state that we are asserting to be the current
+            state of the state machine under test
+        :type state: str
+        """
+        raise NotImplementedError()
+
+    def perform_action(self, action):
+        """
+        Abstract method for performing a triggering action on the state
+        machine
+
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        raise NotImplementedError()
+
+    def assert_fails(self, action):
+        """
+        Abstract method for asserting that an action fails if performed
+        on the state machine under test in its current state.
+
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        raise NotImplementedError()
+
+    def to_state(self, target_state):
+        """
+        Abstract method for getting the state machine into a target
+        state.
+
+        :param target_state: the state that we want to get the state
+            machine under test into
+        :type target_state: str
+        """
+        raise NotImplementedError()
+
+
+class TransitionsStateMachineTester(StateMachineTester):
+    """
+    Much less abstract implementation of a StateMachineTester for a
+    pytransitions state machine. Requires only implementation of the
+    `machine` property for obtaining the machine. Assumes that the DAG
+    states and actions are the states and triggers of the pytransitions
+    machine.
+    """
+
+    @property
+    def machine(self):
+        """
+        Returns a pytransitions Machine for testing that it implements
+        the state diagram described by the DAG
+        """
+        raise NotImplementedError()
+
+    def assert_state(self, state):
+        """
+        Assert the current state of the state machine under test.
+
+        :param state: the state that we are asserting to be the current
+            state of the state machine under test
+        :type state: str
+        """
+        assert self.machine.state == state
+
+    def perform_action(self, action):
+        """
+        Perform a given action on the state machine under test.
+
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        self.machine.trigger(action)
+
+    def assert_fails(self, action):
+        """
+        Assert that performing a given action on the state maching under
+        test fails in its current state.
+
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        with pytest.raises(MachineError):
+            self.perform_action(action)
+
+    def to_state(self, target_state):
+        """
+        Transition the state machine to a target state.
+
+        :param target_state: the state that we want to get the state
+            machine under test into
+        :type target_state: str
+        """
+        self.machine.trigger(f"to_{target_state}")
 
 
 @pytest.fixture(scope="class")
@@ -65,6 +259,22 @@ def initialize_device(tango_context):
     yield tango_context.device.Init()
 
 
+@pytest.fixture
+def device_state_model():
+    """
+    Yields a new SKABaseDeviceStateModel for testing
+    """
+    yield SKABaseDeviceStateModel()
+
+
+@pytest.fixture
+def subarray_state_model():
+    """
+    Yields a new SKASubarrayStateModel for testing
+    """
+    yield SKASubarrayStateModel()
+
+
 @pytest.fixture(scope="function")
 def tango_change_event_helper(tango_context):
     """
@@ -95,6 +305,11 @@ def tango_change_event_helper(tango_context):
 
     """
     class _Callback:
+        """
+        Private callback handler class, an instance of which is returned
+        by the tango_change_event_helper each time it is used to
+        subscribe to a change event.
+        """
         @staticmethod
         def subscribe(attribute_name):
             """

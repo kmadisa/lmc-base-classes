@@ -25,6 +25,12 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
 
 ## Version History
 
+#### 0.6.4
+- Refactor state machine to use pytransitions library.
+- Minor behavioural change: Off() command is accepted in every obsState, rather
+that only EMPTY obsState.
+- Refactor of state machine testing to make it more portable
+
 #### 0.6.3
 - Fix omission of fatal_error transition from base device state machine.
 

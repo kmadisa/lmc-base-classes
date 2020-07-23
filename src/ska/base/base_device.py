@@ -18,9 +18,8 @@ import logging.handlers
 import socket
 import sys
 import threading
-from transitions import Machine
 import warnings
-
+from transitions import MachineError
 from urllib.parse import urlparse
 from urllib.request import url2pathname
 
@@ -36,8 +35,10 @@ from ska.base.commands import (
 )
 from ska.base.control_model import (
     AdminMode, ControlMode, SimulationMode, TestMode, HealthState,
-    LoggingLevel, DeviceStateModel
+    LoggingLevel
 )
+from ska.base.faults import StateModelError
+from ska.base.state_machine import BaseDeviceStateMachine
 
 from ska.base.utils import get_groups_from_json
 from ska.base.faults import (GroupDefinitionsError,
@@ -308,7 +309,7 @@ class LoggingUtils:
 # PROTECTED REGION END #    //  SKABaseDevice.additionnal_import
 
 
-__all__ = ["SKABaseDevice", "SKABaseDeviceStateModel", "main"]
+__all__ = ["SKABaseDevice", "main"]
 
 
 class SKABaseDeviceStateModel:
@@ -316,214 +317,27 @@ class SKABaseDeviceStateModel:
     Implements the state model for the SKABaseDevice
     """
 
-    __states = [
-        "INIT (DISABLED)", "INIT (ENABLED)", 
-        "FAULT (DISABLED)", "FAULT (ENABLED)", 
-        "DISABLED", "OFF", "ON"
-    ]
-    __transitions = [
-        {
-            "source": ["INIT (ENABLED)", "OFF", "FAULT", "ON"],
-            "trigger": "fatal_error",
-            "dest": "FAULT (ENABLED)",
-            "after": lambda self: self._set_dev_state(DevState.FAULT)
-        },
-        {
-            "source": ["INIT (DISABLED)", "DISABLED", "FAULT (DISABLED)"],
-            "trigger": "fatal_error",
-            "dest": "FAULT (DISABLED)",
-            "after": lambda self: self._set_dev_state(DevState.FAULT)
-        },
-        {
-            "source": "UNINITIALISED",
-            "trigger": "init_started",
-            "dest": "INIT (ENABLED)",
-            "after": lambda self: (
-                self._set_admin_mode(AdminMode.MAINTENANCE),
-                self._set_dev_state(DevState.INIT),
-            )
-        },
-        {
-            "source": "INIT (ENABLED)",
-            "trigger": "init_succeeded",
-            "dest": "OFF",
-            "after": lambda self: self._set_dev_state(DevState.OFF)
-        },
-        {
-            "source": "INIT (DISABLED)",
-            "trigger": "init_succeeded",
-            "dest": "DISABLE",
-            "after": lambda self: self._set_dev_state(DevState.DISABLE)
-        },
-        {
-            "source": "INIT (ENABLED)",
-            "trigger": "init_failed",
-            "dest": "FAULT (ENABLED)",
-            "after": lambda self: self._set_dev_state(DevState.FAULT)
-        },
-        {
-            "source": "INIT (DISABLED)",
-            "trigger": "init_failed",
-            "dest": "FAULT (DISABLED)",
-            "after": lambda self: self._set_dev_state(DevState.FAULT)
-        },
-        {
-            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
-            "trigger": "to_notfitted",
-            "dest": "INIT (DISABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
-        },
-        {
-            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
-            "trigger": "to_offline",
-            "dest": "INIT (DISABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.OFFLINE)
-        },
-        {
-            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
-            "trigger": "to_maintenance",
-            "dest": "INIT (ENABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
-        },
-        {
-            "source": ["INIT (ENABLED)", "INIT (DISABLED)"],
-            "trigger": "to_online",
-            "dest": "INIT (ENABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.ONLINE)
-        },
-        {
-            "source": "FAULT (DISABLED)",
-            "trigger": "reset_succeeded",
-            "dest": "DISABLED",
-            "after": lambda self: self._set_dev_state(DevState.DISABLE)
-        },
-        {
-            "source": "FAULT (ENABLED)",
-            "trigger": "reset_succeeded",
-            "dest": "OFF",
-            "after": lambda self: self._set_dev_state(DevState.OFF)
-        },
-        {
-            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
-            "trigger": "reset_failed",
-            "dest": None,
-        },
-        {
-            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
-            "trigger": "to_notfitted",
-            "dest": "FAULT (DISABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.NOT_FITTED)
-        },
-        {
-            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
-            "trigger": "to_offline",
-            "dest": "FAULT (DISABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.OFFLINE)
-        },
-        {
-            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
-            "trigger": "to_maintenance",
-            "dest": "FAULT (ENABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.MAINTENANCE)
-        },
-        {
-            "source": ["FAULT (DISABLED)", "FAULT (ENABLED)"],
-            "trigger": "to_online",
-            "dest": "FAULT (ENABLED)",
-            "after": lambda self: self._set_admin_mode(AdminMode.ONLINE)
-        },
-        {
-            "source": ["DISABLED", "OFF"],
-            "trigger": "to_notfitted",
-            "dest": "DISABLED",
-            "after": lambda self: (
-                self._set_admin_mode(AdminMode.NOTFITTED),
-                self._set_dev_state(DevState.OFF)
-            )
-        },
-        {
-            "source": ["DISABLED", "OFF"],
-            "trigger": "to_offline",
-            "dest": "DISABLED",
-            "after": lambda self: (
-                self._set_admin_mode(AdminMode.OFFLINE),
-                self._set_dev_state(DevState.DISABLE)
-            )
-        },
-        {
-            "source": ["DISABLED", "OFF"],
-            "trigger": "to_maintenance",
-            "dest": "OFF",
-            "after": lambda self: (
-                self._set_admin_mode(AdminMode.MAINTENANCE),
-                self._set_dev_state(DevState.OFF)
-            )
-        },
-        {
-            "source": ["DISABLED", "OFF"],
-            "trigger": "to_online",
-            "dest": "OFF",
-            "after": lambda self: (
-                self._set_admin_mode(AdminMode.ONLINE),
-                self._set_dev_state(DevState.OFF)
-            )
-        },
-        {
-            "source": "OFF",
-            "trigger": "on_succeeded",
-            "dest": "ON",
-            "after": lambda self: (
-                self._set_dev_state(DevState.ON)
-            )
-        },
-        {
-            "source": "OFF",
-            "trigger": "on_failed",
-            "dest": "FAULT (ENABLED)",
-            "after": lambda self: (
-                self._set_dev_state(DevState.FAULT)
-            )
-        },
-        {
-            "source": "ON",
-            "trigger": "off_succeeded",
-            "dest": "OFF",
-            "after": lambda self: (
-                self._set_dev_state(DevState.ON)
-            )
-        },
-        {
-            "source": "ON",
-            "trigger": "off_failed",
-            "dest": "FAULT (ENABLED)",
-            "after": lambda self: (
-                self._set_dev_state(DevState.FAULT)
-            )
-        },
-    ]
-    
-    def __init__(self, dev_state_callback=None, admin_mode_callback=None):
+    def __init__(self, op_state_callback=None, admin_mode_callback=None):
         """
         Initialises the state model.
 
-        :param dev_state_callback: A callback to be called when a
-            transition implies a change to device state
-        :type dev_state_callback: callable
+        :param op_state_callback: A callback to be called when a
+            transition implies a change to op state
+        :type op_state_callback: callable
         :param admin_mode_callback: A callback to be called when a
             transition causes a change to device admin_mode
         :type admin_mode_callback: callable
         """
-
-        self.state_machine = Machine(
-            states=self.__states,
-            initial="UNINITIALISED",
-            transitions=self.__transitions
-        )
-
+        self._op_state = None
         self._admin_mode = None
+
+        self._op_state_callback = op_state_callback
         self._admin_mode_callback = admin_mode_callback
-        self._dev_state = None
-        self._dev_state_callback = dev_state_callback
+
+        self._state_machine = BaseDeviceStateMachine(
+            op_state_callback=self._update_op_state,
+            admin_mode_callback=self._update_admin_mode
+        )
 
     @property
     def admin_mode(self):
@@ -535,80 +349,120 @@ class SKABaseDeviceStateModel:
         """
         return self._admin_mode
 
-    def _set_admin_mode(self, admin_mode):
+    def _update_admin_mode(self, admin_mode):
         """
-        Helper method: calls the admin_mode callback if one exists
+        Helper method that updates admin_mode, ensuring that the callback is
+        called if one exists.
 
-        :param admin_mode: the new admin_mode value
+        :param admin_mode: the new adminMode attribute value
         :type admin_mode: AdminMode
         """
         if self._admin_mode != admin_mode:
             self._admin_mode = admin_mode
             if self._admin_mode_callback is not None:
-                self._admin_mode_callback(self._admin_mode)
+                self._admin_mode_callback(admin_mode)
 
     @property
-    def dev_state(self):
+    def op_state(self):
         """
-        Returns the dev_state
+        Returns the op_state
 
-        :returns: dev_state of this state model
+        :returns: op_state of this state model
         :rtype: tango.DevState
         """
-        return self._dev_state
+        return self._op_state
 
-    def _set_dev_state(self, dev_state):
+    def _update_op_state(self, op_state):
         """
-        Helper method: sets this state models dev_state, and calls the
-        dev_state callback if one exists
+        Helper method that updates op_state, ensuring that the callback is
+        called if one exists.
 
-        :param dev_state: the new state value
-        :type admin_mode: DevState
+        :param op_state: the new opState attribute value
+        :type op_state: tango.DevState
         """
-        if self._dev_state != dev_state:
-            self._dev_state = dev_state
-            if self._dev_state_callback is not None:
-                self._dev_state_callback(self._dev_state)
+        if self._op_state != op_state:
+            self._op_state = op_state
+            if self._op_state_callback is not None:
+                self._op_state_callback(op_state)
 
-    # def _register_state(self, state):
-    #     if state not in self.state_machine.states:
-    #         self.state_machine.add_state(state)
+    def is_action_allowed(self, action):
+        """
+        Whether a given action is allowed in the current state.
 
-    # def _register_transition(self, action, from_states, to_state, condition=None):
-    #     self.state_machine.add_transition(action, from_states, to_state, condition=condition)
+        :param action: an action, as given in the transitions table
+        :type action: ANY
+        """
+        return action in self._state_machine.get_triggers(self._state_machine.state)
 
-    # def _register_transition_for_outcome(self, command, from_states, outcome, arg):
-    #     if is_instance(arg, dict):
-    #         for (condition, true_state, false_state) in arg.items():
-    #             self._register_state(to_state)
-    #             self._register_transition(f"{command}_{outcome}", from_states, to_state, condition=condition)
-    #     else:
-    #         self._register_state(to_state)
-    #         self._register_transition(f"{command}_{outcome}", from_states, to_state)
+    def try_action(self, action):
+        """
+        Checks whether a given action is allowed in the current state,
+        and raises a StateModelError if it is not.
 
-    # def add_command(
-    #     self,
-    #     name,
-    #     allowed=None,
-    #     started=None,
-    #     succeeded=None,
-    #     failed=None):
-    # if allowed is None:
-    #     allowed = "*"
-    # else:
-    #     for allowed_state in allowed:
-    #         self._register_state(allowed_state)
-    
-    # if started is None:
-    #     started = allowed
-    # else:
-    #     self._register_state(started)
-    #     self.state_machine.register_transition(f"{name}_started", allowed, started)
-    
-    # self._register_transition_for_outcome(name, started, "succeeded", succeeded)
-    # self._register_transition_for_outcome(name, started, "failed", failed)
+        :param action: an action, as given in the transitions table
+        :type action: ANY
+        :raises StateModelError: if the action is not allowed in the
+            current state
+        :returns: True if the action is allowed
+        :rtype: boolean
+        """
+        if not self.is_action_allowed(action):
+            raise StateModelError(
+                f"Action '{action}' not allowed in current state ({self._state_machine.state})."
+            )
+        return True
 
+    def perform_action(self, action):
+        """
+        Performs an action on the state model
 
+        :param action: an action, as given in the transitions table
+        :type action: ANY
+        :raises StateModelError: if the action is not allowed in the
+            current state
+
+        """
+        # self.try_action(action)
+        try:
+            self._state_machine.trigger(action)
+        except MachineError as error:
+            raise StateModelError(error)
+
+    def _straight_to_state(self, state):
+        """
+        Takes the DeviceStateModel straight to the specified state. This method
+        exists to simplify testing; for example, if testing that a command may
+        be run in a given state, one can push the state model straight to that
+        state, rather than having to drive it to that state through a sequence
+        of actions. It is not intended that this method would be called outside
+        of test setups.
+
+        Note that states are non-deterministics with respect to adminMode. For
+        example, in state "FAULT-DISABLED", the adminMode could be OFFLINE or
+        NOT_FITTED. When you drive the state machine through its transitions,
+        the adminMode will be set accordingly. When using this method, the
+        adminMode will simply be set to something sensible.
+
+        :param state: the target state
+        :type state: string
+        """
+        if state == "UNINITIALISED":
+            pass
+        elif "DISABLED" in state:
+            self._state_machine._set_admin_mode(AdminMode.OFFLINE)
+        else:
+            self._state_machine._set_admin_mode(AdminMode.ONLINE)
+
+        getattr(self._state_machine, f"to_{state}")()
+
+    @property
+    def _state(self):
+        """
+        Returns the state of the underlying state machine. This would normally
+        be a hidden implementation detail, but is exposed here for testing
+        purposes.
+        """
+        return self._state_machine.state
 
 
 class SKABaseDevice(Device):
@@ -630,8 +484,7 @@ class SKABaseDevice(Device):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKABaseDeviceStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -882,11 +735,25 @@ class SKABaseDevice(Device):
             self.set_status(f"The device is in {state} state.")
 
     def set_state(self, state):
+        """
+        Helper method for setting device state, ensuring that change
+        events are pushed.
+
+        :param state: the new state
+        :type state: tango.DevState
+        """
         super().set_state(state)
         self.push_change_event('state')
         self.push_archive_event('state')
 
     def set_status(self, status):
+        """
+        Helper method for setting device status, ensuring that change
+        events are pushed.
+
+        :param status: the new status
+        :type status: str
+        """
         super().set_status(status)
         self.push_change_event('status')
         self.push_archive_event('status')
@@ -926,17 +793,41 @@ class SKABaseDevice(Device):
         Creates the state model for the device
         """
         self.state_model = SKABaseDeviceStateModel(
-            dev_state_callback=self._update_state,
+            op_state_callback=self._update_state,
             admin_mode_callback=self._update_admin_mode
         )
 
     def register_command_object(self, command_name, command_object):
+        """
+        Registers a command object as the object to handle invocations
+        of a given command
+
+        :param command_name: name of the command for which the object is
+            being registered
+        :type command_name: str
+        :param command_object: the object that will handle invocations
+            of the given command
+        :type command_object: Command instance
+        """
         self._command_objects[command_name] = command_object
 
     def get_command_object(self, command_name):
+        """
+        Returns the command object (handler) for a given command.
+
+        :param command_name: name of the command for which a command
+            object (handler) is sought
+        :type command_name: str
+        :return: the registered command object (handler) for the command
+        :rtype: Command instance
+        """
         return self._command_objects[command_name]
 
     def init_command_objects(self):
+        """
+        Creates and registers command objects (handlers) for the
+        commands supported by this device.
+        """
         device_args = (self, self.state_model, self.logger)
 
         self.register_command_object("On", self.OnCommand(*device_args))
@@ -1216,8 +1107,7 @@ class SKABaseDevice(Device):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKABaseDeviceStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -1289,8 +1179,7 @@ class SKABaseDevice(Device):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKABaseDeviceStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -1353,8 +1242,7 @@ class SKABaseDevice(Device):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKABaseDeviceStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library

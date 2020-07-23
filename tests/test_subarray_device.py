@@ -8,7 +8,6 @@
 #########################################################################################
 """Contain the tests for the SKASubarray."""
 
-import itertools
 import re
 import pytest
 
@@ -20,13 +19,228 @@ from ska.base.commands import ResultCode
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
 )
-from ska.base.faults import CommandError
+from ska.base.faults import CommandError, StateModelError
+
+from .conftest import StateMachineTester
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
 
 
-@pytest.mark.usefixtures("tango_context", "initialize_device")
-class TestSKASubarray(object):
-    """Test case for packet generation."""
+class TestSKASubarrayStateModel(StateMachineTester):
+    """
+    This class contains the test for the ska.low.mccs.state module.
+    """
+    model = SKASubarrayStateModel()
+
+    dag = [
+        ("UNINITIALISED", "init_started", "INIT_ENABLED"),
+        ("INIT_ENABLED", "to_notfitted", "INIT_DISABLED"),
+        ("INIT_ENABLED", "to_offline", "INIT_DISABLED"),
+        ("INIT_ENABLED", "to_online", "INIT_ENABLED"),
+        ("INIT_ENABLED", "to_maintenance", "INIT_ENABLED"),
+        ("INIT_ENABLED", "init_succeeded", "OFF"),
+        ("INIT_ENABLED", "init_failed", "FAULT_ENABLED"),
+        ("INIT_ENABLED", "fatal_error", "FAULT_ENABLED"),
+        ("INIT_DISABLED", "to_notfitted", "INIT_DISABLED"),
+        ("INIT_DISABLED", "to_offline", "INIT_DISABLED"),
+        ("INIT_DISABLED", "to_online", "INIT_ENABLED"),
+        ("INIT_DISABLED", "to_maintenance", "INIT_ENABLED"),
+        ("INIT_DISABLED", "init_succeeded", "DISABLED"),
+        ("INIT_DISABLED", "init_failed", "FAULT_DISABLED"),
+        ("INIT_DISABLED", "fatal_error", "FAULT_DISABLED"),
+        ("FAULT_DISABLED", "to_notfitted", "FAULT_DISABLED"),
+        ("FAULT_DISABLED", "to_offline", "FAULT_DISABLED"),
+        ("FAULT_DISABLED", "to_online", "FAULT_ENABLED"),
+        ("FAULT_DISABLED", "to_maintenance", "FAULT_ENABLED"),
+        ("FAULT_DISABLED", "reset_succeeded", "DISABLED"),
+        ("FAULT_DISABLED", "reset_failed", "FAULT_DISABLED"),
+        ("FAULT_DISABLED", "fatal_error", "FAULT_DISABLED"),
+        ("FAULT_ENABLED", "to_notfitted", "FAULT_DISABLED"),
+        ("FAULT_ENABLED", "to_offline", "FAULT_DISABLED"),
+        ("FAULT_ENABLED", "to_online", "FAULT_ENABLED"),
+        ("FAULT_ENABLED", "to_maintenance", "FAULT_ENABLED"),
+        ("FAULT_ENABLED", "reset_succeeded", "OFF"),
+        ("FAULT_ENABLED", "reset_failed", "FAULT_ENABLED"),
+        ("FAULT_ENABLED", "fatal_error", "FAULT_ENABLED"),
+        ("DISABLED", "to_notfitted", "DISABLED"),
+        ("DISABLED", "to_offline", "DISABLED"),
+        ("DISABLED", "to_online", "OFF"),
+        ("DISABLED", "to_maintenance", "OFF"),
+        ("DISABLED", "fatal_error", "FAULT_DISABLED"),
+        ("OFF", "to_notfitted", "DISABLED"),
+        ("OFF", "to_offline", "DISABLED"),
+        ("OFF", "to_online", "OFF"),
+        ("OFF", "to_maintenance", "OFF"),
+        ("OFF", "on_succeeded", "EMPTY"),
+        ("OFF", "on_failed", "FAULT_ENABLED"),
+        ("OFF", "fatal_error", "FAULT_ENABLED"),
+        ("EMPTY", "off_succeeded", "OFF"),
+        ("EMPTY", "off_failed", "FAULT_ENABLED"),
+        ("EMPTY", "assign_started", "RESOURCING"),
+        ("EMPTY", "fatal_error", "FAULT"),
+        ("RESOURCING", "off_succeeded", "OFF"),
+        ("RESOURCING", "off_failed", "FAULT_ENABLED"),
+        ("RESOURCING", "resourcing_succeeded_some_resources", "IDLE"),
+        ("RESOURCING", "resourcing_succeeded_no_resources", "EMPTY"),
+        ("RESOURCING", "resourcing_failed", "FAULT"),
+        ("RESOURCING", "fatal_error", "FAULT"),
+        ("IDLE", "off_succeeded", "OFF"),
+        ("IDLE", "off_failed", "FAULT_ENABLED"),
+        ("IDLE", "assign_started", "RESOURCING"),
+        ("IDLE", "release_started", "RESOURCING"),
+        ("IDLE", "configure_started", "CONFIGURING"),
+        ("IDLE", "abort_started", "ABORTING"),
+        ("IDLE", "fatal_error", "FAULT"),
+        ("CONFIGURING", "off_succeeded", "OFF"),
+        ("CONFIGURING", "off_failed", "FAULT_ENABLED"),
+        ("CONFIGURING", "configure_succeeded", "READY"),
+        ("CONFIGURING", "configure_failed", "FAULT"),
+        ("CONFIGURING", "abort_started", "ABORTING"),
+        ("CONFIGURING", "fatal_error", "FAULT"),
+        ("READY", "off_succeeded", "OFF"),
+        ("READY", "off_failed", "FAULT_ENABLED"),
+        ("READY", "end_succeeded", "IDLE"),
+        ("READY", "end_failed", "FAULT"),
+        ("READY", "configure_started", "CONFIGURING"),
+        ("READY", "abort_started", "ABORTING"),
+        ("READY", "scan_started", "SCANNING"),
+        ("READY", "fatal_error", "FAULT"),
+        ("SCANNING", "off_succeeded", "OFF"),
+        ("SCANNING", "off_failed", "FAULT_ENABLED"),
+        ("SCANNING", "scan_succeeded", "READY"),
+        ("SCANNING", "scan_failed", "FAULT"),
+        ("SCANNING", "end_scan_succeeded", "READY"),
+        ("SCANNING", "end_scan_failed", "FAULT"),
+        ("SCANNING", "abort_started", "ABORTING"),
+        ("SCANNING", "fatal_error", "FAULT"),
+        ("ABORTING", "off_succeeded", "OFF"),
+        ("ABORTING", "off_failed", "FAULT_ENABLED"),
+        ("ABORTING", "abort_succeeded", "ABORTED"),
+        ("ABORTING", "abort_failed", "FAULT"),
+        ("ABORTING", "fatal_error", "FAULT"),
+        ("ABORTED", "off_succeeded", "OFF"),
+        ("ABORTED", "off_failed", "FAULT_ENABLED"),
+        ("ABORTED", "obs_reset_started", "RESETTING"),
+        ("ABORTED", "restart_started", "RESTARTING"),
+        ("ABORTED", "fatal_error", "FAULT"),
+        ("FAULT", "off_succeeded", "OFF"),
+        ("FAULT", "off_failed", "FAULT_ENABLED"),
+        ("FAULT", "obs_reset_started", "RESETTING"),
+        ("FAULT", "restart_started", "RESTARTING"),
+        ("FAULT", "fatal_error", "FAULT"),
+        ("RESETTING", "off_succeeded", "OFF"),
+        ("RESETTING", "off_failed", "FAULT_ENABLED"),
+        ("RESETTING", "obs_reset_succeeded", "IDLE"),
+        ("RESETTING", "obs_reset_failed", "FAULT"),
+        ("RESETTING", "fatal_error", "FAULT"),
+        ("RESTARTING", "off_succeeded", "OFF"),
+        ("RESTARTING", "off_failed", "FAULT_ENABLED"),
+        ("RESTARTING", "restart_succeeded", "EMPTY"),
+        ("RESTARTING", "restart_failed", "FAULT"),
+        ("RESTARTING", "fatal_error", "FAULT"),
+    ]
+
+    state_checks = {
+        "UNINITIALISED":
+            (None, None, ObsState.EMPTY),
+        "FAULT_ENABLED":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.FAULT, ObsState.EMPTY),
+        "FAULT_DISABLED":
+            ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.FAULT, ObsState.EMPTY),
+        "INIT_ENABLED":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.INIT, ObsState.EMPTY),
+        "INIT_DISABLED":
+            ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.INIT, ObsState.EMPTY),
+        "DISABLED":
+            ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.DISABLE, ObsState.EMPTY),
+        "OFF":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.OFF, ObsState.EMPTY),
+        "EMPTY":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.EMPTY),
+        "RESOURCING":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.RESOURCING),
+        "IDLE":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.IDLE),
+        "CONFIGURING":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.CONFIGURING),
+        "READY":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.READY),
+        "SCANNING":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.SCANNING),
+        "ABORTING":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.ABORTING),
+        "ABORTED":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.ABORTED),
+        "FAULT":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.FAULT),
+        "RESETTING":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.RESETTING),
+        "RESTARTING":
+            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.RESTARTING),
+
+    }
+
+    def assert_state(self, state):
+        """
+        Assert the current state of this state machine, based on the
+        values of the adminMode, opState and obsState attributes of this
+        model.
+
+        :param state: the state that we are asserting to be the current
+            state of the state machine under test
+        :type state: str
+        """
+        # Debugging only -- machine is already tested
+        # assert self.model._state == state
+        # print(f"State is {state}")
+        (admin_modes, op_state, obs_state) = self.state_checks[state]
+        if admin_modes is None:
+            assert self.model.admin_mode is None
+        else:
+            assert self.model.admin_mode in admin_modes
+        if op_state is None:
+            assert self.model.op_state is None
+        else:
+            assert self.model.op_state == op_state
+        if obs_state is None:
+            assert self.model.obs_state is None
+        else:
+            assert self.model.obs_state == obs_state
+
+    def perform_action(self, action):
+        """
+        Perform a given action on the state machine under test.
+
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        self.model.perform_action(action)
+
+    def assert_fails(self, action):
+        """
+        Assert that performing a given action on the state maching under
+        test fails in its current state.
+
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        with pytest.raises(StateModelError):
+            self.perform_action(action)
+
+    def to_state(self, target_state):
+        """
+        Transition the state machine to a target state.
+
+        :param target_state: the state that we want to get the state
+            machine under test into
+        :type target_state: str
+        """
+        self.model._straight_to_state(target_state)
+
+
+class TestSKASubarray:
+    """
+    Test cases for SKASubarray device.
+    """
 
     properties = {
         'CapabilityTypes': '',
@@ -403,189 +617,23 @@ class TestSKASubarray(object):
         assert tango_context.device.configuredCapabilities == ("BAND1:0", "BAND2:0")
         # PROTECTED REGION END #    //  SKASubarray.test_configuredCapabilities
 
-    @pytest.mark.parametrize(
-        'state_under_test, action_under_test',
-        itertools.product(
-            [
-                # not testing FAULT or OBSFAULT states because in the current
-                # implementation the interface cannot be used to get the device
-                # into these states
-                "DISABLED", "OFF", "EMPTY", "IDLE", "READY", "SCANNING",
-                "ABORTED",
-            ],
-            [
-                # not testing 'reset' action because in the current
-                # implementation the interface cannot be used to get the device
-                # into a state from which 'reset' is a valid action
-                "notfitted", "offline", "online", "maintenance", "on", "off",
-                "assign", "release", "release (all)", "releaseall",
-                "configure", "scan", "endscan", "end", "abort", "obsreset",
-                "restart"]
-        )
-    )
-    def test_state_machine(self, tango_context, state_under_test, action_under_test):
-        """
-        Test the subarray state machine: for a given initial state and
-        an action, does execution of that action, from that initial
-        state, yield the expected results? If the action was not allowed
-        from that initial state, does the device raise a DevFailed
-        exception? If the action was allowed, does it result in the
-        correct state transition?
-        """
-        states = {
-            "DISABLED":
-                ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.DISABLE, ObsState.EMPTY),
-            "FAULT":  # not tested
-                ([AdminMode.NOT_FITTED, AdminMode.OFFLINE, AdminMode.ONLINE, AdminMode.MAINTENANCE],
-                 DevState.FAULT, ObsState.EMPTY),
-            "OFF":
-                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.OFF, ObsState.EMPTY),
-            "EMPTY":
-                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.EMPTY),
-            "IDLE":
-                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.IDLE),
-            "READY":
-                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.READY),
-            "SCANNING":
-                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.SCANNING),
-            "ABORTED":
-                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.ABORTED),
-            "OBSFAULT":  # not tested
-                ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON, ObsState.FAULT),
-        }
-
-        def assert_state(state):
-            """
-            Check that the device is in the state we think it should be in
-            """
-            (admin_modes, dev_state, obs_state) = states[state]
-            assert tango_context.device.adminMode in admin_modes
-            assert tango_context.device.state() == dev_state
-            assert tango_context.device.obsState == obs_state
-
-        actions = {
-            "notfitted":
-                lambda d: d.write_attribute("adminMode", AdminMode.NOT_FITTED),
-            "offline":
-                lambda d: d.write_attribute("adminMode", AdminMode.OFFLINE),
-            "online":
-                lambda d: d.write_attribute("adminMode", AdminMode.ONLINE),
-            "maintenance":
-                lambda d: d.write_attribute("adminMode", AdminMode.MAINTENANCE),
-            "on":
-                lambda d: d.On(),
-            "off":
-                lambda d: d.Off(),
-            "reset":
-                lambda d: d.Reset(),  # not tested
-            "assign":
-                lambda d: d.AssignResources('{"example": ["BAND1", "BAND2"]}'),
-            "release":
-                lambda d: d.ReleaseResources('{"example": ["BAND1"]}'),
-            "release (all)":
-                lambda d: d.ReleaseResources('{"example": ["BAND1", "BAND2"]}'),
-            "releaseall":
-                lambda d: d.ReleaseAllResources(),
-            "configure":
-                lambda d: d.Configure('{"BAND1": 2, "BAND2": 2}'),
-            "scan":
-                lambda d: d.Scan('{"id": 123}'),
-            "endscan":
-                lambda d: d.EndScan(),
-            "end":
-                lambda d: d.End(),
-            "abort":
-                lambda d: d.Abort(),
-            "obsreset":
-                lambda d: d.ObsReset(),
-            "restart":
-                lambda d: d.Restart(),
-        }
-
-        def perform_action(action):
-            actions[action](tango_context.device)
-
-        transitions = {
-            ("DISABLED", "notfitted"): "DISABLED",
-            ("DISABLED", "offline"): "DISABLED",
-            ("DISABLED", "online"): "OFF",
-            ("DISABLED", "maintenance"): "OFF",
-            ("OFF", "notfitted"): "DISABLED",
-            ("OFF", "offline"): "DISABLED",
-            ("OFF", "online"): "OFF",
-            ("OFF", "maintenance"): "OFF",
-            ("OFF", "on"): "EMPTY",
-            ("EMPTY", "off"): "OFF",
-            ("EMPTY", "assign"): "IDLE",
-            ("IDLE", "assign"): "IDLE",
-            ("IDLE", "release"): "IDLE",
-            ("IDLE", "release (all)"): "EMPTY",
-            ("IDLE", "releaseall"): "EMPTY",
-            ("IDLE", "configure"): "READY",
-            ("IDLE", "abort"): "ABORTED",
-            ("READY", "configure"): "READY",
-            ("READY", "end"): "IDLE",
-            ("READY", "abort"): "ABORTED",
-            ("READY", "scan"): "SCANNING",
-            ("SCANNING", "endscan"): "READY",
-            ("SCANNING", "abort"): "ABORTED",
-            ("ABORTED", "obsreset"): "IDLE",
-            ("ABORTED", "restart"): "EMPTY",
-        }
-
-        setups = {
-            "DISABLED":
-                ['offline'],
-            "OFF":
-                [],
-            "EMPTY":
-                ['on'],
-            "IDLE":
-                ['on', 'assign'],
-            "READY":
-                ['on', 'assign', 'configure'],
-            "SCANNING":
-                ['on', 'assign', 'configure', 'scan'],
-            "ABORTED":
-                ['on', 'assign', 'abort'],
-        }
-
-        # state = "OFF"  # debugging only
-        # assert_state(state)  # debugging only
-
-        # Put the device into the state under test
-        for action in setups[state_under_test]:
-            perform_action(action)
-            # state = transitions[state, action]  # debugging only
-            # assert_state(state)  # debugging only
-
-        # Check that we are in the state under test
-        assert_state(state_under_test)
-
-        # Test that the action under test does what we expect it to
-        if (state_under_test, action_under_test) in transitions:
-            # Action should succeed
-            perform_action(action_under_test)
-            assert_state(transitions[(state_under_test, action_under_test)])
-        else:
-            # Action should fail and the state should not change
-            with pytest.raises(DevFailed):
-                perform_action(action_under_test)
-            assert_state(state_under_test)
-
 
 @pytest.fixture
 def resource_manager():
+    """
+    Fixture that yields an SKASubarrayResourceManager
+    """
     yield SKASubarrayResourceManager()
 
 
-@pytest.fixture
-def state_model():
-    yield SKASubarrayStateModel()
-
-
 class TestSKASubarrayResourceManager:
+    """
+    Test suite for SKASubarrayResourceManager class
+    """
     def test_ResourceManager_assign(self, resource_manager):
+        """
+        Test that the ResourceManager assigns resource correctly.
+        """
         # create a resource manager and check that it is empty
         assert not len(resource_manager)
         assert resource_manager.get() == set()
@@ -615,6 +663,9 @@ class TestSKASubarrayResourceManager:
         assert resource_manager.get() == set(["A", "B", "C", "D"])
 
     def test_ResourceManager_release(self, resource_manager):
+        """
+        Test that the ResourceManager releases resource correctly.
+        """
         resource_manager = SKASubarrayResourceManager()
         resource_manager.assign('{"example": ["A", "B", "C", "D"]}')
 
@@ -649,34 +700,46 @@ class TestSKASubarray_commands:
     This class contains tests of SKASubarray commands
     """
 
-    def test_AssignCommand(self, resource_manager, state_model):
+    def test_AssignCommand(self, resource_manager, subarray_state_model):
         """
         Test for SKASubarray.AssignResourcesCommand
         """
         assign_resources = SKASubarray.AssignResourcesCommand(
             resource_manager,
-            state_model
+            subarray_state_model
         )
 
-        # until the state_model is in the right state for it, the
-        # command's is_allowed() method will return False, and an
-        # attempt to call the command will raise a CommandError, and
-        # there will be no side-effect on the resource manager
-        for action in ["init_started", "init_succeeded", "on_succeeded"]:
+        # in all these states, the assign resources command is not permitted,
+        # should not be allowed, should fail, should have no side-effect
+        for state in [
+            "UNINITIALISED", "FAULT_ENABLED", "FAULT_DISABLED", "INIT_ENABLED",
+            "INIT_DISABLED", "DISABLED", "OFF", "RESOURCING", "CONFIGURING",
+            "READY", "SCANNING", "ABORTING", "ABORTED", "FAULT",
+            "RESETTING", "RESTARTING",
+        ]:
+            subarray_state_model._straight_to_state(state)
             assert not assign_resources.is_allowed()
             with pytest.raises(CommandError):
                 assign_resources('{"example": ["foo"]}')
             assert not len(resource_manager)
             assert resource_manager.get() == set()
+            assert subarray_state_model._state == state
 
-            state_model.perform_action(action)
-
-        # now that the state_model is in the right state, is_allowed()
-        # should return True, and the command should succeed, and we
-        # should see the result in the resource manager
+        # now push to empty, a state in which is IS allowed
+        subarray_state_model._straight_to_state("EMPTY")
         assert assign_resources.is_allowed()
         assert assign_resources('{"example": ["foo"]}') == (
             ResultCode.OK, "AssignResources command completed OK"
         )
         assert len(resource_manager) == 1
         assert resource_manager.get() == set(["foo"])
+
+        assert subarray_state_model._state == "IDLE"
+
+        # AssignResources is still allowed in ON_IDLE
+        assert assign_resources.is_allowed()
+        assert assign_resources('{"example": ["bar"]}') == (
+            ResultCode.OK, "AssignResources command completed OK"
+        )
+        assert len(resource_manager) == 2
+        assert resource_manager.get() == set(["foo", "bar"])

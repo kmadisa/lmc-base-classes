@@ -14,214 +14,29 @@ information like assigned resources, configured capabilities, etc.
 import json
 
 from tango import DebugIt
-from tango import DevState
 from tango.server import run, attribute, command
 from tango.server import device_property
 
 # SKA specific imports
-from ska.base import SKAObsDevice, SKAObsDeviceStateModel
+from ska.base import SKAObsDevice, SKABaseDeviceStateModel
 from ska.base.commands import ActionCommand, ResultCode
-from ska.base.control_model import ObsState
-from ska.base.faults import CapabilityValidationError
+from ska.base.control_model import AdminMode, ObsState
+from ska.base.faults import CapabilityValidationError, StateModelError
+from ska.base.state_machine import ObservationStateMachine
+
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 
-__all__ = ["SKASubarray", "SKASubarrayResourceManager", "SKASubarrayStateModel", "main"]
+__all__ = ["SKASubarray", "main"]
 
 
-class SKASubarrayStateModel(SKAObsDeviceStateModel):
+class SKASubarrayStateModel(SKABaseDeviceStateModel):
     """
     Implements the state model for the SKASubarray
     """
-    __transitions = {
-        ('OFF', 'on_succeeded'): (
-            "EMPTY",
-            lambda self: self._set_dev_state(DevState.ON)
-        ),
-        ('OFF', 'on_failed'): (
-            "FAULT",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('EMPTY', 'off_succeeded'): (
-            "OFF",
-            lambda self: self._set_dev_state(DevState.OFF)
-        ),
-        ('EMPTY', 'off_failed'): (
-            "FAULT",
-            lambda self: self._set_dev_state(DevState.FAULT)
-        ),
-        ('EMPTY', 'assign_started'): (
-            "RESOURCING",
-            lambda self: self._set_obs_state(ObsState.RESOURCING)
-        ),
-        ('EMPTY', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('RESOURCING', 'resourcing_succeeded_some_resources'): (
-            "IDLE",
-            lambda self: self._set_obs_state(ObsState.IDLE)
-        ),
-        ('RESOURCING', 'resourcing_succeeded_no_resources'): (
-            "EMPTY",
-            lambda self: self._set_obs_state(ObsState.EMPTY)
-        ),
-        ('RESOURCING', 'resourcing_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('RESOURCING', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('IDLE', 'assign_started'): (
-            "RESOURCING",
-            lambda self: self._set_obs_state(ObsState.RESOURCING)
-        ),
-        ('IDLE', 'release_started'): (
-            "RESOURCING",
-            lambda self: self._set_obs_state(ObsState.RESOURCING)
-        ),
-        ('IDLE', 'configure_started'): (
-            "CONFIGURING",
-            lambda self: self._set_obs_state(ObsState.CONFIGURING)
-        ),
-        ('IDLE', 'abort_started'): (
-            "ABORTING",
-            lambda self: self._set_obs_state(ObsState.ABORTING)
-        ),
-        ('IDLE', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('CONFIGURING', 'configure_succeeded'): (
-            "READY",
-            lambda self: self._set_obs_state(ObsState.READY)
-        ),
-        ('CONFIGURING', 'configure_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('CONFIGURING', 'abort_started'): (
-            "ABORTING",
-            lambda self: self._set_obs_state(ObsState.ABORTING)
-        ),
-        ('CONFIGURING', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('READY', 'end_succeeded'): (
-            "IDLE",
-            lambda self: self._set_obs_state(ObsState.IDLE)
-        ),
-        ('READY', 'end_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('READY', 'configure_started'): (
-            "CONFIGURING",
-            lambda self: self._set_obs_state(ObsState.CONFIGURING)
-        ),
-        ('READY', 'abort_started'): (
-            "ABORTING",
-            lambda self: self._set_obs_state(ObsState.ABORTING)
-        ),
-        ('READY', 'scan_started'): (
-            "SCANNING",
-            lambda self: self._set_obs_state(ObsState.SCANNING)
-        ),
-        ('READY', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('SCANNING', 'scan_succeeded'): (
-            "READY",
-            lambda self: self._set_obs_state(ObsState.READY)
-        ),
-        ('SCANNING', 'scan_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('SCANNING', 'end_scan_succeeded'): (
-            "READY",
-            lambda self: self._set_obs_state(ObsState.READY)
-        ),
-        ('SCANNING', 'end_scan_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('SCANNING', 'abort_started'): (
-            "ABORTING",
-            lambda self: self._set_obs_state(ObsState.ABORTING)
-        ),
-        ('SCANNING', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('ABORTING', 'abort_succeeded'): (
-            "ABORTED",
-            lambda self: self._set_obs_state(ObsState.ABORTED)
-        ),
-        ('ABORTING', 'abort_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('ABORTING', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('ABORTED', 'obs_reset_started'): (
-            "RESETTING",
-            lambda self: self._set_obs_state(ObsState.RESETTING)
-        ),
-        ('ABORTED', 'restart_started'): (
-            "RESTARTING",
-            lambda self: self._set_obs_state(ObsState.RESTARTING)
-        ),
-        ('ABORTED', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('OBSFAULT', 'obs_reset_started'): (
-            "RESETTING",
-            lambda self: self._set_obs_state(ObsState.RESETTING)
-        ),
-        ('OBSFAULT', 'restart_started'): (
-            "RESTARTING",
-            lambda self: self._set_obs_state(ObsState.RESTARTING)
-        ),
-        ('OBSFAULT', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('RESETTING', 'obs_reset_succeeded'): (
-            "IDLE",
-            lambda self: self._set_obs_state(ObsState.IDLE)
-        ),
-        ('RESETTING', 'obs_reset_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('RESETTING', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('RESTARTING', 'restart_succeeded'): (
-            "EMPTY",
-            lambda self: self._set_obs_state(ObsState.EMPTY)
-        ),
-        ('RESTARTING', 'restart_failed'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-        ('RESTARTING', 'fatal_error'): (
-            "OBSFAULT",
-            lambda self: self._set_obs_state(ObsState.FAULT)
-        ),
-    }
 
     def __init__(
         self,
-        dev_state_callback=None,
+        op_state_callback=None,
         admin_mode_callback=None,
         obs_state_callback=None
     ):
@@ -229,9 +44,9 @@ class SKASubarrayStateModel(SKAObsDeviceStateModel):
         Initialises the model. Note that this does not imply moving to
         INIT state. The INIT state is managed by the model itself.
 
-        :param dev_state_callback: A callback to be called when a
-            transition implies a change to device state
-        :type dev_state_callback: callable
+        :param op_state_callback: A callback to be called when a
+            transition implies a change to op state
+        :type op_state_callback: callable
         :param admin_mode_callback: A callback to be called when a
             transition causes a change to device admin_mode
         :type admin_mode_callback: callable
@@ -240,11 +55,134 @@ class SKASubarrayStateModel(SKAObsDeviceStateModel):
         :type obs_state_callback: callable
         """
         super().__init__(
-            dev_state_callback=dev_state_callback,
+            op_state_callback=op_state_callback,
             admin_mode_callback=admin_mode_callback,
-            obs_state_callback=obs_state_callback
         )
-        self.update_transitions(self.__transitions)
+
+        self._obs_state = ObsState.EMPTY
+        self._obs_state_callback = obs_state_callback
+
+        self._observation_state_machine = ObservationStateMachine(
+            self._update_obs_state
+        )
+
+    @property
+    def obs_state(self):
+        """
+        Returns the obs_state
+
+        :returns: obs_state of this state model
+        :rtype: ObsState
+        """
+        return self._obs_state
+
+    def _update_obs_state(self, obs_state):
+        """
+        Helper method that updates obs_state, ensuring that the callback
+        is called if one exists.
+
+        :param obs_state: the new obsState attribute value
+        :type obs_state: ObsState
+        """
+        if self._obs_state != obs_state:
+            self._obs_state = obs_state
+            if self._obs_state_callback is not None:
+                self._obs_state_callback(obs_state)
+
+    def is_action_allowed(self, action):
+        """
+        Whether a given action is allowed in the current state.
+
+        :param action: an action, as given in the transitions table
+        :type action: ANY
+        """
+        if self._state_machine.state == "ON":
+            if action in self._observation_state_machine.get_triggers(
+                self._observation_state_machine.state
+            ):
+                return True
+
+        return action in self._state_machine.get_triggers(self._state_machine.state)
+
+    def perform_action(self, action):
+        """
+        Performs an action on the state model
+
+        :param action: an action, as given in the transitions table
+        :type action: ANY
+        :raises StateModelError: if the action is not allowed in the
+            current state
+
+        """
+        if self._state_machine.state == "ON":
+            if action in self._observation_state_machine.get_triggers(
+                self._observation_state_machine.state
+            ):
+                self._observation_state_machine.trigger(action)
+                return
+
+        if action in self._state_machine.get_triggers(
+            self._state_machine.state
+        ):
+            self._observation_state_machine.to_EMPTY()
+            self._state_machine.trigger(action)
+            return
+
+        raise StateModelError(
+            f"Action {action} is not allowed in device state "
+            "{self._state_machine.state}, observation_state "
+            "{self._observation_state_machine.state}."
+        )
+
+    def _straight_to_state(self, state):
+        """
+        Takes the DeviceStateModel straight to the specified state. This method
+        exists to simplify testing; for example, if testing that a command may
+        be run in a given state, one can push the state model straight to that
+        state, rather than having to drive it to that state through a sequence
+        of actions. It is not intended that this method would be called outside
+        of test setups.
+
+        Note that states are non-deterministics with respect to adminMode. For
+        example, in state "FAULT-DISABLED", the adminMode could be OFFLINE or
+        NOT_FITTED. When you drive the state machine through its transitions,
+        the adminMode will be set accordingly. When using this method, the
+        adminMode will simply be set to something sensible.
+
+        :param state: the target state
+        :type state: string
+        """
+        if state == "UNINITIALISED":
+            pass
+        elif "DISABLED" in state:
+            self._state_machine._set_admin_mode(AdminMode.OFFLINE)
+        else:
+            self._state_machine._set_admin_mode(AdminMode.ONLINE)
+
+        to_state = getattr(self._state_machine, f"to_{state}", None)
+        if to_state is not None:
+            self._observation_state_machine.to_EMPTY()
+            to_state()
+            return
+
+        to_state = getattr(self._observation_state_machine, f"to_{state}", None)
+        if to_state is not None:
+            self._state_machine.to_ON()
+            to_state()
+            return
+
+        raise StateModelError(f"No such state {state}")
+
+    @property
+    def _state(self):
+        """
+        Returns the state of the underlying state machine. This would normally
+        be a hidden implementation detail, but is exposed here for testing
+        purposes.
+        """
+        if self._state_machine.state == "ON":
+            return self._observation_state_machine.state
+        return self._state_machine.state
 
 
 class SKASubarrayResourceManager:
@@ -369,8 +307,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel instance
             :param action_hook: a hook for the command, used to build
                 actions that will be sent to the state model; for example,
                 if the hook is "scan", then success of the command will
@@ -418,8 +355,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel instance
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -460,8 +396,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel instance
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -527,8 +462,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel instance
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -582,8 +516,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -624,8 +557,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -661,8 +593,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -701,8 +632,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -740,8 +670,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -787,8 +716,7 @@ class SKASubarray(SKAObsDevice):
             :param state_model: the state model that this command uses
                  to check that it is allowed to run, and that it drives
                  with actions.
-            :type state_model: SKABaseClassStateModel or a subclass of
-                same
+            :type state_model: SKASubarrayStateModel
             :param logger: the logger to be used by this Command. If not
                 provided, then a default module logger will be used.
             :type logger: a logger that implements the standard library
@@ -828,7 +756,7 @@ class SKASubarray(SKAObsDevice):
         Sets up the state model for the device
         """
         self.state_model = SKASubarrayStateModel(
-            dev_state_callback=self._update_state,
+            op_state_callback=self._update_state,
             admin_mode_callback=self._update_admin_mode,
             obs_state_callback=self._update_obs_state
         )
@@ -941,16 +869,31 @@ class SKASubarray(SKAObsDevice):
             "PstBeams:4, VlbiBeams:0.",
     )
 
+    obsState = attribute(
+        dtype=ObsState,
+        doc="Observing State",
+    )
+
     # ---------------
     # General methods
     # ---------------
     def always_executed_hook(self):
         # PROTECTED REGION ID(SKASubarray.always_executed_hook) ENABLED START #
+        """
+        Method that is always executed before any device command gets executed.
+
+        :return: None
+        """
         pass
         # PROTECTED REGION END #    //  SKASubarray.always_executed_hook
 
     def delete_device(self):
         # PROTECTED REGION ID(SKASubarray.delete_device) ENABLED START #
+        """
+        Method to cleanup when device is stopped.
+
+        :return: None
+        """
         pass
         # PROTECTED REGION END #    //  SKASubarray.delete_device
 
