@@ -324,7 +324,7 @@ class TestLoggingUtils:
 
 class TestSKABaseDeviceStateModel(StateMachineTester):
     """
-    This class contains the test for the ska.low.mccs.state module.
+    This class contains the test suite for the ska.base.SKABaseDevice class.
     """
     model = SKABaseDeviceStateModel()
 

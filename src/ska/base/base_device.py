@@ -40,7 +40,7 @@ from ska.base.control_model import (
 from ska.base.faults import StateModelError
 from ska.base.state_machine import BaseDeviceStateMachine
 
-from ska.base.utils import get_groups_from_json
+from ska.base.utils import get_groups_from_json, for_testing_only
 from ska.base.faults import (GroupDefinitionsError,
                              LoggingTargetError,
                              LoggingLevelError)
@@ -401,8 +401,10 @@ class SKABaseDeviceStateModel:
 
         :param action: an action, as given in the transitions table
         :type action: ANY
+
         :raises StateModelError: if the action is not allowed in the
             current state
+
         :returns: True if the action is allowed
         :rtype: boolean
         """
@@ -422,12 +424,12 @@ class SKABaseDeviceStateModel:
             current state
 
         """
-        # self.try_action(action)
         try:
             self._state_machine.trigger(action)
         except MachineError as error:
             raise StateModelError(error)
 
+    @for_testing_only
     def _straight_to_state(self, state):
         """
         Takes the DeviceStateModel straight to the specified state. This method
@@ -435,9 +437,9 @@ class SKABaseDeviceStateModel:
         be run in a given state, one can push the state model straight to that
         state, rather than having to drive it to that state through a sequence
         of actions. It is not intended that this method would be called outside
-        of test setups.
+        of test setups. A warning will be raised if it is.
 
-        Note that states are non-deterministics with respect to adminMode. For
+        Note that states are non-deterministic with respect to adminMode. For
         example, in state "FAULT-DISABLED", the adminMode could be OFFLINE or
         NOT_FITTED. When you drive the state machine through its transitions,
         the adminMode will be set accordingly. When using this method, the
@@ -449,9 +451,11 @@ class SKABaseDeviceStateModel:
         if state == "UNINITIALISED":
             pass
         elif "DISABLED" in state:
-            self._state_machine._set_admin_mode(AdminMode.OFFLINE)
+            if self._admin_mode not in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
+                self._state_machine._set_admin_mode(AdminMode.OFFLINE)
         else:
-            self._state_machine._set_admin_mode(AdminMode.ONLINE)
+            if self._admin_mode not in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
+                self._state_machine._set_admin_mode(AdminMode.ONLINE)
 
         getattr(self._state_machine, f"to_{state}")()
 
@@ -818,6 +822,7 @@ class SKABaseDevice(Device):
         :param command_name: name of the command for which a command
             object (handler) is sought
         :type command_name: str
+
         :return: the registered command object (handler) for the command
         :rtype: Command instance
         """
@@ -1205,6 +1210,7 @@ class SKABaseDevice(Device):
         Check if command `On` is allowed in the current device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1268,6 +1274,7 @@ class SKABaseDevice(Device):
         Check if command `Off` is allowed in the current device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """

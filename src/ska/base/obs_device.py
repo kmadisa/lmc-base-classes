@@ -104,7 +104,6 @@ class SKAObsDevice(SKABaseDevice):
         :param obs_state: the new obs_state value
         :type obs_state: ObsState
         """
-        print(f"IN _update_obs_state with obs_state {obs_state}")
         self._obs_state = obs_state
         self.push_change_event("obsState", obs_state)
         self.push_archive_event("obsState", obs_state)

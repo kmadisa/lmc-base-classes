@@ -23,6 +23,7 @@ from ska.base.commands import ActionCommand, ResultCode
 from ska.base.control_model import AdminMode, ObsState
 from ska.base.faults import CapabilityValidationError, StateModelError
 from ska.base.state_machine import ObservationStateMachine
+from ska.base.utils import for_testing_only
 
 # PROTECTED REGION END #    //  SKASubarray.additionnal_imports
 
@@ -110,6 +111,7 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
 
         :param action: an action, as given in the transitions table
         :type action: ANY
+
         :raises StateModelError: if the action is not allowed in the
             current state
 
@@ -134,6 +136,7 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
             "{self._observation_state_machine.state}."
         )
 
+    @for_testing_only
     def _straight_to_state(self, state):
         """
         Takes the DeviceStateModel straight to the specified state. This method
@@ -141,7 +144,7 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
         be run in a given state, one can push the state model straight to that
         state, rather than having to drive it to that state through a sequence
         of actions. It is not intended that this method would be called outside
-        of test setups.
+        of test setups. A warning is raised if it is.
 
         Note that states are non-deterministics with respect to adminMode. For
         example, in state "FAULT-DISABLED", the adminMode could be OFFLINE or
@@ -213,6 +216,7 @@ class SKASubarrayResourceManager:
         :todo: Currently implemented for testing purposes to take a JSON
             string encoding a dictionary with key 'example'. In future this
             will take a collection of resources.
+
         :param resources: JSON-encoding of a dictionary, with resources to
             assign under key 'example'
         :type resources: JSON string
@@ -228,6 +232,7 @@ class SKASubarrayResourceManager:
         :todo: Currently implemented for testing purposes to take a JSON
             string encoding a dictionary with key 'example'. In future this
             will take a collection of resources.
+
         :param resources: JSON-encoding of a dictionary, with resources to
             assign under key 'example'
         :type resources: JSON string
@@ -369,6 +374,7 @@ class SKASubarray(SKAObsDevice):
 
             :param argin: The resources to be assigned
             :type argin: list of str
+
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -410,6 +416,7 @@ class SKASubarray(SKAObsDevice):
 
             :param argin: The resources to be released
             :type argin: list of str
+
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -478,6 +485,7 @@ class SKASubarray(SKAObsDevice):
 
             :param argin: The configuration as JSON
             :type argin: str
+
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -532,6 +540,7 @@ class SKASubarray(SKAObsDevice):
 
             :param argin: Scan info
             :type argin: str
+
             :return: A tuple containing a return code and a string
                 message indicating status. The message is for
                 information purpose only.
@@ -813,6 +822,7 @@ class SKASubarray(SKAObsDevice):
         :param capability_types: a list strings representing
             capability types.
         :type capability_types: list
+
         :raises ValueError: If any of the capabilities requested are
             not valid.
         """
@@ -867,11 +877,6 @@ class SKASubarray(SKAObsDevice):
             "in use on this subarray; "
             "e.g.\nCorrelators:512, PssBeams:4, "
             "PstBeams:4, VlbiBeams:0.",
-    )
-
-    obsState = attribute(
-        dtype=ObsState,
-        doc="Observing State",
     )
 
     # ---------------
@@ -946,6 +951,7 @@ class SKASubarray(SKAObsDevice):
         device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -979,6 +985,7 @@ class SKASubarray(SKAObsDevice):
         device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1012,6 +1019,7 @@ class SKASubarray(SKAObsDevice):
         device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1043,6 +1051,7 @@ class SKASubarray(SKAObsDevice):
         device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1075,6 +1084,7 @@ class SKASubarray(SKAObsDevice):
         Check if command `Scan` is allowed in the current device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1107,6 +1117,7 @@ class SKASubarray(SKAObsDevice):
         Check if command `EndScan` is allowed in the current device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1134,6 +1145,7 @@ class SKASubarray(SKAObsDevice):
         Check if command `End` is allowed in the current device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1162,6 +1174,7 @@ class SKASubarray(SKAObsDevice):
         Check if command `Abort` is allowed in the current device state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1191,6 +1204,7 @@ class SKASubarray(SKAObsDevice):
         state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
@@ -1219,6 +1233,7 @@ class SKASubarray(SKAObsDevice):
         state.
 
         :raises ``tango.DevFailed``: if the command is not allowed
+
         :return: ``True`` if the command is allowed
         :rtype: boolean
         """
