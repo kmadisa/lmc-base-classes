@@ -15,45 +15,32 @@ from ska.base import SKABaseDeviceStateModel, SKASubarrayStateModel
 
 def pytest_configure(config):
     """
-    pytest hook, used here to register custom marks to get rid of spurious
-    warnings
+    pytest hook, used here to register custom "state_machine_tester" marks
     """
     config.addinivalue_line(
         "markers",
-        "state_machine_test: indicate that the test is a state machine "
-        "test and should be parameterised by the states and actions in "
-        "its DAG"
+        "state_machine_tester: indicate that this class is state machine "
+        "tester class, and tests should be parameterised by the states and "
+        "actions in the DAG provided in its argument."
     )
 
 
 def pytest_generate_tests(metafunc):
     """
     pytest hook that generates tests; this hook ensures that any test
-    that is marked with `state_machine_test` custom marker will be
-    parameterised by the states and actions in its DAG
+    class that is marked with the `state_machine_tester` custom marker
+    will have its tests parameterised by the states and actions in the
+    DAG provided by that mark
     """
     # called once per each test function
-    if metafunc.definition.get_closest_marker("state_machine_test"):
-        metafunc.parametrize(*metafunc.cls._parametrize())
-
-
-@pytest.mark.state_machine_test
-class StateMachineTester:
-    """
-    Abstract base class for a class for testing state machines
-    """
-
-    @classmethod
-    def _parametrize(cls):
-        """
-        Parametrizes the state machine tests to ensure that every action
-        in the DAG is tested from every state in the DAG.
-        """
+    mark = metafunc.definition.get_closest_marker("state_machine_tester")
+    if mark:
+        dag = mark.args[0]
         states = set()
         triggers = set()
         expected = {}
 
-        for (from_state, trigger, to_state) in cls.dag:
+        for (from_state, trigger, to_state) in dag:
             states.add(from_state)
             states.add(to_state)
             triggers.add(trigger)
@@ -62,7 +49,7 @@ class StateMachineTester:
         states = sorted(states)
         triggers = sorted(triggers)
 
-        return (
+        metafunc.parametrize(
             "state_under_test, action_under_test, expected_state",
             [
                 (
@@ -73,71 +60,99 @@ class StateMachineTester:
             ]
         )
 
+
+class StateMachineTester:
+    """
+    Abstract base class for a class for testing state machines
+    """
+
     def test_state_machine(
-        self, state_under_test, action_under_test, expected_state,
+        self, machine, state_under_test, action_under_test, expected_state,
     ):
         """
-        Test the subarray state machine: for a given initial state and
-        an action, does execution of that action, from that initial
-        state, yield the expected results? If the action was not allowed
-        from that initial state, does the device raise a DevFailed
-        exception? If the action was allowed, does it result in the
-        correct state transition?
+        Implements the unit test for a state machine: for a given
+        initial state and an action, does execution of that action, from
+        that state, yield the expected results? If the action was
+        allowed from that state, does the machine transition to the
+        correct state? If the action was not allowed from that state,
+        does the machine reject the action (e.g. raise an exception or
+        return an error code) and remain in the current state?
 
-        :todo: support starting in different memorised adminModes
+        :param machine: the state machine under test
+        :type machine: state machine object instance
+        :param state_under_test: the state from which the
+            `action_under_test` is being tested
+        :type state_under_test: string
+        :param action_under_test: the action being tested from the
+            `state_under_test`
+        :type action_under_test: string
+        :param expected_state: the state to which the machine is
+            expected to transition, as a result of performing the
+            `action_under_test` in the `state_under_test`. If None, then
+            the action should be disallowed and result in no change of
+            state.
+        :type expected_state: string
+
         """
         # Put the device into the state under test
-        self.to_state(state_under_test)
+        self.to_state(machine, state_under_test)
 
         # Check that we are in the state under test
-        self.assert_state(state_under_test)
+        self.assert_state(machine, state_under_test)
 
         # Test that the action under test does what we expect it to
         if expected_state is None:
             # Action should fail and the state should not change
-            self.assert_fails(action_under_test)
-            self.assert_state(state_under_test)
+            self.check_action_disallowed(machine, action_under_test)
+            self.assert_state(machine, state_under_test)
         else:
             # Action should succeed
-            self.perform_action(action_under_test)
-            self.assert_state(expected_state)
+            self.perform_action(machine, action_under_test)
+            self.assert_state(machine, expected_state)
 
-    def assert_state(self, state):
+    def assert_state(self, machine, state):
         """
         Abstract method for asserting the current state of the state
         machine under test
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param state: the state that we are asserting to be the current
             state of the state machine under test
-        :type state: str
+        :type state: string
         """
         raise NotImplementedError()
 
-    def perform_action(self, action):
+    def perform_action(self, machine, action):
         """
-        Abstract method for performing a triggering action on the state
-        machine
+        Abstract method for performing an action on the state machine
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param action: action to be performed on the state machine
         :type action: str
         """
         raise NotImplementedError()
 
-    def assert_fails(self, action):
+    def check_action_disallowed(self, machine, action):
         """
         Abstract method for asserting that an action fails if performed
         on the state machine under test in its current state.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param action: action to be performed on the state machine
         :type action: str
         """
         raise NotImplementedError()
 
-    def to_state(self, target_state):
+    def to_state(self, machine, target_state):
         """
         Abstract method for getting the state machine into a target
         state.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param target_state: the state that we want to get the state
             machine under test into
         :type target_state: str
@@ -147,60 +162,63 @@ class StateMachineTester:
 
 class TransitionsStateMachineTester(StateMachineTester):
     """
-    Much less abstract implementation of a StateMachineTester for a
-    pytransitions state machine. Requires only implementation of the
-    `machine` property for obtaining the machine. Assumes that the DAG
-    states and actions are the states and triggers of the pytransitions
-    machine.
+    Concrete implementation of a StateMachineTester for a pytransitions
+    state machine (with autotransitions turned on). The states and
+    actions in the DAG must correspond exactly with the machine's states
+    and triggers.
     """
 
-    @property
-    def machine(self):
-        """
-        Returns a pytransitions Machine for testing that it implements
-        the state diagram described by the DAG
-        """
-        raise NotImplementedError()
-
-    def assert_state(self, state):
+    def assert_state(self, machine, state):
         """
         Assert the current state of the state machine under test.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param state: the state that we are asserting to be the current
             state of the state machine under test
         :type state: str
         """
-        assert self.machine.state == state
+        assert machine.state == state
 
-    def perform_action(self, action):
+    def perform_action(self, machine, action):
         """
         Perform a given action on the state machine under test.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param action: action to be performed on the state machine
         :type action: str
         """
-        self.machine.trigger(action)
+        machine.trigger(action)
 
-    def assert_fails(self, action):
+    def check_action_disallowed(self, machine, action):
         """
         Assert that performing a given action on the state maching under
         test fails in its current state.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param action: action to be performed on the state machine
         :type action: str
         """
         with pytest.raises(MachineError):
-            self.perform_action(action)
+            self.perform_action(machine, action)
 
-    def to_state(self, target_state):
+    def to_state(self, machine, target_state):
         """
-        Transition the state machine to a target state.
+        Transition the state machine to a target state. This
+        implementation uses autotransitions. If the pytransitions state
+        machine under test has autotransitions turned off, then this
+        method will need to be overridden by some other method of
+        putting the machine into the state under test.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param target_state: the state that we want to get the state
             machine under test into
         :type target_state: str
         """
-        self.machine.trigger(f"to_{target_state}")
+        machine.trigger(f"to_{target_state}")
 
 
 @pytest.fixture(scope="class")

@@ -322,58 +322,65 @@ class TestLoggingUtils:
             LoggingUtils.create_logging_handler = orig_create_logging_handler
 
 
+base_device_state_model_dag = [
+    ("UNINITIALISED", "init_started", "INIT_ENABLED"),
+    ("INIT_ENABLED", "to_notfitted", "INIT_DISABLED"),
+    ("INIT_ENABLED", "to_offline", "INIT_DISABLED"),
+    ("INIT_ENABLED", "to_online", "INIT_ENABLED"),
+    ("INIT_ENABLED", "to_maintenance", "INIT_ENABLED"),
+    ("INIT_ENABLED", "init_succeeded", "OFF"),
+    ("INIT_ENABLED", "init_failed", "FAULT_ENABLED"),
+    ("INIT_ENABLED", "fatal_error", "FAULT_ENABLED"),
+    ("INIT_DISABLED", "to_notfitted", "INIT_DISABLED"),
+    ("INIT_DISABLED", "to_offline", "INIT_DISABLED"),
+    ("INIT_DISABLED", "to_online", "INIT_ENABLED"),
+    ("INIT_DISABLED", "to_maintenance", "INIT_ENABLED"),
+    ("INIT_DISABLED", "init_succeeded", "DISABLED"),
+    ("INIT_DISABLED", "init_failed", "FAULT_DISABLED"),
+    ("INIT_DISABLED", "fatal_error", "FAULT_DISABLED"),
+    ("FAULT_DISABLED", "to_notfitted", "FAULT_DISABLED"),
+    ("FAULT_DISABLED", "to_offline", "FAULT_DISABLED"),
+    ("FAULT_DISABLED", "to_online", "FAULT_ENABLED"),
+    ("FAULT_DISABLED", "to_maintenance", "FAULT_ENABLED"),
+    ("FAULT_DISABLED", "reset_succeeded", "DISABLED"),
+    ("FAULT_DISABLED", "reset_failed", "FAULT_DISABLED"),
+    ("FAULT_DISABLED", "fatal_error", "FAULT_DISABLED"),
+    ("FAULT_ENABLED", "to_notfitted", "FAULT_DISABLED"),
+    ("FAULT_ENABLED", "to_offline", "FAULT_DISABLED"),
+    ("FAULT_ENABLED", "to_online", "FAULT_ENABLED"),
+    ("FAULT_ENABLED", "to_maintenance", "FAULT_ENABLED"),
+    ("FAULT_ENABLED", "reset_succeeded", "OFF"),
+    ("FAULT_ENABLED", "reset_failed", "FAULT_ENABLED"),
+    ("FAULT_ENABLED", "fatal_error", "FAULT_ENABLED"),
+    ("DISABLED", "to_notfitted", "DISABLED"),
+    ("DISABLED", "to_offline", "DISABLED"),
+    ("DISABLED", "to_online", "OFF"),
+    ("DISABLED", "to_maintenance", "OFF"),
+    ("DISABLED", "fatal_error", "FAULT_DISABLED"),
+    ("OFF", "to_notfitted", "DISABLED"),
+    ("OFF", "to_offline", "DISABLED"),
+    ("OFF", "to_online", "OFF"),
+    ("OFF", "to_maintenance", "OFF"),
+    ("OFF", "on_succeeded", "ON"),
+    ("OFF", "on_failed", "FAULT_ENABLED"),
+    ("OFF", "fatal_error", "FAULT_ENABLED"),
+    ("ON", "off_succeeded", "OFF"),
+    ("ON", "off_failed", "FAULT_ENABLED"),
+    ("ON", "fatal_error", "FAULT_ENABLED"),
+]
+
+
+@pytest.mark.state_machine_tester(base_device_state_model_dag)
 class TestSKABaseDeviceStateModel(StateMachineTester):
     """
     This class contains the test suite for the ska.base.SKABaseDevice class.
     """
-    model = SKABaseDeviceStateModel()
-
-    dag = [
-        ("UNINITIALISED", "init_started", "INIT_ENABLED"),
-        ("INIT_ENABLED", "to_notfitted", "INIT_DISABLED"),
-        ("INIT_ENABLED", "to_offline", "INIT_DISABLED"),
-        ("INIT_ENABLED", "to_online", "INIT_ENABLED"),
-        ("INIT_ENABLED", "to_maintenance", "INIT_ENABLED"),
-        ("INIT_ENABLED", "init_succeeded", "OFF"),
-        ("INIT_ENABLED", "init_failed", "FAULT_ENABLED"),
-        ("INIT_ENABLED", "fatal_error", "FAULT_ENABLED"),
-        ("INIT_DISABLED", "to_notfitted", "INIT_DISABLED"),
-        ("INIT_DISABLED", "to_offline", "INIT_DISABLED"),
-        ("INIT_DISABLED", "to_online", "INIT_ENABLED"),
-        ("INIT_DISABLED", "to_maintenance", "INIT_ENABLED"),
-        ("INIT_DISABLED", "init_succeeded", "DISABLED"),
-        ("INIT_DISABLED", "init_failed", "FAULT_DISABLED"),
-        ("INIT_DISABLED", "fatal_error", "FAULT_DISABLED"),
-        ("FAULT_DISABLED", "to_notfitted", "FAULT_DISABLED"),
-        ("FAULT_DISABLED", "to_offline", "FAULT_DISABLED"),
-        ("FAULT_DISABLED", "to_online", "FAULT_ENABLED"),
-        ("FAULT_DISABLED", "to_maintenance", "FAULT_ENABLED"),
-        ("FAULT_DISABLED", "reset_succeeded", "DISABLED"),
-        ("FAULT_DISABLED", "reset_failed", "FAULT_DISABLED"),
-        ("FAULT_DISABLED", "fatal_error", "FAULT_DISABLED"),
-        ("FAULT_ENABLED", "to_notfitted", "FAULT_DISABLED"),
-        ("FAULT_ENABLED", "to_offline", "FAULT_DISABLED"),
-        ("FAULT_ENABLED", "to_online", "FAULT_ENABLED"),
-        ("FAULT_ENABLED", "to_maintenance", "FAULT_ENABLED"),
-        ("FAULT_ENABLED", "reset_succeeded", "OFF"),
-        ("FAULT_ENABLED", "reset_failed", "FAULT_ENABLED"),
-        ("FAULT_ENABLED", "fatal_error", "FAULT_ENABLED"),
-        ("DISABLED", "to_notfitted", "DISABLED"),
-        ("DISABLED", "to_offline", "DISABLED"),
-        ("DISABLED", "to_online", "OFF"),
-        ("DISABLED", "to_maintenance", "OFF"),
-        ("DISABLED", "fatal_error", "FAULT_DISABLED"),
-        ("OFF", "to_notfitted", "DISABLED"),
-        ("OFF", "to_offline", "DISABLED"),
-        ("OFF", "to_online", "OFF"),
-        ("OFF", "to_maintenance", "OFF"),
-        ("OFF", "on_succeeded", "ON"),
-        ("OFF", "on_failed", "FAULT_ENABLED"),
-        ("OFF", "fatal_error", "FAULT_ENABLED"),
-        ("ON", "off_succeeded", "OFF"),
-        ("ON", "off_failed", "FAULT_ENABLED"),
-        ("ON", "fatal_error", "FAULT_ENABLED"),
-    ]
+    @pytest.fixture
+    def machine(self):
+        """
+        Fixture that returns the state machine under test in this class
+        """
+        yield SKABaseDeviceStateModel()
 
     state_checks = {
         "UNINITIALISED":
@@ -394,12 +401,14 @@ class TestSKABaseDeviceStateModel(StateMachineTester):
             ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON),
     }
 
-    def assert_state(self, state):
+    def assert_state(self, machine, state):
         """
         Assert the current state of this state machine, based on the
         values of the adminMode, opState and obsState attributes of this
         model.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param state: the state that we are asserting to be the current
             state of the state machine under test
         :type state: str
@@ -407,43 +416,47 @@ class TestSKABaseDeviceStateModel(StateMachineTester):
 
         (admin_modes, op_state) = self.state_checks[state]
         if admin_modes is None:
-            assert self.model.admin_mode is None
+            assert machine.admin_mode is None
         else:
-            assert self.model.admin_mode in admin_modes
+            assert machine.admin_mode in admin_modes
         if op_state is None:
-            assert self.model.op_state is None
+            assert machine.op_state is None
         else:
-            assert self.model.op_state == op_state
+            assert machine.op_state == op_state
 
-    def perform_action(self, action):
+    def perform_action(self, machine, action):
         """
         Perform a given action on the state machine under test.
 
         :param action: action to be performed on the state machine
         :type action: str
         """
-        self.model.perform_action(action)
+        machine.perform_action(action)
 
-    def assert_fails(self, action):
+    def check_action_disallowed(self, machine, action):
         """
         Assert that performing a given action on the state maching under
         test fails in its current state.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param action: action to be performed on the state machine
         :type action: str
         """
         with pytest.raises(StateModelError):
-            self.perform_action(action)
+            self.perform_action(machine, action)
 
-    def to_state(self, target_state):
+    def to_state(self, machine, target_state):
         """
         Transition the state machine to a target state.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param target_state: the state that we want to get the state
             machine under test into
         :type target_state: str
         """
-        self.model._straight_to_state(target_state)
+        machine._straight_to_state(target_state)
 
 
 # PROTECTED REGION END #    //  SKABaseDevice.test_SKABaseDevice_decorators
