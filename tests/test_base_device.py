@@ -6,19 +6,19 @@
 #
 #
 #########################################################################################
-"""Contain the tests for the SKABASE."""
-
-import re
-import pytest
+"""
+This module contains the tests for the SKABaseDevice.
+"""
 
 # PROTECTED REGION ID(SKABaseDevice.test_additional_imports) ENABLED START #
 import logging
+import re
+import pytest
 import socket
 import tango
 
 from unittest import mock
 from tango import DevFailed, DevState
-from ska.base import SKABaseDeviceStateModel
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, LoggingLevel, SimulationMode, TestMode
 )
@@ -376,11 +376,11 @@ class TestSKABaseDeviceStateModel(StateMachineTester):
     This class contains the test suite for the ska.base.SKABaseDevice class.
     """
     @pytest.fixture
-    def machine(self):
+    def machine(self, device_state_model):
         """
         Fixture that returns the state machine under test in this class
         """
-        yield SKABaseDeviceStateModel()
+        yield device_state_model
 
     state_checks = {
         "UNINITIALISED":

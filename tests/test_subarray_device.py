@@ -14,7 +14,7 @@ import pytest
 from tango import DevState, DevFailed
 
 # PROTECTED REGION ID(SKASubarray.test_additional_imports) ENABLED START #
-from ska.base import SKASubarray, SKASubarrayResourceManager, SKASubarrayStateModel
+from ska.base import SKASubarray, SKASubarrayResourceManager
 from ska.base.commands import ResultCode
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
@@ -139,11 +139,11 @@ class TestSKASubarrayStateModel(StateMachineTester):
     This class contains the test for the ska.low.mccs.state module.
     """
     @pytest.fixture
-    def machine(self):
+    def machine(self, subarray_state_model):
         """
         Fixture that returns the state machine under test in this class
         """
-        yield SKASubarrayStateModel()
+        yield subarray_state_model
 
     state_checks = {
         "UNINITIALISED":

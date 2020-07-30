@@ -3,6 +3,7 @@ A module defining a list of fixtures that are shared across all ska.base tests.
 """
 import importlib
 import itertools
+import logging
 import pytest
 from queue import Empty, Queue
 from transitions import MachineError
@@ -282,7 +283,7 @@ def device_state_model():
     """
     Yields a new SKABaseDeviceStateModel for testing
     """
-    yield SKABaseDeviceStateModel()
+    yield SKABaseDeviceStateModel(logging.getLogger())
 
 
 @pytest.fixture
@@ -290,7 +291,7 @@ def subarray_state_model():
     """
     Yields a new SKASubarrayStateModel for testing
     """
-    yield SKASubarrayStateModel()
+    yield SKASubarrayStateModel(logging.getLogger())
 
 
 @pytest.fixture(scope="function")

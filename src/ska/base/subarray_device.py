@@ -12,6 +12,7 @@ information like assigned resources, configured capabilities, etc.
 """
 # PROTECTED REGION ID(SKASubarray.additionnal_import) ENABLED START #
 import json
+import warnings
 
 from tango import DebugIt
 from tango.server import run, attribute, command
@@ -37,6 +38,7 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
 
     def __init__(
         self,
+        logger,
         op_state_callback=None,
         admin_mode_callback=None,
         obs_state_callback=None
@@ -45,6 +47,9 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
         Initialises the model. Note that this does not imply moving to
         INIT state. The INIT state is managed by the model itself.
 
+        :param logger: the logger to be used by this state model.
+        :type logger: a logger that implements the standard library
+            logger interface
         :param op_state_callback: A callback to be called when a
             transition implies a change to op state
         :type op_state_callback: callable
@@ -56,6 +61,7 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
         :type obs_state_callback: callable
         """
         super().__init__(
+            logger,
             op_state_callback=op_state_callback,
             admin_mode_callback=admin_mode_callback,
         )
@@ -126,7 +132,15 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
         if action in self._state_machine.get_triggers(
             self._state_machine.state
         ):
-            self._observation_state_machine.to_EMPTY()
+            if self._observation_state_machine.state != "EMPTY":
+                message = (
+                    "Changing device state of a non-EMPTY observing device "
+                    "should only be done as an emergency measure and may be "
+                    "disallowed in future."
+                )
+                self.logger.warning(message)
+                warnings.warn(message, PendingDeprecationWarning)
+                self._observation_state_machine.to_EMPTY()
             self._state_machine.trigger(action)
             return
 
@@ -158,19 +172,21 @@ class SKASubarrayStateModel(SKABaseDeviceStateModel):
         if state == "UNINITIALISED":
             pass
         elif "DISABLED" in state:
-            self._state_machine._set_admin_mode(AdminMode.OFFLINE)
+            if self._admin_mode not in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
+                self._state_machine._update_admin_mode(AdminMode.OFFLINE)
         else:
-            self._state_machine._set_admin_mode(AdminMode.ONLINE)
-
-        to_state = getattr(self._state_machine, f"to_{state}", None)
-        if to_state is not None:
-            self._observation_state_machine.to_EMPTY()
-            to_state()
-            return
+            if self._admin_mode not in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
+                self._state_machine._update_admin_mode(AdminMode.ONLINE)
 
         to_state = getattr(self._observation_state_machine, f"to_{state}", None)
         if to_state is not None:
             self._state_machine.to_ON()
+            to_state()
+            return
+
+        to_state = getattr(self._state_machine, f"to_{state}", None)
+        if to_state is not None:
+            self._observation_state_machine.to_EMPTY()
             to_state()
             return
 
@@ -765,6 +781,7 @@ class SKASubarray(SKAObsDevice):
         Sets up the state model for the device
         """
         self.state_model = SKASubarrayStateModel(
+            logger=self.logger,
             op_state_callback=self._update_state,
             admin_mode_callback=self._update_admin_mode,
             obs_state_callback=self._update_obs_state

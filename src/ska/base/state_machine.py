@@ -221,61 +221,61 @@ class BaseDeviceStateMachine(Machine):
         """
         called when the state machine enters the "" state.
         """
-        self._set_op_state(DevState.INIT)
+        self._update_op_state(DevState.INIT)
 
     def _fault_entered(self):
         """
         called when the state machine enters the "" state.
         """
-        self._set_op_state(DevState.FAULT)
+        self._update_op_state(DevState.FAULT)
 
     def _disabled_entered(self):
         """
         called when the state machine enters the "" state.
         """
-        self._set_op_state(DevState.DISABLE)
+        self._update_op_state(DevState.DISABLE)
 
     def _off_entered(self):
         """
         called when the state machine enters the "" state.
         """
-        self._set_op_state(DevState.OFF)
+        self._update_op_state(DevState.OFF)
 
     def _on_entered(self):
         """
         called when the state machine enters the "" state.
         """
-        self._set_op_state(DevState.ON)
+        self._update_op_state(DevState.ON)
 
     def _not_fitted_callback(self):
         """
         callback called when the state machine is set to admin mode
         NOT FITTED
         """
-        self._set_admin_mode(AdminMode.NOT_FITTED)
+        self._update_admin_mode(AdminMode.NOT_FITTED)
 
     def _offline_callback(self):
         """
         callback called when the state machine is set to admin mode
         OFFLINE
         """
-        self._set_admin_mode(AdminMode.OFFLINE)
+        self._update_admin_mode(AdminMode.OFFLINE)
 
     def _maintenance_callback(self):
         """
         callback called when the state machine is set to admin mode
         MAINTENANCE
         """
-        self._set_admin_mode(AdminMode.MAINTENANCE)
+        self._update_admin_mode(AdminMode.MAINTENANCE)
 
     def _online_callback(self):
         """
         callback called when the state machine is set to admin mode
         online
         """
-        self._set_admin_mode(AdminMode.ONLINE)
+        self._update_admin_mode(AdminMode.ONLINE)
 
-    def _set_admin_mode(self, admin_mode):
+    def _update_admin_mode(self, admin_mode):
         """
         Helper method: calls the admin_mode callback if one exists
 
@@ -287,7 +287,7 @@ class BaseDeviceStateMachine(Machine):
             if self._admin_mode_callback is not None:
                 self._admin_mode_callback(self._admin_mode)
 
-    def _set_op_state(self, op_state):
+    def _update_op_state(self, op_state):
         """
         Helper method: sets this state models op_state, and calls the
         op_state callback if one exists

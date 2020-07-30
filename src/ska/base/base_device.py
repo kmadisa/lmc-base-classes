@@ -317,10 +317,13 @@ class SKABaseDeviceStateModel:
     Implements the state model for the SKABaseDevice
     """
 
-    def __init__(self, op_state_callback=None, admin_mode_callback=None):
+    def __init__(self, logger, op_state_callback=None, admin_mode_callback=None):
         """
         Initialises the state model.
 
+        :param logger: the logger to be used by this state model.
+        :type logger: a logger that implements the standard library
+            logger interface
         :param op_state_callback: A callback to be called when a
             transition implies a change to op state
         :type op_state_callback: callable
@@ -328,6 +331,8 @@ class SKABaseDeviceStateModel:
             transition causes a change to device admin_mode
         :type admin_mode_callback: callable
         """
+        self.logger = logger
+
         self._op_state = None
         self._admin_mode = None
 
@@ -452,10 +457,10 @@ class SKABaseDeviceStateModel:
             pass
         elif "DISABLED" in state:
             if self._admin_mode not in [AdminMode.OFFLINE, AdminMode.NOT_FITTED]:
-                self._state_machine._set_admin_mode(AdminMode.OFFLINE)
+                self._state_machine._update_admin_mode(AdminMode.OFFLINE)
         else:
             if self._admin_mode not in [AdminMode.ONLINE, AdminMode.MAINTENANCE]:
-                self._state_machine._set_admin_mode(AdminMode.ONLINE)
+                self._state_machine._update_admin_mode(AdminMode.ONLINE)
 
         getattr(self._state_machine, f"to_{state}")()
 
@@ -797,6 +802,7 @@ class SKABaseDevice(Device):
         Creates the state model for the device
         """
         self.state_model = SKABaseDeviceStateModel(
+            logger=self.logger,
             op_state_callback=self._update_state,
             admin_mode_callback=self._update_admin_mode
         )

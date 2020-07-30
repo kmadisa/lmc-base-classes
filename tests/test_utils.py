@@ -233,9 +233,10 @@ def test_for_testing_only(in_test, context):
     using the @decorator syntax.
     """
     def foo():
+        """Dummy function for wrapping by decorator under test."""
         return "foo"
 
-    foo = for_testing_only(foo, _test=lambda: not in_test)
+    foo = for_testing_only(foo, _testing_check=lambda: in_test)
 
     with context:
         assert foo() == "foo"
@@ -247,6 +248,7 @@ def test_for_testing_only_decorator():
     """
     @for_testing_only
     def bah():
+        """Dummy function for wrapping by decorator under test."""
         return "bah"
 
     with pytest.warns(None) as warning_record:
