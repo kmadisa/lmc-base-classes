@@ -3,15 +3,12 @@ A module defining a list of fixtures that are shared across all ska.base tests.
 """
 import importlib
 import itertools
-import logging
 import pytest
 from queue import Empty, Queue
 from transitions import MachineError
 
 from tango import EventType
 from tango.test_context import DeviceTestContext
-
-from ska.base import SKABaseDeviceStateModel, SKASubarrayStateModel
 
 
 def pytest_configure(config):
@@ -22,7 +19,7 @@ def pytest_configure(config):
         "markers",
         "state_machine_tester: indicate that this class is state machine "
         "tester class, and tests should be parameterised by the states and "
-        "actions in the DAG provided in its argument."
+        "actions in the specification provided in its argument."
     )
 
 
@@ -31,17 +28,17 @@ def pytest_generate_tests(metafunc):
     pytest hook that generates tests; this hook ensures that any test
     class that is marked with the `state_machine_tester` custom marker
     will have its tests parameterised by the states and actions in the
-    DAG provided by that mark
+    specification provided by that mark
     """
     # called once per each test function
     mark = metafunc.definition.get_closest_marker("state_machine_tester")
     if mark:
-        dag = mark.args[0]
+        spec = mark.args[0]
         states = set()
         triggers = set()
         expected = {}
 
-        for (from_state, trigger, to_state) in dag:
+        for (from_state, trigger, to_state) in spec:
             states.add(from_state)
             states.add(to_state)
             triggers.add(trigger)
@@ -165,8 +162,8 @@ class TransitionsStateMachineTester(StateMachineTester):
     """
     Concrete implementation of a StateMachineTester for a pytransitions
     state machine (with autotransitions turned on). The states and
-    actions in the DAG must correspond exactly with the machine's states
-    and triggers.
+    actions in the state machine specification must correspond exactly
+    with the machine's states and triggers.
     """
 
     def assert_state(self, machine, state):
@@ -276,22 +273,6 @@ def initialize_device(tango_context):
         Context to run a device without a database.
     """
     yield tango_context.device.Init()
-
-
-@pytest.fixture
-def device_state_model():
-    """
-    Yields a new SKABaseDeviceStateModel for testing
-    """
-    yield SKABaseDeviceStateModel(logging.getLogger())
-
-
-@pytest.fixture
-def subarray_state_model():
-    """
-    Yields a new SKASubarrayStateModel for testing
-    """
-    yield SKASubarrayStateModel(logging.getLogger())
 
 
 @pytest.fixture(scope="function")

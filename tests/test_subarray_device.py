@@ -8,13 +8,15 @@
 #########################################################################################
 """Contain the tests for the SKASubarray."""
 
+import json
+import logging
 import re
 import pytest
 
 from tango import DevState, DevFailed
 
 # PROTECTED REGION ID(SKASubarray.test_additional_imports) ENABLED START #
-from ska.base import SKASubarray, SKASubarrayResourceManager
+from ska.base import SKASubarray, SKASubarrayResourceManager, SKASubarrayStateModel
 from ska.base.commands import ResultCode
 from ska.base.control_model import (
     AdminMode, ControlMode, HealthState, ObsMode, ObsState, SimulationMode, TestMode
@@ -24,119 +26,23 @@ from ska.base.faults import CommandError, StateModelError
 from .conftest import StateMachineTester
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
 
-subarray_state_model_dag = [
-    ("UNINITIALISED", "init_started", "INIT_ENABLED"),
-    ("INIT_ENABLED", "to_notfitted", "INIT_DISABLED"),
-    ("INIT_ENABLED", "to_offline", "INIT_DISABLED"),
-    ("INIT_ENABLED", "to_online", "INIT_ENABLED"),
-    ("INIT_ENABLED", "to_maintenance", "INIT_ENABLED"),
-    ("INIT_ENABLED", "init_succeeded", "OFF"),
-    ("INIT_ENABLED", "init_failed", "FAULT_ENABLED"),
-    ("INIT_ENABLED", "fatal_error", "FAULT_ENABLED"),
-    ("INIT_DISABLED", "to_notfitted", "INIT_DISABLED"),
-    ("INIT_DISABLED", "to_offline", "INIT_DISABLED"),
-    ("INIT_DISABLED", "to_online", "INIT_ENABLED"),
-    ("INIT_DISABLED", "to_maintenance", "INIT_ENABLED"),
-    ("INIT_DISABLED", "init_succeeded", "DISABLED"),
-    ("INIT_DISABLED", "init_failed", "FAULT_DISABLED"),
-    ("INIT_DISABLED", "fatal_error", "FAULT_DISABLED"),
-    ("FAULT_DISABLED", "to_notfitted", "FAULT_DISABLED"),
-    ("FAULT_DISABLED", "to_offline", "FAULT_DISABLED"),
-    ("FAULT_DISABLED", "to_online", "FAULT_ENABLED"),
-    ("FAULT_DISABLED", "to_maintenance", "FAULT_ENABLED"),
-    ("FAULT_DISABLED", "reset_succeeded", "DISABLED"),
-    ("FAULT_DISABLED", "reset_failed", "FAULT_DISABLED"),
-    ("FAULT_DISABLED", "fatal_error", "FAULT_DISABLED"),
-    ("FAULT_ENABLED", "to_notfitted", "FAULT_DISABLED"),
-    ("FAULT_ENABLED", "to_offline", "FAULT_DISABLED"),
-    ("FAULT_ENABLED", "to_online", "FAULT_ENABLED"),
-    ("FAULT_ENABLED", "to_maintenance", "FAULT_ENABLED"),
-    ("FAULT_ENABLED", "reset_succeeded", "OFF"),
-    ("FAULT_ENABLED", "reset_failed", "FAULT_ENABLED"),
-    ("FAULT_ENABLED", "fatal_error", "FAULT_ENABLED"),
-    ("DISABLED", "to_notfitted", "DISABLED"),
-    ("DISABLED", "to_offline", "DISABLED"),
-    ("DISABLED", "to_online", "OFF"),
-    ("DISABLED", "to_maintenance", "OFF"),
-    ("DISABLED", "fatal_error", "FAULT_DISABLED"),
-    ("OFF", "to_notfitted", "DISABLED"),
-    ("OFF", "to_offline", "DISABLED"),
-    ("OFF", "to_online", "OFF"),
-    ("OFF", "to_maintenance", "OFF"),
-    ("OFF", "on_succeeded", "EMPTY"),
-    ("OFF", "on_failed", "FAULT_ENABLED"),
-    ("OFF", "fatal_error", "FAULT_ENABLED"),
-    ("EMPTY", "off_succeeded", "OFF"),
-    ("EMPTY", "off_failed", "FAULT_ENABLED"),
-    ("EMPTY", "assign_started", "RESOURCING"),
-    ("EMPTY", "fatal_error", "FAULT"),
-    ("RESOURCING", "off_succeeded", "OFF"),
-    ("RESOURCING", "off_failed", "FAULT_ENABLED"),
-    ("RESOURCING", "resourcing_succeeded_some_resources", "IDLE"),
-    ("RESOURCING", "resourcing_succeeded_no_resources", "EMPTY"),
-    ("RESOURCING", "resourcing_failed", "FAULT"),
-    ("RESOURCING", "fatal_error", "FAULT"),
-    ("IDLE", "off_succeeded", "OFF"),
-    ("IDLE", "off_failed", "FAULT_ENABLED"),
-    ("IDLE", "assign_started", "RESOURCING"),
-    ("IDLE", "release_started", "RESOURCING"),
-    ("IDLE", "configure_started", "CONFIGURING"),
-    ("IDLE", "abort_started", "ABORTING"),
-    ("IDLE", "fatal_error", "FAULT"),
-    ("CONFIGURING", "off_succeeded", "OFF"),
-    ("CONFIGURING", "off_failed", "FAULT_ENABLED"),
-    ("CONFIGURING", "configure_succeeded", "READY"),
-    ("CONFIGURING", "configure_failed", "FAULT"),
-    ("CONFIGURING", "abort_started", "ABORTING"),
-    ("CONFIGURING", "fatal_error", "FAULT"),
-    ("READY", "off_succeeded", "OFF"),
-    ("READY", "off_failed", "FAULT_ENABLED"),
-    ("READY", "end_succeeded", "IDLE"),
-    ("READY", "end_failed", "FAULT"),
-    ("READY", "configure_started", "CONFIGURING"),
-    ("READY", "abort_started", "ABORTING"),
-    ("READY", "scan_started", "SCANNING"),
-    ("READY", "fatal_error", "FAULT"),
-    ("SCANNING", "off_succeeded", "OFF"),
-    ("SCANNING", "off_failed", "FAULT_ENABLED"),
-    ("SCANNING", "scan_succeeded", "READY"),
-    ("SCANNING", "scan_failed", "FAULT"),
-    ("SCANNING", "end_scan_succeeded", "READY"),
-    ("SCANNING", "end_scan_failed", "FAULT"),
-    ("SCANNING", "abort_started", "ABORTING"),
-    ("SCANNING", "fatal_error", "FAULT"),
-    ("ABORTING", "off_succeeded", "OFF"),
-    ("ABORTING", "off_failed", "FAULT_ENABLED"),
-    ("ABORTING", "abort_succeeded", "ABORTED"),
-    ("ABORTING", "abort_failed", "FAULT"),
-    ("ABORTING", "fatal_error", "FAULT"),
-    ("ABORTED", "off_succeeded", "OFF"),
-    ("ABORTED", "off_failed", "FAULT_ENABLED"),
-    ("ABORTED", "obs_reset_started", "RESETTING"),
-    ("ABORTED", "restart_started", "RESTARTING"),
-    ("ABORTED", "fatal_error", "FAULT"),
-    ("FAULT", "off_succeeded", "OFF"),
-    ("FAULT", "off_failed", "FAULT_ENABLED"),
-    ("FAULT", "obs_reset_started", "RESETTING"),
-    ("FAULT", "restart_started", "RESTARTING"),
-    ("FAULT", "fatal_error", "FAULT"),
-    ("RESETTING", "off_succeeded", "OFF"),
-    ("RESETTING", "off_failed", "FAULT_ENABLED"),
-    ("RESETTING", "obs_reset_succeeded", "IDLE"),
-    ("RESETTING", "obs_reset_failed", "FAULT"),
-    ("RESETTING", "fatal_error", "FAULT"),
-    ("RESTARTING", "off_succeeded", "OFF"),
-    ("RESTARTING", "off_failed", "FAULT_ENABLED"),
-    ("RESTARTING", "restart_succeeded", "EMPTY"),
-    ("RESTARTING", "restart_failed", "FAULT"),
-    ("RESTARTING", "fatal_error", "FAULT"),
-]
+
+with open("tests/schemas/subarray_state_machine.json", "r") as json_file:
+    subarray_state_machine_spec = json.load(json_file)
 
 
-@pytest.mark.state_machine_tester(subarray_state_model_dag)
+@pytest.fixture
+def subarray_state_model():
+    """
+    Yields a new SKASubarrayStateModel for testing
+    """
+    yield SKASubarrayStateModel(logging.getLogger())
+
+
+@pytest.mark.state_machine_tester(subarray_state_machine_spec)
 class TestSKASubarrayStateModel(StateMachineTester):
     """
-    This class contains the test for the ska.low.mccs.state module.
+    This class contains the test for the SKASubarrayStateModel class.
     """
     @pytest.fixture
     def machine(self, subarray_state_model):
@@ -724,14 +630,17 @@ class TestSKASubarray_commands:
             subarray_state_model
         )
 
-        # in all these states, the assign resources command is not permitted,
-        # should not be allowed, should fail, should have no side-effect
-        for state in [
+        all_states = {
             "UNINITIALISED", "FAULT_ENABLED", "FAULT_DISABLED", "INIT_ENABLED",
-            "INIT_DISABLED", "DISABLED", "OFF", "RESOURCING", "CONFIGURING",
-            "READY", "SCANNING", "ABORTING", "ABORTED", "FAULT",
+            "INIT_DISABLED", "DISABLED", "OFF", "EMPTY", "RESOURCING", "IDLE",
+            "CONFIGURING", "READY", "SCANNING", "ABORTING", "ABORTED", "FAULT",
             "RESETTING", "RESTARTING",
-        ]:
+        }
+
+        # in all states except EMPTY and IDLE, the assign resources command is
+        # not permitted, should not be allowed, should fail, should have no
+        # side-effect
+        for state in all_states - {"EMPTY", "IDLE"}:
             subarray_state_model._straight_to_state(state)
             assert not assign_resources.is_allowed()
             with pytest.raises(CommandError):
