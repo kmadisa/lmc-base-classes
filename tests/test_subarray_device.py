@@ -8,7 +8,6 @@
 #########################################################################################
 """Contain the tests for the SKASubarray."""
 
-import json
 import logging
 import re
 import pytest
@@ -23,12 +22,8 @@ from ska.base.control_model import (
 )
 from ska.base.faults import CommandError, StateModelError
 
-from .conftest import StateMachineTester
+from .conftest import load_data, StateMachineTester
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
-
-
-with open("tests/schemas/subarray_state_machine.json", "r") as json_file:
-    subarray_state_machine_spec = json.load(json_file)
 
 
 @pytest.fixture
@@ -39,7 +34,7 @@ def subarray_state_model():
     yield SKASubarrayStateModel(logging.getLogger())
 
 
-@pytest.mark.state_machine_tester(subarray_state_machine_spec)
+@pytest.mark.state_machine_tester(load_data("subarray_state_machine"))
 class TestSKASubarrayStateModel(StateMachineTester):
     """
     This class contains the test for the SKASubarrayStateModel class.

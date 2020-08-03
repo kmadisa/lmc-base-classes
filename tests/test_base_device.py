@@ -11,7 +11,6 @@ This module contains the tests for the SKABaseDevice.
 """
 
 # PROTECTED REGION ID(SKABaseDevice.test_additional_imports) ENABLED START #
-import json
 import logging
 import re
 import pytest
@@ -33,7 +32,7 @@ from ska.base.base_device import (
 )
 from ska.base.faults import StateModelError
 
-from .conftest import StateMachineTester
+from .conftest import load_data, StateMachineTester
 
 # PROTECTED REGION END #    //  SKABaseDevice.test_additional_imports
 # Device test case
@@ -332,11 +331,7 @@ def device_state_model():
     yield SKABaseDeviceStateModel(logging.getLogger())
 
 
-with open("tests/schemas/base_device_state_machine.json", "r") as json_file:
-    base_device_state_machine_spec = json.load(json_file)
-
-
-@pytest.mark.state_machine_tester(base_device_state_machine_spec)
+@pytest.mark.state_machine_tester(load_data("base_device_state_machine"))
 class TestSKABaseDeviceStateModel(StateMachineTester):
     """
     This class contains the test suite for the ska.base.SKABaseDevice class.

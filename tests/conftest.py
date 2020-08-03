@@ -3,6 +3,7 @@ A module defining a list of fixtures that are shared across all ska.base tests.
 """
 import importlib
 import itertools
+import json
 import pytest
 from queue import Empty, Queue
 from transitions import MachineError
@@ -217,6 +218,20 @@ class TransitionsStateMachineTester(StateMachineTester):
         :type target_state: str
         """
         machine.trigger(f"to_{target_state}")
+
+
+def load_data(name):
+    """
+    Loads a dataset by name. This implementation uses the name to find a
+    JSON file containing the data to be loaded.
+
+    :param name: name of the dataset to be loaded; this implementation
+        uses the name to find a JSON file containing the data to be
+        loaded.
+    :type name: string
+    """
+    with open(f"tests/data/{name}.json", "r") as json_file:
+        return json.load(json_file)
 
 
 @pytest.fixture(scope="class")
