@@ -8,10 +8,11 @@ from .conftest import load_data, TransitionsStateMachineTester
 
 
 @pytest.mark.state_machine_tester(load_data("base_device_state_machine"))
-class BaseDeviceStateMachineTester(TransitionsStateMachineTester):
+class TestBaseDeviceStateMachine(TransitionsStateMachineTester):
     """
     This class contains the test for the BaseDeviceStateMachine class.
     """
+
     @pytest.fixture
     def machine(self):
         """
@@ -25,6 +26,7 @@ class TestObservationStateMachine(TransitionsStateMachineTester):
     """
     This class contains the test for the ObservationStateMachine class.
     """
+
     @pytest.fixture
     def machine(self):
         """
