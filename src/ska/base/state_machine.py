@@ -7,7 +7,7 @@ from tango import DevState
 from ska.base.control_model import AdminMode, ObsState
 
 
-class BaseDeviceStateMachine(Machine):
+class DeviceStateMachine(Machine):
     """
     State machine for an SKA base device.
     Supports INIT, FAULT, DISABLED, STANDBY, OFF and ON states.

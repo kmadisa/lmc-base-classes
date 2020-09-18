@@ -23,7 +23,7 @@ implement further states.
   documentation, showing the state machine as designed
 
 
-.. figure:: images/BaseDeviceStateMachine.png
+.. figure:: images/DeviceStateMachine.png
   :width: 80%
   :alt: Diagram of the device state machine, automatically generated
         from the state machine as specified in code.

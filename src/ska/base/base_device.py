@@ -38,7 +38,7 @@ from ska.base.control_model import (
     LoggingLevel
 )
 from ska.base.faults import StateModelError
-from ska.base.state_machine import BaseDeviceStateMachine
+from ska.base.state_machine import DeviceStateMachine
 
 from ska.base.utils import get_groups_from_json, for_testing_only
 from ska.base.faults import (GroupDefinitionsError,
@@ -339,7 +339,7 @@ class SKABaseDeviceStateModel:
         self._op_state_callback = op_state_callback
         self._admin_mode_callback = admin_mode_callback
 
-        self._state_machine = BaseDeviceStateMachine(
+        self._state_machine = DeviceStateMachine(
             op_state_callback=self._update_op_state,
             admin_mode_callback=self._update_admin_mode
         )

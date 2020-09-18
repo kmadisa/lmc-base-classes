@@ -3,14 +3,14 @@ This module contains the tests for the ska.base.state_machine module.
 """
 import pytest
 
-from ska.base.state_machine import BaseDeviceStateMachine, ObservationStateMachine
+from ska.base.state_machine import DeviceStateMachine, ObservationStateMachine
 from .conftest import load_data, TransitionsStateMachineTester
 
 
-@pytest.mark.state_machine_tester(load_data("base_device_state_machine"))
-class TestBaseDeviceStateMachine(TransitionsStateMachineTester):
+@pytest.mark.state_machine_tester(load_data("device_state_machine"))
+class TestDeviceStateMachine(TransitionsStateMachineTester):
     """
-    This class contains the test for the BaseDeviceStateMachine class.
+    This class contains the test for the DeviceStateMachine class.
     """
 
     @pytest.fixture
@@ -18,7 +18,7 @@ class TestBaseDeviceStateMachine(TransitionsStateMachineTester):
         """
         Fixture that returns the state machine under test in this class
         """
-        yield BaseDeviceStateMachine()
+        yield DeviceStateMachine()
 
 
 @pytest.mark.state_machine_tester(load_data("observation_state_machine"))
