@@ -1,6 +1,7 @@
 """
 A module defining a list of fixtures that are shared across all ska.base tests.
 """
+from collections import defaultdict
 import importlib
 import itertools
 import json
@@ -8,8 +9,10 @@ import pytest
 from queue import Empty, Queue
 from transitions import MachineError
 
-from tango import EventType
+from tango import DevState, EventType
 from tango.test_context import DeviceTestContext
+
+from ska.base.control_model import AdminMode, ObsState
 
 
 def pytest_configure(config):
@@ -31,32 +34,26 @@ def pytest_generate_tests(metafunc):
     will have its tests parameterised by the states and actions in the
     specification provided by that mark
     """
-    # called once per each test function
     mark = metafunc.definition.get_closest_marker("state_machine_tester")
     if mark:
         spec = mark.args[0]
-        states = set()
-        triggers = set()
-        expected = {}
 
-        for (from_state, trigger, to_state) in spec:
-            states.add(from_state)
-            states.add(to_state)
-            triggers.add(trigger)
-            expected[(from_state, trigger)] = to_state
-
-        states = sorted(states)
-        triggers = sorted(triggers)
+        states = {state: spec["states"][state] or state for state in spec["states"]}
+        triggers = set(transition["trigger"] for transition in spec["transitions"])
+        expected = defaultdict(lambda: None, (((transition["from"], transition["trigger"]), states[transition["to"]]) for transition in spec["transitions"]))
+        test_cases = list(itertools.product(sorted(states), sorted(triggers)))
+        test_ids = [f"{state}-{trigger}" for (state, trigger) in test_cases]
 
         metafunc.parametrize(
             "state_under_test, action_under_test, expected_state",
             [
                 (
-                    state,
+                    states[state],
                     trigger,
-                    expected[(state, trigger)] if (state, trigger) in expected else None
-                ) for (state, trigger) in itertools.product(states, triggers)
-            ]
+                    expected[(state, trigger)]
+                ) for (state, trigger) in test_cases
+            ],
+            ids=test_ids
         )
 
 
@@ -259,6 +256,25 @@ def load_data(name):
     with open(f"tests/data/{name}.json", "r") as json_file:
         return json.load(json_file)
 
+def load_state_machine_spec(name):
+    """
+    Loads a state machine specification by name.
+
+    :param name: name of the dataset to be loaded; this implementation
+        uses the name to find a JSON file containing the data to be
+        loaded.
+    :type name: string
+    """
+    machine_spec = load_data(name)
+    for state in machine_spec["states"]:
+        state_spec = machine_spec["states"][state]
+        if "admin_mode" in state_spec:
+            state_spec["admin_mode"] = AdminMode[state_spec["admin_mode"]]
+        if "op_state" in state_spec:
+            state_spec["op_state"] = getattr(DevState, state_spec["op_state"])
+        if "obs_state" in state_spec:
+            state_spec["obs_state"] = ObsState[state_spec["obs_state"]]
+    return machine_spec
 
 @pytest.fixture(scope="class")
 def tango_context(request):

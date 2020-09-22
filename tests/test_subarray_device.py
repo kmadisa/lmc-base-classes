@@ -28,7 +28,7 @@ from ska.base.control_model import (
 )
 from ska.base.faults import CommandError, StateModelError
 
-from .conftest import load_data, StateMachineTester
+from .conftest import load_state_machine_spec, StateMachineTester
 
 # PROTECTED REGION END #    //  SKASubarray.test_additional_imports
 
@@ -41,7 +41,7 @@ def subarray_state_model():
     yield SKASubarrayStateModel(logging.getLogger())
 
 
-@pytest.mark.state_machine_tester(load_data("subarray_state_machine"))
+@pytest.mark.state_machine_tester(load_state_machine_spec("subarray_state_machine"))
 class TestSKASubarrayStateModel(StateMachineTester):
     """
     This class contains the test for the SKASubarrayStateModel class.
@@ -53,74 +53,6 @@ class TestSKASubarrayStateModel(StateMachineTester):
         Fixture that returns the state machine under test in this class
         """
         yield subarray_state_model
-
-    state_checks = {
-        "INIT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.INIT, ObsState.EMPTY),
-        "INIT_ONLINE": (AdminMode.ONLINE, DevState.INIT, ObsState.EMPTY),
-        "INIT_OFFLINE": (AdminMode.OFFLINE, DevState.INIT, ObsState.EMPTY),
-        "INIT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.INIT, ObsState.EMPTY),
-        "INIT_RESERVED": (AdminMode.RESERVED, DevState.INIT, ObsState.EMPTY),
-        "FAULT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.FAULT, ObsState.EMPTY),
-        "FAULT_ONLINE": (AdminMode.ONLINE, DevState.FAULT, ObsState.EMPTY),
-        "FAULT_OFFLINE": (AdminMode.OFFLINE, DevState.FAULT, ObsState.EMPTY),
-        "FAULT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.FAULT, ObsState.EMPTY),
-        "FAULT_RESERVED": (AdminMode.RESERVED, DevState.FAULT, ObsState.EMPTY),
-        "DISABLE_MAINTENANCE": (
-            AdminMode.MAINTENANCE,
-            DevState.DISABLE,
-            ObsState.EMPTY,
-        ),
-        "DISABLE_ONLINE": (AdminMode.ONLINE, DevState.DISABLE, ObsState.EMPTY),
-        "DISABLE_OFFLINE": (AdminMode.OFFLINE, DevState.DISABLE, ObsState.EMPTY),
-        "DISABLE_NOTFITTED": (AdminMode.NOT_FITTED, DevState.DISABLE, ObsState.EMPTY),
-        "DISABLE_RESERVED": (AdminMode.RESERVED, DevState.DISABLE, ObsState.EMPTY),
-        "STANDBY_MAINTENANCE": (
-            AdminMode.MAINTENANCE,
-            DevState.STANDBY,
-            ObsState.EMPTY,
-        ),
-        "STANDBY_ONLINE": (AdminMode.ONLINE, DevState.STANDBY, ObsState.EMPTY),
-        "OFF_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.OFF, ObsState.EMPTY),
-        "OFF_ONLINE": (AdminMode.ONLINE, DevState.OFF, ObsState.EMPTY),
-        "EMPTY_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.EMPTY),
-        "EMPTY_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.EMPTY),
-        "RESOURCING_MAINTENANCE": (
-            AdminMode.MAINTENANCE,
-            DevState.ON,
-            ObsState.RESOURCING,
-        ),
-        "RESOURCING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.RESOURCING),
-        "IDLE_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.IDLE),
-        "IDLE_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.IDLE),
-        "CONFIGURING_MAINTENANCE": (
-            AdminMode.MAINTENANCE,
-            DevState.ON,
-            ObsState.CONFIGURING,
-        ),
-        "CONFIGURING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.CONFIGURING),
-        "READY_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.READY),
-        "READY_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.READY),
-        "SCANNING_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.SCANNING),
-        "SCANNING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.SCANNING),
-        "ABORTING_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.ABORTING),
-        "ABORTING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.ABORTING),
-        "ABORTED_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.ABORTED),
-        "ABORTED_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.ABORTED),
-        "OBSFAULT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.FAULT),
-        "OBSFAULT_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.FAULT),
-        "RESETTING_MAINTENANCE": (
-            AdminMode.MAINTENANCE,
-            DevState.ON,
-            ObsState.RESETTING,
-        ),
-        "RESETTING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.RESETTING),
-        "RESTARTING_MAINTENANCE": (
-            AdminMode.MAINTENANCE,
-            DevState.ON,
-            ObsState.RESTARTING,
-        ),
-        "RESTARTING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.RESTARTING),
-    }
 
     def assert_state(self, machine, state):
         """
@@ -134,13 +66,9 @@ class TestSKASubarrayStateModel(StateMachineTester):
             state of the state machine under test
         :type state: str
         """
-        (admin_mode, op_state, obs_state) = self.state_checks[state]
-        if admin_mode is not None:
-            assert machine.admin_mode == admin_mode
-        if op_state is not None:
-            assert machine.op_state == op_state
-        if obs_state is not None:
-            assert machine.obs_state == obs_state
+        assert machine.admin_mode == state["admin_mode"]
+        assert machine.op_state == state["op_state"]
+        assert machine.obs_state == state["obs_state"]
 
     def is_action_allowed(self, machine, action):
         """
@@ -188,10 +116,7 @@ class TestSKASubarrayStateModel(StateMachineTester):
             machine under test into
         :type target_state: str
         """
-        (admin_mode, op_state, obs_state) = self.state_checks[target_state]
-        machine._straight_to_state(
-            op_state=op_state, admin_mode=admin_mode, obs_state=obs_state
-        )
+        machine._straight_to_state(**target_state)
 
 
 class TestSKASubarray:
@@ -670,125 +595,30 @@ class TestSKASubarray_commands:
             subarray_state_model
         )
 
-        state_defs = {
-            "INIT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.INIT, ObsState.EMPTY),
-            "INIT_ONLINE": (AdminMode.ONLINE, DevState.INIT, ObsState.EMPTY),
-            "INIT_OFFLINE": (AdminMode.OFFLINE, DevState.INIT, ObsState.EMPTY),
-            "INIT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.INIT, ObsState.EMPTY),
-            "INIT_RESERVED": (AdminMode.RESERVED, DevState.INIT, ObsState.EMPTY),
-            "FAULT_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.FAULT,
-                ObsState.EMPTY,
-            ),
-            "FAULT_ONLINE": (AdminMode.ONLINE, DevState.FAULT, ObsState.EMPTY),
-            "FAULT_OFFLINE": (AdminMode.OFFLINE, DevState.FAULT, ObsState.EMPTY),
-            "FAULT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.FAULT, ObsState.EMPTY),
-            "FAULT_RESERVED": (AdminMode.RESERVED, DevState.FAULT, ObsState.EMPTY),
-            "DISABLE_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.DISABLE,
-                ObsState.EMPTY,
-            ),
-            "DISABLE_ONLINE": (AdminMode.ONLINE, DevState.DISABLE, ObsState.EMPTY),
-            "DISABLE_OFFLINE": (AdminMode.OFFLINE, DevState.DISABLE, ObsState.EMPTY),
-            "DISABLE_NOTFITTED": (
-                AdminMode.NOT_FITTED,
-                DevState.DISABLE,
-                ObsState.EMPTY,
-            ),
-            "DISABLE_RESERVED": (AdminMode.RESERVED, DevState.DISABLE, ObsState.EMPTY),
-            "STANDBY_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.STANDBY,
-                ObsState.EMPTY,
-            ),
-            "STANDBY_ONLINE": (AdminMode.ONLINE, DevState.STANDBY, ObsState.EMPTY),
-            "OFF_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.OFF, ObsState.EMPTY),
-            "OFF_ONLINE": (AdminMode.ONLINE, DevState.OFF, ObsState.EMPTY),
-            "EMPTY_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.EMPTY),
-            "EMPTY_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.EMPTY),
-            "RESOURCING_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.RESOURCING,
-            ),
-            "RESOURCING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.RESOURCING),
-            "IDLE_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.IDLE),
-            "IDLE_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.IDLE),
-            "CONFIGURING_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.CONFIGURING,
-            ),
-            "CONFIGURING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.CONFIGURING),
-            "READY_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON, ObsState.READY),
-            "READY_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.READY),
-            "SCANNING_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.SCANNING,
-            ),
-            "SCANNING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.SCANNING),
-            "ABORTING_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.ABORTING,
-            ),
-            "ABORTING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.ABORTING),
-            "ABORTED_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.ABORTED,
-            ),
-            "ABORTED_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.ABORTED),
-            "OBSFAULT_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.FAULT,
-            ),
-            "OBSFAULT_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.FAULT),
-            "RESETTING_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.RESETTING,
-            ),
-            "RESETTING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.RESETTING),
-            "RESTARTING_MAINTENANCE": (
-                AdminMode.MAINTENANCE,
-                DevState.ON,
-                ObsState.RESTARTING,
-            ),
-            "RESTARTING_ONLINE": (AdminMode.ONLINE, DevState.ON, ObsState.RESTARTING),
-        }
-
+        machine_spec = load_state_machine_spec("subarray_state_machine")
+        states = machine_spec["states"]
         # in all states except EMPTY and IDLE, the assign resources command is
         # not permitted, should not be allowed, should fail, should have no
         # side-effect
-        for state in set(state_defs.keys()) - {
+        for state in set(states) - {
             "EMPTY_ONLINE",
             "EMPTY_MAINTENANCE",
             "IDLE_ONLINE",
             "IDLE_MAINTENANCE",
         }:
-            (admin_mode, op_state, obs_state) = state_defs[state]
-            subarray_state_model._straight_to_state(
-                admin_mode=admin_mode, op_state=op_state, obs_state=obs_state
-            )
+
+            subarray_state_model._straight_to_state(**states[state])
             assert not assign_resources.is_allowed()
             with pytest.raises(CommandError):
                 assign_resources('{"example": ["foo"]}')
             assert not len(resource_manager)
             assert resource_manager.get() == set()
-            assert subarray_state_model.admin_mode == admin_mode
-            assert subarray_state_model.op_state == op_state
-            assert subarray_state_model.obs_state == obs_state
+            assert subarray_state_model.admin_mode == states[state]["admin_mode"]
+            assert subarray_state_model.op_state == states[state]["op_state"]
+            assert subarray_state_model.obs_state == states[state]["obs_state"]
 
         # now push to empty, a state in which is IS allowed
-        (admin_mode, op_state, obs_state) = state_defs["EMPTY_ONLINE"]
-        subarray_state_model._straight_to_state(
-            admin_mode=admin_mode, op_state=op_state, obs_state=obs_state
-        )
+        subarray_state_model._straight_to_state(**states["EMPTY_ONLINE"])
         assert assign_resources.is_allowed()
         assert assign_resources('{"example": ["foo"]}') == (
             ResultCode.OK,
@@ -797,10 +627,9 @@ class TestSKASubarray_commands:
         assert len(resource_manager) == 1
         assert resource_manager.get() == set(["foo"])
 
-        (admin_mode, op_state, obs_state) = state_defs["IDLE_ONLINE"]
-        assert subarray_state_model.admin_mode == admin_mode
-        assert subarray_state_model.op_state == op_state
-        assert subarray_state_model.obs_state == obs_state
+        assert subarray_state_model.admin_mode == states["IDLE_ONLINE"]["admin_mode"]
+        assert subarray_state_model.op_state == states["IDLE_ONLINE"]["op_state"]
+        assert subarray_state_model.obs_state == states["IDLE_ONLINE"]["obs_state"]
 
         # AssignResources is still allowed in IDLE
         assert assign_resources.is_allowed()
@@ -811,6 +640,6 @@ class TestSKASubarray_commands:
         assert len(resource_manager) == 2
         assert resource_manager.get() == set(["foo", "bar"])
 
-        assert subarray_state_model.admin_mode == admin_mode
-        assert subarray_state_model.op_state == op_state
-        assert subarray_state_model.obs_state == obs_state
+        assert subarray_state_model.admin_mode == states["IDLE_ONLINE"]["admin_mode"]
+        assert subarray_state_model.op_state == states["IDLE_ONLINE"]["op_state"]
+        assert subarray_state_model.obs_state == states["IDLE_ONLINE"]["obs_state"]

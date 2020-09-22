@@ -1,1149 +1,1356 @@
-[
-    [
-        "INIT_MAINTENANCE",
-        "to_offline",
-        "INIT_OFFLINE"
-    ],
-    [
-        "INIT_MAINTENANCE",
-        "init_succeeded_disable",
-        "DISABLE_MAINTENANCE"
-    ],
-    [
-        "INIT_MAINTENANCE",
-        "init_succeeded_standby",
-        "STANDBY_MAINTENANCE"
-    ],
-    [
-        "INIT_MAINTENANCE",
-        "init_succeeded_off",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "INIT_MAINTENANCE",
-        "init_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "INIT_MAINTENANCE",
-        "fatal_error",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "INIT_ONLINE",
-        "to_offline",
-        "INIT_OFFLINE"
-    ],
-    [
-        "INIT_ONLINE",
-        "init_succeeded_disable",
-        "DISABLE_ONLINE"
-    ],
-    [
-        "INIT_ONLINE",
-        "init_succeeded_standby",
-        "STANDBY_ONLINE"
-    ],
-    [
-        "INIT_ONLINE",
-        "init_succeeded_off",
-        "OFF_ONLINE"
-    ],
-    [
-        "INIT_ONLINE",
-        "init_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "INIT_ONLINE",
-        "fatal_error",
-        "FAULT_ONLINE"
-    ],
-    [
-        "INIT_OFFLINE",
-        "to_online",
-        "INIT_ONLINE"
-    ],
-    [
-        "INIT_OFFLINE",
-        "to_maintenance",
-        "INIT_MAINTENANCE"
-    ],
-    [
-        "INIT_OFFLINE",
-        "to_notfitted",
-        "INIT_NOTFITTED"
-    ],
-    [
-        "INIT_OFFLINE",
-        "init_succeeded_disable",
-        "DISABLE_OFFLINE"
-    ],
-    [
-        "INIT_OFFLINE",
-        "init_failed",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "INIT_OFFLINE",
-        "fatal_error",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "INIT_NOTFITTED",
-        "to_offline",
-        "INIT_OFFLINE"
-    ],
-    [
-        "INIT_NOTFITTED",
-        "to_reserved",
-        "INIT_RESERVED"
-    ],
-    [
-        "INIT_NOTFITTED",
-        "init_succeeded_disable",
-        "DISABLE_NOTFITTED"
-    ],
-    [
-        "INIT_NOTFITTED",
-        "init_failed",
-        "FAULT_NOTFITTED"
-    ],
-    [
-        "INIT_NOTFITTED",
-        "fatal_error",
-        "FAULT_NOTFITTED"
-    ],
-    [
-        "INIT_RESERVED",
-        "to_notfitted",
-        "INIT_NOTFITTED"
-    ],
-    [
-        "INIT_RESERVED",
-        "init_succeeded_disable",
-        "DISABLE_RESERVED"
-    ],
-    [
-        "INIT_RESERVED",
-        "init_failed",
-        "FAULT_RESERVED"
-    ],
-    [
-        "INIT_RESERVED",
-        "fatal_error",
-        "FAULT_RESERVED"
-    ],
-    [
-        "FAULT_MAINTENANCE",
-        "to_offline",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "FAULT_MAINTENANCE",
-        "reset_succeeded_disable",
-        "DISABLE_MAINTENANCE"
-    ],
-    [
-        "FAULT_MAINTENANCE",
-        "reset_succeeded_standby",
-        "STANDBY_MAINTENANCE"
-    ],
-    [
-        "FAULT_MAINTENANCE",
-        "reset_succeeded_off",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "FAULT_MAINTENANCE",
-        "reset_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "FAULT_MAINTENANCE",
-        "fatal_error",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "FAULT_ONLINE",
-        "to_offline",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "FAULT_ONLINE",
-        "reset_succeeded_disable",
-        "DISABLE_ONLINE"
-    ],
-    [
-        "FAULT_ONLINE",
-        "reset_succeeded_standby",
-        "STANDBY_ONLINE"
-    ],
-    [
-        "FAULT_ONLINE",
-        "reset_succeeded_off",
-        "OFF_ONLINE"
-    ],
-    [
-        "FAULT_ONLINE",
-        "reset_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "FAULT_ONLINE",
-        "fatal_error",
-        "FAULT_ONLINE"
-    ],
-    [
-        "FAULT_OFFLINE",
-        "to_online",
-        "FAULT_ONLINE"
-    ],
-    [
-        "FAULT_OFFLINE",
-        "to_maintenance",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "FAULT_OFFLINE",
-        "to_notfitted",
-        "FAULT_NOTFITTED"
-    ],
-    [
-        "FAULT_OFFLINE",
-        "reset_succeeded_disable",
-        "DISABLE_OFFLINE"
-    ],
-    [
-        "FAULT_OFFLINE",
-        "reset_failed",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "FAULT_OFFLINE",
-        "fatal_error",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "FAULT_NOTFITTED",
-        "to_offline",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "FAULT_NOTFITTED",
-        "to_reserved",
-        "FAULT_RESERVED"
-    ],
-    [
-        "FAULT_NOTFITTED",
-        "reset_succeeded_disable",
-        "DISABLE_NOTFITTED"
-    ],
-    [
-        "FAULT_NOTFITTED",
-        "reset_failed",
-        "FAULT_NOTFITTED"
-    ],
-    [
-        "FAULT_NOTFITTED",
-        "fatal_error",
-        "FAULT_NOTFITTED"
-    ],
-    [
-        "FAULT_RESERVED",
-        "to_notfitted",
-        "FAULT_NOTFITTED"
-    ],
-    [
-        "FAULT_RESERVED",
-        "reset_succeeded_disable",
-        "DISABLE_RESERVED"
-    ],
-    [
-        "FAULT_RESERVED",
-        "reset_failed",
-        "FAULT_RESERVED"
-    ],
-    [
-        "FAULT_RESERVED",
-        "fatal_error",
-        "FAULT_RESERVED"
-    ],
-    [
-        "DISABLE_MAINTENANCE",
-        "to_offline",
-        "DISABLE_OFFLINE"
-    ],
-    [
-        "DISABLE_MAINTENANCE",
-        "standby_succeeded",
-        "STANDBY_MAINTENANCE"
-    ],
-    [
-        "DISABLE_MAINTENANCE",
-        "standby_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "DISABLE_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "DISABLE_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "DISABLE_MAINTENANCE",
-        "fatal_error",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "DISABLE_ONLINE",
-        "to_offline",
-        "DISABLE_OFFLINE"
-    ],
-    [
-        "DISABLE_ONLINE",
-        "standby_succeeded",
-        "STANDBY_ONLINE"
-    ],
-    [
-        "DISABLE_ONLINE",
-        "standby_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "DISABLE_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "DISABLE_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "DISABLE_ONLINE",
-        "fatal_error",
-        "FAULT_ONLINE"
-    ],
-    [
-        "DISABLE_OFFLINE",
-        "to_maintenance",
-        "DISABLE_MAINTENANCE"
-    ],
-    [
-        "DISABLE_OFFLINE",
-        "to_online",
-        "DISABLE_ONLINE"
-    ],
-    [
-        "DISABLE_OFFLINE",
-        "to_notfitted",
-        "DISABLE_NOTFITTED"
-    ],
-    [
-        "DISABLE_OFFLINE",
-        "fatal_error",
-        "FAULT_OFFLINE"
-    ],
-    [
-        "DISABLE_NOTFITTED",
-        "to_offline",
-        "DISABLE_OFFLINE"
-    ],
-    [
-        "DISABLE_NOTFITTED",
-        "to_reserved",
-        "DISABLE_RESERVED"
-    ],
-    [
-        "DISABLE_NOTFITTED",
-        "fatal_error",
-        "FAULT_NOTFITTED"
-    ],
-    [
-        "DISABLE_RESERVED",
-        "to_notfitted",
-        "DISABLE_NOTFITTED"
-    ],
-    [
-        "DISABLE_RESERVED",
-        "fatal_error",
-        "FAULT_RESERVED"
-    ],
-    [
-        "STANDBY_MAINTENANCE",
-        "disable_succeeded",
-        "DISABLE_MAINTENANCE"
-    ],
-    [
-        "STANDBY_MAINTENANCE",
-        "disable_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "STANDBY_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "STANDBY_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "STANDBY_MAINTENANCE",
-        "fatal_error",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "STANDBY_ONLINE",
-        "disable_succeeded",
-        "DISABLE_ONLINE"
-    ],
-    [
-        "STANDBY_ONLINE",
-        "disable_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "STANDBY_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "STANDBY_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "STANDBY_ONLINE",
-        "fatal_error",
-        "FAULT_ONLINE"
-    ],
-    [
-        "OFF_MAINTENANCE",
-        "disable_succeeded",
-        "DISABLE_MAINTENANCE"
-    ],
-    [
-        "OFF_MAINTENANCE",
-        "disable_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "OFF_MAINTENANCE",
-        "standby_succeeded",
-        "STANDBY_MAINTENANCE"
-    ],
-    [
-        "OFF_MAINTENANCE",
-        "standby_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "OFF_MAINTENANCE",
-        "on_succeeded",
-        "EMPTY_MAINTENANCE"
-    ],
-    [
-        "OFF_MAINTENANCE",
-        "on_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "OFF_MAINTENANCE",
-        "fatal_error",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "OFF_ONLINE",
-        "disable_succeeded",
-        "DISABLE_ONLINE"
-    ],
-    [
-        "OFF_ONLINE",
-        "disable_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "OFF_ONLINE",
-        "standby_succeeded",
-        "STANDBY_ONLINE"
-    ],
-    [
-        "OFF_ONLINE",
-        "standby_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "OFF_ONLINE",
-        "on_succeeded",
-        "EMPTY_ONLINE"
-    ],
-    [
-        "OFF_ONLINE",
-        "on_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "OFF_ONLINE",
-        "fatal_error",
-        "FAULT_ONLINE"
-    ],
-    [
-        "EMPTY_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "EMPTY_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "EMPTY_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "EMPTY_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "EMPTY_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "EMPTY_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "EMPTY_ONLINE",
-        "assign_started",
-        "RESOURCING_ONLINE"
-    ],
-    [
-        "EMPTY_MAINTENANCE",
-        "assign_started",
-        "RESOURCING_MAINTENANCE"
-    ],
-    [
-        "RESOURCING_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "RESOURCING_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "RESOURCING_ONLINE",
-        "resourcing_succeeded_some_resources",
-        "IDLE_ONLINE"
-    ],
-    [
-        "RESOURCING_ONLINE",
-        "resourcing_succeeded_no_resources",
-        "EMPTY_ONLINE"
-    ],
-    [
-        "RESOURCING_ONLINE",
-        "resourcing_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "RESOURCING_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "RESOURCING_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "RESOURCING_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "RESOURCING_MAINTENANCE",
-        "resourcing_succeeded_some_resources",
-        "IDLE_MAINTENANCE"
-    ],
-    [
-        "RESOURCING_MAINTENANCE",
-        "resourcing_succeeded_no_resources",
-        "EMPTY_MAINTENANCE"
-    ],
-    [
-        "RESOURCING_MAINTENANCE",
-        "resourcing_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "RESOURCING_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "IDLE_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "IDLE_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "IDLE_ONLINE",
-        "assign_started",
-        "RESOURCING_ONLINE"
-    ],
-    [
-        "IDLE_ONLINE",
-        "release_started",
-        "RESOURCING_ONLINE"
-    ],
-    [
-        "IDLE_ONLINE",
-        "configure_started",
-        "CONFIGURING_ONLINE"
-    ],
-    [
-        "IDLE_ONLINE",
-        "abort_started",
-        "ABORTING_ONLINE"
-    ],
-    [
-        "IDLE_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "IDLE_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "IDLE_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "IDLE_MAINTENANCE",
-        "assign_started",
-        "RESOURCING_MAINTENANCE"
-    ],
-    [
-        "IDLE_MAINTENANCE",
-        "release_started",
-        "RESOURCING_MAINTENANCE"
-    ],
-    [
-        "IDLE_MAINTENANCE",
-        "configure_started",
-        "CONFIGURING_MAINTENANCE"
-    ],
-    [
-        "IDLE_MAINTENANCE",
-        "abort_started",
-        "ABORTING_MAINTENANCE"
-    ],
-    [
-        "IDLE_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "CONFIGURING_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "CONFIGURING_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "CONFIGURING_ONLINE",
-        "configure_succeeded",
-        "READY_ONLINE"
-    ],
-    [
-        "CONFIGURING_ONLINE",
-        "configure_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "CONFIGURING_ONLINE",
-        "abort_started",
-        "ABORTING_ONLINE"
-    ],
-    [
-        "CONFIGURING_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "CONFIGURING_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "CONFIGURING_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "CONFIGURING_MAINTENANCE",
-        "configure_succeeded",
-        "READY_MAINTENANCE"
-    ],
-    [
-        "CONFIGURING_MAINTENANCE",
-        "configure_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "CONFIGURING_MAINTENANCE",
-        "abort_started",
-        "ABORTING_MAINTENANCE"
-    ],
-    [
-        "CONFIGURING_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-
-
-    [
-        "READY_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "READY_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "READY_ONLINE",
-        "end_succeeded",
-        "IDLE_ONLINE"
-    ],
-    [
-        "READY_ONLINE",
-        "end_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "READY_ONLINE",
-        "configure_started",
-        "CONFIGURING_ONLINE"
-    ],
-    [
-        "READY_ONLINE",
-        "abort_started",
-        "ABORTING_ONLINE"
-    ],
-    [
-        "READY_ONLINE",
-        "scan_started",
-        "SCANNING_ONLINE"
-    ],
-    [
-        "READY_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "end_succeeded",
-        "IDLE_MAINTENANCE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "end_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "configure_started",
-        "CONFIGURING_MAINTENANCE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "abort_started",
-        "ABORTING_MAINTENANCE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "scan_started",
-        "SCANNING_MAINTENANCE"
-    ],
-    [
-        "READY_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "scan_succeeded",
-        "READY_ONLINE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "scan_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "end_scan_succeeded",
-        "READY_ONLINE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "end_scan_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "abort_started",
-        "ABORTING_ONLINE"
-    ],
-    [
-        "SCANNING_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "scan_succeeded",
-        "READY_MAINTENANCE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "scan_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "end_scan_succeeded",
-        "READY_MAINTENANCE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "end_scan_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "abort_started",
-        "ABORTING_MAINTENANCE"
-    ],
-    [
-        "SCANNING_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "ABORTING_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "ABORTING_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "ABORTING_ONLINE",
-        "abort_succeeded",
-        "ABORTED_ONLINE"
-    ],
-    [
-        "ABORTING_ONLINE",
-        "abort_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "ABORTING_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "ABORTING_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "ABORTING_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "ABORTING_MAINTENANCE",
-        "abort_succeeded",
-        "ABORTED_MAINTENANCE"
-    ],
-    [
-        "ABORTING_MAINTENANCE",
-        "abort_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "ABORTING_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "ABORTED_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "ABORTED_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "ABORTED_ONLINE",
-        "obs_reset_started",
-        "RESETTING_ONLINE"
-    ],
-    [
-        "ABORTED_ONLINE",
-        "restart_started",
-        "RESTARTING_ONLINE"
-    ],
-    [
-        "ABORTED_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "ABORTED_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "ABORTED_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "ABORTED_MAINTENANCE",
-        "obs_reset_started",
-        "RESETTING_MAINTENANCE"
-    ],
-    [
-        "ABORTED_MAINTENANCE",
-        "restart_started",
-        "RESTARTING_MAINTENANCE"
-    ],
-    [
-        "ABORTED_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "OBSFAULT_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "OBSFAULT_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "OBSFAULT_ONLINE",
-        "obs_reset_started",
-        "RESETTING_ONLINE"
-    ],
-    [
-        "OBSFAULT_ONLINE",
-        "restart_started",
-        "RESTARTING_ONLINE"
-    ],
-    [
-        "OBSFAULT_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "OBSFAULT_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "OBSFAULT_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "OBSFAULT_MAINTENANCE",
-        "obs_reset_started",
-        "RESETTING_MAINTENANCE"
-    ],
-    [
-        "OBSFAULT_MAINTENANCE",
-        "restart_started",
-        "RESTARTING_MAINTENANCE"
-    ],
-    [
-        "OBSFAULT_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "RESETTING_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "RESETTING_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "RESETTING_ONLINE",
-        "obs_reset_succeeded",
-        "IDLE_ONLINE"
-    ],
-    [
-        "RESETTING_ONLINE",
-        "obs_reset_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "RESETTING_ONLINE",
-        "abort_started",
-        "ABORTING_ONLINE"
-    ],
-    [
-        "RESETTING_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "RESETTING_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "RESETTING_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "RESETTING_MAINTENANCE",
-        "obs_reset_succeeded",
-        "IDLE_MAINTENANCE"
-    ],
-    [
-        "RESETTING_MAINTENANCE",
-        "obs_reset_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "RESETTING_MAINTENANCE",
-        "abort_started",
-        "ABORTING_MAINTENANCE"
-    ],
-    [
-        "RESETTING_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "RESTARTING_ONLINE",
-        "off_succeeded",
-        "OFF_ONLINE"
-    ],
-    [
-        "RESTARTING_ONLINE",
-        "off_failed",
-        "FAULT_ONLINE"
-    ],
-    [
-        "RESTARTING_ONLINE",
-        "restart_succeeded",
-        "EMPTY_ONLINE"
-    ],
-    [
-        "RESTARTING_ONLINE",
-        "restart_failed",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "RESTARTING_ONLINE",
-        "fatal_error",
-        "OBSFAULT_ONLINE"
-    ],
-    [
-        "RESTARTING_MAINTENANCE",
-        "off_succeeded",
-        "OFF_MAINTENANCE"
-    ],
-    [
-        "RESTARTING_MAINTENANCE",
-        "off_failed",
-        "FAULT_MAINTENANCE"
-    ],
-    [
-        "RESTARTING_MAINTENANCE",
-        "restart_succeeded",
-        "EMPTY_MAINTENANCE"
-    ],
-    [
-        "RESTARTING_MAINTENANCE",
-        "restart_failed",
-        "OBSFAULT_MAINTENANCE"
-    ],
-    [
-        "RESTARTING_MAINTENANCE",
-        "fatal_error",
-        "OBSFAULT_MAINTENANCE"
+{
+    "states": {
+        "INIT_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "INIT",
+            "obs_state": "EMPTY"
+        },
+        "INIT_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "INIT",
+            "obs_state": "EMPTY"
+        },
+        "INIT_OFFLINE": {
+            "admin_mode": "OFFLINE",
+            "op_state": "INIT",
+            "obs_state": "EMPTY"
+        },
+        "INIT_NOTFITTED": {
+            "admin_mode": "NOT_FITTED",
+            "op_state": "INIT",
+            "obs_state": "EMPTY"
+        },
+        "INIT_RESERVED": {
+            "admin_mode": "RESERVED",
+            "op_state": "INIT",
+            "obs_state": "EMPTY"
+        },
+        "FAULT_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "FAULT",
+            "obs_state": "EMPTY"
+        },
+        "FAULT_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "FAULT",
+            "obs_state": "EMPTY"
+        },
+        "FAULT_OFFLINE": {
+            "admin_mode": "OFFLINE",
+            "op_state": "FAULT",
+            "obs_state": "EMPTY"
+        },
+        "FAULT_NOTFITTED": {
+            "admin_mode": "NOT_FITTED",
+            "op_state": "FAULT",
+            "obs_state": "EMPTY"
+        },
+        "FAULT_RESERVED": {
+            "admin_mode": "RESERVED",
+            "op_state": "FAULT",
+            "obs_state": "EMPTY"
+        },
+        "DISABLE_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "DISABLE",
+            "obs_state": "EMPTY"
+        },
+        "DISABLE_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "DISABLE",
+            "obs_state": "EMPTY"
+        },
+        "DISABLE_OFFLINE": {
+            "admin_mode": "OFFLINE",
+            "op_state": "DISABLE",
+            "obs_state": "EMPTY"
+        },
+        "DISABLE_NOTFITTED": {
+            "admin_mode": "NOT_FITTED",
+            "op_state": "DISABLE",
+            "obs_state": "EMPTY"
+        },
+        "DISABLE_RESERVED": {
+            "admin_mode": "RESERVED",
+            "op_state": "DISABLE",
+            "obs_state": "EMPTY"
+        },
+        "STANDBY_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "STANDBY",
+            "obs_state": "EMPTY"
+        },
+        "STANDBY_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "STANDBY",
+            "obs_state": "EMPTY"
+        },
+        "OFF_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "OFF",
+            "obs_state": "EMPTY"
+        },
+        "OFF_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "OFF",
+            "obs_state": "EMPTY"
+        },
+        "EMPTY_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "EMPTY"
+        },
+        "EMPTY_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "EMPTY"
+        },
+        "RESOURCING_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "RESOURCING"
+        },
+        "RESOURCING_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "RESOURCING"
+        },
+        "IDLE_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "IDLE"
+        },
+        "IDLE_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "IDLE"
+        },
+        "CONFIGURING_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "CONFIGURING"
+        },
+        "CONFIGURING_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "CONFIGURING"
+        },
+        "READY_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "READY"
+        },
+        "READY_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "READY"
+        },
+        "SCANNING_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "SCANNING"
+        },
+        "SCANNING_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "SCANNING"
+        },
+        "ABORTING_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "ABORTING"
+        },
+        "ABORTING_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "ABORTING"
+        },
+        "ABORTED_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "ABORTED"
+        },
+        "ABORTED_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "ABORTED"
+        },
+        "OBSFAULT_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "FAULT"
+        },
+        "OBSFAULT_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "FAULT"
+        },
+        "RESETTING_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "RESETTING"
+        },
+        "RESETTING_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "RESETTING"
+        },
+        "RESTARTING_MAINTENANCE": {
+            "admin_mode": "MAINTENANCE",
+            "op_state": "ON",
+            "obs_state": "RESTARTING"
+        },
+        "RESTARTING_ONLINE": {
+            "admin_mode": "ONLINE",
+            "op_state": "ON",
+            "obs_state": "RESTARTING"
+        }
+    },
+    "transitions": [
+        {
+            "from": "INIT_MAINTENANCE",
+            "to": "INIT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "INIT_MAINTENANCE",
+            "to": "DISABLE_MAINTENANCE",
+            "trigger": "init_succeeded_disable"
+        },
+        {
+            "from": "INIT_MAINTENANCE",
+            "to": "STANDBY_MAINTENANCE",
+            "trigger": "init_succeeded_standby"
+        },
+        {
+            "from": "INIT_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "init_succeeded_off"
+        },
+        {
+            "from": "INIT_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "init_failed"
+        },
+        {
+            "from": "INIT_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "INIT_ONLINE",
+            "to": "INIT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "INIT_ONLINE",
+            "to": "DISABLE_ONLINE",
+            "trigger": "init_succeeded_disable"
+        },
+        {
+            "from": "INIT_ONLINE",
+            "to": "STANDBY_ONLINE",
+            "trigger": "init_succeeded_standby"
+        },
+        {
+            "from": "INIT_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "init_succeeded_off"
+        },
+        {
+            "from": "INIT_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "init_failed"
+        },
+        {
+            "from": "INIT_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "INIT_OFFLINE",
+            "to": "INIT_ONLINE",
+            "trigger": "to_online"
+        },
+        {
+            "from": "INIT_OFFLINE",
+            "to": "INIT_MAINTENANCE",
+            "trigger": "to_maintenance"
+        },
+        {
+            "from": "INIT_OFFLINE",
+            "to": "INIT_NOTFITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "INIT_OFFLINE",
+            "to": "DISABLE_OFFLINE",
+            "trigger": "init_succeeded_disable"
+        },
+        {
+            "from": "INIT_OFFLINE",
+            "to": "FAULT_OFFLINE",
+            "trigger": "init_failed"
+        },
+        {
+            "from": "INIT_OFFLINE",
+            "to": "FAULT_OFFLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "INIT_NOTFITTED",
+            "to": "INIT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "INIT_NOTFITTED",
+            "to": "INIT_RESERVED",
+            "trigger": "to_reserved"
+        },
+        {
+            "from": "INIT_NOTFITTED",
+            "to": "DISABLE_NOTFITTED",
+            "trigger": "init_succeeded_disable"
+        },
+        {
+            "from": "INIT_NOTFITTED",
+            "to": "FAULT_NOTFITTED",
+            "trigger": "init_failed"
+        },
+        {
+            "from": "INIT_NOTFITTED",
+            "to": "FAULT_NOTFITTED",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "INIT_RESERVED",
+            "to": "INIT_NOTFITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "INIT_RESERVED",
+            "to": "DISABLE_RESERVED",
+            "trigger": "init_succeeded_disable"
+        },
+        {
+            "from": "INIT_RESERVED",
+            "to": "FAULT_RESERVED",
+            "trigger": "init_failed"
+        },
+        {
+            "from": "INIT_RESERVED",
+            "to": "FAULT_RESERVED",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT_MAINTENANCE",
+            "to": "FAULT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "FAULT_MAINTENANCE",
+            "to": "DISABLE_MAINTENANCE",
+            "trigger": "reset_succeeded_disable"
+        },
+        {
+            "from": "FAULT_MAINTENANCE",
+            "to": "STANDBY_MAINTENANCE",
+            "trigger": "reset_succeeded_standby"
+        },
+        {
+            "from": "FAULT_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "reset_succeeded_off"
+        },
+        {
+            "from": "FAULT_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "reset_failed"
+        },
+        {
+            "from": "FAULT_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT_ONLINE",
+            "to": "FAULT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "FAULT_ONLINE",
+            "to": "DISABLE_ONLINE",
+            "trigger": "reset_succeeded_disable"
+        },
+        {
+            "from": "FAULT_ONLINE",
+            "to": "STANDBY_ONLINE",
+            "trigger": "reset_succeeded_standby"
+        },
+        {
+            "from": "FAULT_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "reset_succeeded_off"
+        },
+        {
+            "from": "FAULT_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "reset_failed"
+        },
+        {
+            "from": "FAULT_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT_OFFLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "to_online"
+        },
+        {
+            "from": "FAULT_OFFLINE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "to_maintenance"
+        },
+        {
+            "from": "FAULT_OFFLINE",
+            "to": "FAULT_NOTFITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "FAULT_OFFLINE",
+            "to": "DISABLE_OFFLINE",
+            "trigger": "reset_succeeded_disable"
+        },
+        {
+            "from": "FAULT_OFFLINE",
+            "to": "FAULT_OFFLINE",
+            "trigger": "reset_failed"
+        },
+        {
+            "from": "FAULT_OFFLINE",
+            "to": "FAULT_OFFLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT_NOTFITTED",
+            "to": "FAULT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "FAULT_NOTFITTED",
+            "to": "FAULT_RESERVED",
+            "trigger": "to_reserved"
+        },
+        {
+            "from": "FAULT_NOTFITTED",
+            "to": "DISABLE_NOTFITTED",
+            "trigger": "reset_succeeded_disable"
+        },
+        {
+            "from": "FAULT_NOTFITTED",
+            "to": "FAULT_NOTFITTED",
+            "trigger": "reset_failed"
+        },
+        {
+            "from": "FAULT_NOTFITTED",
+            "to": "FAULT_NOTFITTED",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT_RESERVED",
+            "to": "FAULT_NOTFITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "FAULT_RESERVED",
+            "to": "DISABLE_RESERVED",
+            "trigger": "reset_succeeded_disable"
+        },
+        {
+            "from": "FAULT_RESERVED",
+            "to": "FAULT_RESERVED",
+            "trigger": "reset_failed"
+        },
+        {
+            "from": "FAULT_RESERVED",
+            "to": "FAULT_RESERVED",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "DISABLE_MAINTENANCE",
+            "to": "DISABLE_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "DISABLE_MAINTENANCE",
+            "to": "STANDBY_MAINTENANCE",
+            "trigger": "standby_succeeded"
+        },
+        {
+            "from": "DISABLE_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "standby_failed"
+        },
+        {
+            "from": "DISABLE_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "DISABLE_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "DISABLE_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "DISABLE_ONLINE",
+            "to": "DISABLE_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "DISABLE_ONLINE",
+            "to": "STANDBY_ONLINE",
+            "trigger": "standby_succeeded"
+        },
+        {
+            "from": "DISABLE_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "standby_failed"
+        },
+        {
+            "from": "DISABLE_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "DISABLE_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "DISABLE_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "DISABLE_OFFLINE",
+            "to": "DISABLE_MAINTENANCE",
+            "trigger": "to_maintenance"
+        },
+        {
+            "from": "DISABLE_OFFLINE",
+            "to": "DISABLE_ONLINE",
+            "trigger": "to_online"
+        },
+        {
+            "from": "DISABLE_OFFLINE",
+            "to": "DISABLE_NOTFITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "DISABLE_OFFLINE",
+            "to": "FAULT_OFFLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "DISABLE_NOTFITTED",
+            "to": "DISABLE_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "DISABLE_NOTFITTED",
+            "to": "DISABLE_RESERVED",
+            "trigger": "to_reserved"
+        },
+        {
+            "from": "DISABLE_NOTFITTED",
+            "to": "FAULT_NOTFITTED",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "DISABLE_RESERVED",
+            "to": "DISABLE_NOTFITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "DISABLE_RESERVED",
+            "to": "FAULT_RESERVED",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "STANDBY_MAINTENANCE",
+            "to": "DISABLE_MAINTENANCE",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "STANDBY_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "disable_failed"
+        },
+        {
+            "from": "STANDBY_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "STANDBY_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "STANDBY_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "STANDBY_ONLINE",
+            "to": "DISABLE_ONLINE",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "STANDBY_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "disable_failed"
+        },
+        {
+            "from": "STANDBY_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "STANDBY_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "STANDBY_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "OFF_MAINTENANCE",
+            "to": "DISABLE_MAINTENANCE",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "OFF_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "disable_failed"
+        },
+        {
+            "from": "OFF_MAINTENANCE",
+            "to": "STANDBY_MAINTENANCE",
+            "trigger": "standby_succeeded"
+        },
+        {
+            "from": "OFF_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "standby_failed"
+        },
+        {
+            "from": "OFF_MAINTENANCE",
+            "to": "EMPTY_MAINTENANCE",
+            "trigger": "on_succeeded"
+        },
+        {
+            "from": "OFF_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "on_failed"
+        },
+        {
+            "from": "OFF_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "OFF_ONLINE",
+            "to": "DISABLE_ONLINE",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "OFF_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "disable_failed"
+        },
+        {
+            "from": "OFF_ONLINE",
+            "to": "STANDBY_ONLINE",
+            "trigger": "standby_succeeded"
+        },
+        {
+            "from": "OFF_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "standby_failed"
+        },
+        {
+            "from": "OFF_ONLINE",
+            "to": "EMPTY_ONLINE",
+            "trigger": "on_succeeded"
+        },
+        {
+            "from": "OFF_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "on_failed"
+        },
+        {
+            "from": "OFF_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "EMPTY_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "EMPTY_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "EMPTY_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "EMPTY_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "EMPTY_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "EMPTY_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "EMPTY_ONLINE",
+            "to": "RESOURCING_ONLINE",
+            "trigger": "assign_started"
+        },
+        {
+            "from": "EMPTY_MAINTENANCE",
+            "to": "RESOURCING_MAINTENANCE",
+            "trigger": "assign_started"
+        },
+        {
+            "from": "RESOURCING_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "RESOURCING_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "RESOURCING_ONLINE",
+            "to": "IDLE_ONLINE",
+            "trigger": "resourcing_succeeded_some_resources"
+        },
+        {
+            "from": "RESOURCING_ONLINE",
+            "to": "EMPTY_ONLINE",
+            "trigger": "resourcing_succeeded_no_resources"
+        },
+        {
+            "from": "RESOURCING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "resourcing_failed"
+        },
+        {
+            "from": "RESOURCING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "RESOURCING_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "RESOURCING_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "RESOURCING_MAINTENANCE",
+            "to": "IDLE_MAINTENANCE",
+            "trigger": "resourcing_succeeded_some_resources"
+        },
+        {
+            "from": "RESOURCING_MAINTENANCE",
+            "to": "EMPTY_MAINTENANCE",
+            "trigger": "resourcing_succeeded_no_resources"
+        },
+        {
+            "from": "RESOURCING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "resourcing_failed"
+        },
+        {
+            "from": "RESOURCING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "IDLE_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "IDLE_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "IDLE_ONLINE",
+            "to": "RESOURCING_ONLINE",
+            "trigger": "assign_started"
+        },
+        {
+            "from": "IDLE_ONLINE",
+            "to": "RESOURCING_ONLINE",
+            "trigger": "release_started"
+        },
+        {
+            "from": "IDLE_ONLINE",
+            "to": "CONFIGURING_ONLINE",
+            "trigger": "configure_started"
+        },
+        {
+            "from": "IDLE_ONLINE",
+            "to": "ABORTING_ONLINE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "IDLE_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "IDLE_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "IDLE_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "IDLE_MAINTENANCE",
+            "to": "RESOURCING_MAINTENANCE",
+            "trigger": "assign_started"
+        },
+        {
+            "from": "IDLE_MAINTENANCE",
+            "to": "RESOURCING_MAINTENANCE",
+            "trigger": "release_started"
+        },
+        {
+            "from": "IDLE_MAINTENANCE",
+            "to": "CONFIGURING_MAINTENANCE",
+            "trigger": "configure_started"
+        },
+        {
+            "from": "IDLE_MAINTENANCE",
+            "to": "ABORTING_MAINTENANCE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "IDLE_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "CONFIGURING_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "CONFIGURING_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "CONFIGURING_ONLINE",
+            "to": "READY_ONLINE",
+            "trigger": "configure_succeeded"
+        },
+        {
+            "from": "CONFIGURING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "configure_failed"
+        },
+        {
+            "from": "CONFIGURING_ONLINE",
+            "to": "ABORTING_ONLINE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "CONFIGURING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "CONFIGURING_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "CONFIGURING_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "CONFIGURING_MAINTENANCE",
+            "to": "READY_MAINTENANCE",
+            "trigger": "configure_succeeded"
+        },
+        {
+            "from": "CONFIGURING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "configure_failed"
+        },
+        {
+            "from": "CONFIGURING_MAINTENANCE",
+            "to": "ABORTING_MAINTENANCE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "CONFIGURING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "IDLE_ONLINE",
+            "trigger": "end_succeeded"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "end_failed"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "CONFIGURING_ONLINE",
+            "trigger": "configure_started"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "ABORTING_ONLINE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "SCANNING_ONLINE",
+            "trigger": "scan_started"
+        },
+        {
+            "from": "READY_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "IDLE_MAINTENANCE",
+            "trigger": "end_succeeded"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "end_failed"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "CONFIGURING_MAINTENANCE",
+            "trigger": "configure_started"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "ABORTING_MAINTENANCE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "SCANNING_MAINTENANCE",
+            "trigger": "scan_started"
+        },
+        {
+            "from": "READY_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "READY_ONLINE",
+            "trigger": "scan_succeeded"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "scan_failed"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "READY_ONLINE",
+            "trigger": "end_scan_succeeded"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "end_scan_failed"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "ABORTING_ONLINE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "SCANNING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "READY_MAINTENANCE",
+            "trigger": "scan_succeeded"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "scan_failed"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "READY_MAINTENANCE",
+            "trigger": "end_scan_succeeded"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "end_scan_failed"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "ABORTING_MAINTENANCE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "SCANNING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "ABORTING_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "ABORTING_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "ABORTING_ONLINE",
+            "to": "ABORTED_ONLINE",
+            "trigger": "abort_succeeded"
+        },
+        {
+            "from": "ABORTING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "abort_failed"
+        },
+        {
+            "from": "ABORTING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "ABORTING_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "ABORTING_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "ABORTING_MAINTENANCE",
+            "to": "ABORTED_MAINTENANCE",
+            "trigger": "abort_succeeded"
+        },
+        {
+            "from": "ABORTING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "abort_failed"
+        },
+        {
+            "from": "ABORTING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "ABORTED_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "ABORTED_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "ABORTED_ONLINE",
+            "to": "RESETTING_ONLINE",
+            "trigger": "obs_reset_started"
+        },
+        {
+            "from": "ABORTED_ONLINE",
+            "to": "RESTARTING_ONLINE",
+            "trigger": "restart_started"
+        },
+        {
+            "from": "ABORTED_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "ABORTED_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "ABORTED_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "ABORTED_MAINTENANCE",
+            "to": "RESETTING_MAINTENANCE",
+            "trigger": "obs_reset_started"
+        },
+        {
+            "from": "ABORTED_MAINTENANCE",
+            "to": "RESTARTING_MAINTENANCE",
+            "trigger": "restart_started"
+        },
+        {
+            "from": "ABORTED_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "OBSFAULT_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "OBSFAULT_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "OBSFAULT_ONLINE",
+            "to": "RESETTING_ONLINE",
+            "trigger": "obs_reset_started"
+        },
+        {
+            "from": "OBSFAULT_ONLINE",
+            "to": "RESTARTING_ONLINE",
+            "trigger": "restart_started"
+        },
+        {
+            "from": "OBSFAULT_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "OBSFAULT_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "OBSFAULT_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "OBSFAULT_MAINTENANCE",
+            "to": "RESETTING_MAINTENANCE",
+            "trigger": "obs_reset_started"
+        },
+        {
+            "from": "OBSFAULT_MAINTENANCE",
+            "to": "RESTARTING_MAINTENANCE",
+            "trigger": "restart_started"
+        },
+        {
+            "from": "OBSFAULT_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "RESETTING_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "RESETTING_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "RESETTING_ONLINE",
+            "to": "IDLE_ONLINE",
+            "trigger": "obs_reset_succeeded"
+        },
+        {
+            "from": "RESETTING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "obs_reset_failed"
+        },
+        {
+            "from": "RESETTING_ONLINE",
+            "to": "ABORTING_ONLINE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "RESETTING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "RESETTING_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "RESETTING_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "RESETTING_MAINTENANCE",
+            "to": "IDLE_MAINTENANCE",
+            "trigger": "obs_reset_succeeded"
+        },
+        {
+            "from": "RESETTING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "obs_reset_failed"
+        },
+        {
+            "from": "RESETTING_MAINTENANCE",
+            "to": "ABORTING_MAINTENANCE",
+            "trigger": "abort_started"
+        },
+        {
+            "from": "RESETTING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "RESTARTING_ONLINE",
+            "to": "OFF_ONLINE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "RESTARTING_ONLINE",
+            "to": "FAULT_ONLINE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "RESTARTING_ONLINE",
+            "to": "EMPTY_ONLINE",
+            "trigger": "restart_succeeded"
+        },
+        {
+            "from": "RESTARTING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "restart_failed"
+        },
+        {
+            "from": "RESTARTING_ONLINE",
+            "to": "OBSFAULT_ONLINE",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "RESTARTING_MAINTENANCE",
+            "to": "OFF_MAINTENANCE",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "RESTARTING_MAINTENANCE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "RESTARTING_MAINTENANCE",
+            "to": "EMPTY_MAINTENANCE",
+            "trigger": "restart_succeeded"
+        },
+        {
+            "from": "RESTARTING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "restart_failed"
+        },
+        {
+            "from": "RESTARTING_MAINTENANCE",
+            "to": "OBSFAULT_MAINTENANCE",
+            "trigger": "fatal_error"
+        }
     ]
-]
+}
