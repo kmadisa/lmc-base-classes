@@ -3,12 +3,16 @@ This module contains the tests for the ska.base.state_machine module.
 """
 import pytest
 
-from ska.base.state_machine import DeviceStateMachine, ObservationStateMachine
+from ska.base.state_machine import (
+    AdminModeStateMachine,
+    OperationStateMachine,
+    ObservationStateMachine,
+)
 from .conftest import load_data, TransitionsStateMachineTester
 
 
-@pytest.mark.state_machine_tester(load_data("device_state_machine"))
-class TestDeviceStateMachine(TransitionsStateMachineTester):
+@pytest.mark.state_machine_tester(load_data("operation_state_machine"))
+class TestOperationStateMachine(TransitionsStateMachineTester):
     """
     This class contains the test for the DeviceStateMachine class.
     """
@@ -17,8 +21,26 @@ class TestDeviceStateMachine(TransitionsStateMachineTester):
     def machine(self):
         """
         Fixture that returns the state machine under test in this class
+
+        :yields: the state machine under test
         """
-        yield DeviceStateMachine()
+        yield OperationStateMachine()
+
+
+@pytest.mark.state_machine_tester(load_data("admin_mode_state_machine"))
+class TestAdminModeStateMachine(TransitionsStateMachineTester):
+    """
+    This class contains the test for the DeviceStateMachine class.
+    """
+
+    @pytest.fixture
+    def machine(self):
+        """
+        Fixture that returns the state machine under test in this class
+
+        :yields: the state machine under test
+        """
+        yield AdminModeStateMachine()
 
 
 @pytest.mark.state_machine_tester(load_data("observation_state_machine"))
@@ -31,5 +53,7 @@ class TestObservationStateMachine(TransitionsStateMachineTester):
     def machine(self):
         """
         Fixture that returns the state machine under test in this class
+
+        :yields: the state machine under test
         """
         yield ObservationStateMachine()

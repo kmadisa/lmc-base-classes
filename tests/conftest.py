@@ -102,10 +102,12 @@ class StateMachineTester:
         # Test that the action under test does what we expect it to
         if expected_state is None:
             # Action should fail and the state should not change
-            self.check_action_disallowed(machine, action_under_test)
+            assert not self.is_action_allowed(machine, action_under_test)
+            self.check_action_fails(machine, action_under_test)
             self.assert_state(machine, state_under_test)
         else:
             # Action should succeed
+            assert self.is_action_allowed(machine, action_under_test)
             self.perform_action(machine, action_under_test)
             self.assert_state(machine, expected_state)
 
@@ -122,6 +124,18 @@ class StateMachineTester:
         """
         raise NotImplementedError()
 
+    def is_action_allowed(self, machine, action):
+        """
+        Abstract method for checking whether the action under test is
+        allowed from the current state.
+
+        :param machine: the state machine under test
+        :type machine: state machine object instance
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        raise NotImplementedError()
+
     def perform_action(self, machine, action):
         """
         Abstract method for performing an action on the state machine
@@ -133,7 +147,7 @@ class StateMachineTester:
         """
         raise NotImplementedError()
 
-    def check_action_disallowed(self, machine, action):
+    def check_action_fails(self, machine, action):
         """
         Abstract method for asserting that an action fails if performed
         on the state machine under test in its current state.
@@ -179,6 +193,18 @@ class TransitionsStateMachineTester(StateMachineTester):
         """
         assert machine.state == state
 
+    def is_action_allowed(self, machine, action):
+        """
+        Check whether the action under test is allowed from the current
+        state.
+
+        :param machine: the state machine under test
+        :type machine: state machine object instance
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        return action in machine.get_triggers(machine.state)
+
     def perform_action(self, machine, action):
         """
         Perform a given action on the state machine under test.
@@ -190,9 +216,9 @@ class TransitionsStateMachineTester(StateMachineTester):
         """
         machine.trigger(action)
 
-    def check_action_disallowed(self, machine, action):
+    def check_action_fails(self, machine, action):
         """
-        Assert that performing a given action on the state maching under
+        Check that attempting a given action on the state machine under
         test fails in its current state.
 
         :param machine: the state machine under test
@@ -251,8 +277,7 @@ def tango_context(request):
             'NrSubarrays': '16',
             'CapabilityTypes': '',
             'MaxCapabilities': ['BAND1:1', 'BAND2:1']
-            },
-
+        },
         'SKASubarray': {
             "CapabilityTypes": ["BAND1", "BAND2"],
             'LoggingTargetsDefault': '',
@@ -319,12 +344,14 @@ def tango_change_event_helper(tango_context):
         state_callback.assert_calls([DevState.OFF, DevState.ON])
 
     """
+
     class _Callback:
         """
         Private callback handler class, an instance of which is returned
         by the tango_change_event_helper each time it is used to
         subscribe to a change event.
         """
+
         @staticmethod
         def subscribe(attribute_name):
             """
