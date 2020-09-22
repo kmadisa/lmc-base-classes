@@ -32,7 +32,7 @@ from ska.base.base_device import (
 )
 from ska.base.faults import StateModelError
 
-from .conftest import load_data, StateMachineTester
+from .conftest import load_state_machine_spec, StateMachineTester
 
 # PROTECTED REGION END #    //  SKABaseDevice.test_additional_imports
 # Device test case
@@ -333,11 +333,12 @@ def device_state_model():
     yield DeviceStateModel(logging.getLogger())
 
 
-@pytest.mark.state_machine_tester(load_data("device_state_machine"))
+@pytest.mark.state_machine_tester(load_state_machine_spec("device_state_machine"))
 class TestDeviceStateModel(StateMachineTester):
     """
     This class contains the test suite for the ska.base.SKABaseDevice class.
     """
+
     @pytest.fixture
     def machine(self, device_state_model):
         """
@@ -346,30 +347,6 @@ class TestDeviceStateModel(StateMachineTester):
         :yields: the state machine under test
         """
         yield device_state_model
-
-    state_checks = {
-        "INIT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.INIT),
-        "INIT_ONLINE": (AdminMode.ONLINE, DevState.INIT),
-        "INIT_OFFLINE": (AdminMode.OFFLINE, DevState.INIT),
-        "INIT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.INIT),
-        "INIT_RESERVED": (AdminMode.RESERVED, DevState.INIT),
-        "FAULT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.FAULT),
-        "FAULT_ONLINE": (AdminMode.ONLINE, DevState.FAULT),
-        "FAULT_OFFLINE": (AdminMode.OFFLINE, DevState.FAULT),
-        "FAULT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.FAULT),
-        "FAULT_RESERVED": (AdminMode.RESERVED, DevState.FAULT),
-        "DISABLE_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.DISABLE),
-        "DISABLE_ONLINE": (AdminMode.ONLINE, DevState.DISABLE),
-        "DISABLE_OFFLINE": (AdminMode.OFFLINE, DevState.DISABLE),
-        "DISABLE_NOTFITTED": (AdminMode.NOT_FITTED, DevState.DISABLE),
-        "DISABLE_RESERVED": (AdminMode.RESERVED, DevState.DISABLE),
-        "STANDBY_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.STANDBY),
-        "STANDBY_ONLINE": (AdminMode.ONLINE, DevState.STANDBY),
-        "OFF_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.OFF),
-        "OFF_ONLINE": (AdminMode.ONLINE, DevState.OFF),
-        "ON_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON),
-        "ON_ONLINE": (AdminMode.ONLINE, DevState.ON),
-    }
 
     def assert_state(self, machine, state):
         """
@@ -383,10 +360,8 @@ class TestDeviceStateModel(StateMachineTester):
             state of the state machine under test
         :type state: str
         """
-
-        (admin_mode, op_state) = self.state_checks[state]
-        assert machine.admin_mode == admin_mode
-        assert machine.op_state == op_state
+        assert machine.admin_mode == state["admin_mode"]
+        assert machine.op_state == state["op_state"]
 
     def is_action_allowed(self, machine, action):
         """
@@ -434,8 +409,7 @@ class TestDeviceStateModel(StateMachineTester):
             machine under test into
         :type target_state: str
         """
-        (admin_mode, op_state) = self.state_checks[target_state]
-        machine._straight_to_state(op_state=op_state, admin_mode=admin_mode)
+        machine._straight_to_state(**target_state)
 
 
 # PROTECTED REGION END #    //  SKABaseDevice.test_SKABaseDevice_decorators

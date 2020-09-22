@@ -1,42 +1,51 @@
-[
-    [
-        "RESERVED",
-        "to_notfitted",
-        "NOT_FITTED"
-    ],
-    [
-        "NOT_FITTED",
-        "to_reserved",
-        "RESERVED"
-    ],
-    [
-        "NOT_FITTED",
-        "to_offline",
-        "OFFLINE"
-    ],
-    [
-        "OFFLINE",
-        "to_notfitted",
-        "NOT_FITTED"
-    ],
-    [
-        "OFFLINE",
-        "to_maintenance",
-        "MAINTENANCE"
-    ],
-    [
-        "OFFLINE",
-        "to_online",
-        "ONLINE"
-    ],
-    [
-        "MAINTENANCE",
-        "to_offline",
-        "OFFLINE"
-    ],
-    [
-        "ONLINE",
-        "to_offline",
-        "OFFLINE"
+{
+    "states": {
+        "RESERVED": {},
+        "NOT_FITTED": {},
+        "OFFLINE": {},
+        "MAINTENANCE": {},
+        "ONLINE": {}
+    },
+    "transitions": [
+        {
+            "from": "RESERVED",
+            "to": "NOT_FITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "NOT_FITTED",
+            "to": "RESERVED",
+            "trigger": "to_reserved"
+        },
+        {
+            "from": "NOT_FITTED",
+            "to": "OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "OFFLINE",
+            "to": "NOT_FITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "OFFLINE",
+            "to": "MAINTENANCE",
+            "trigger": "to_maintenance"
+        },
+        {
+            "from": "OFFLINE",
+            "to": "ONLINE",
+            "trigger": "to_online"
+        },
+        {
+            "from": "MAINTENANCE",
+            "to": "OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "ONLINE",
+            "to": "OFFLINE",
+            "trigger": "to_offline"
+        }
     ]
-]
+}

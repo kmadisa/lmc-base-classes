@@ -1,252 +1,266 @@
-[
-    [
-        "UNINITIALISED",
-        "init_started",
-        "INIT"
-    ],
-    [
-        "INIT",
-        "init_succeeded_disable",
-        "DISABLE"
-    ],
-    [
-        "INIT_ADMIN",
-        "init_succeeded_disable",
-        "DISABLE_ADMIN"
-    ],
-    [
-        "INIT",
-        "init_succeeded_standby",
-        "STANDBY"
-    ],
-    [
-        "INIT",
-        "init_succeeded_off",
-        "OFF"
-    ],
-    [
-        "INIT",
-        "init_failed",
-        "FAULT"
-    ],
-    [
-        "INIT_ADMIN",
-        "init_failed",
-        "FAULT_ADMIN"
-    ],
-    [
-        "INIT",
-        "fatal_error",
-        "FAULT"
-    ],
-    [
-        "INIT",
-        "admin_on",
-        "INIT_ADMIN"
-    ],
-    [
-        "INIT",
-        "admin_off",
-        "INIT"
-    ],
-    [
-        "INIT_ADMIN",
-        "admin_on",
-        "INIT_ADMIN"
-    ],
-    [
-        "INIT_ADMIN",
-        "admin_off",
-        "INIT"
-    ],
-    [
-        "INIT_ADMIN",
-        "fatal_error",
-        "FAULT_ADMIN"
-    ],
-    [
-        "FAULT",
-        "reset_succeeded_disable",
-        "DISABLE"
-    ],
-    [
-        "FAULT_ADMIN",
-        "reset_succeeded_disable",
-        "DISABLE_ADMIN"
-    ],
-    [
-        "FAULT",
-        "reset_succeeded_standby",
-        "STANDBY"
-    ],
-    [
-        "FAULT",
-        "reset_succeeded_off",
-        "OFF"
-    ],
-    [
-        "FAULT",
-        "reset_failed",
-        "FAULT"
-    ],
-    [
-        "FAULT_ADMIN",
-        "reset_failed",
-        "FAULT_ADMIN"
-    ],
-    [
-        "FAULT",
-        "fatal_error",
-        "FAULT"
-    ],
-    [
-        "FAULT_ADMIN",
-        "fatal_error",
-        "FAULT_ADMIN"
-    ],
-    [
-        "FAULT",
-        "admin_on",
-        "FAULT_ADMIN"
-    ],
-    [
-        "FAULT",
-        "admin_off",
-        "FAULT"
-    ],
-    [
-        "FAULT_ADMIN",
-        "admin_on",
-        "FAULT_ADMIN"
-    ],
-    [
-        "FAULT_ADMIN",
-        "admin_off",
-        "FAULT"
-    ],
-    [
-        "DISABLE",
-        "standby_succeeded",
-        "STANDBY"
-    ],
-    [
-        "DISABLE",
-        "standby_failed",
-        "FAULT"
-    ],
-    [
-        "DISABLE",
-        "off_succeeded",
-        "OFF"
-    ],
-    [
-        "DISABLE",
-        "off_failed",
-        "FAULT"
-    ],
-    [
-        "DISABLE",
-        "fatal_error",
-        "FAULT"
-    ],
-    [
-        "DISABLE_ADMIN",
-        "fatal_error",
-        "FAULT_ADMIN"
-    ],
-    [
-        "DISABLE",
-        "admin_on",
-        "DISABLE_ADMIN"
-    ],
-    [
-        "DISABLE",
-        "admin_off",
-        "DISABLE"
-    ],
-    [
-        "DISABLE_ADMIN",
-        "admin_on",
-        "DISABLE_ADMIN"
-    ],
-    [
-        "DISABLE_ADMIN",
-        "admin_off",
-        "DISABLE"
-    ],
-    [
-        "STANDBY",
-        "disable_succeeded",
-        "DISABLE"
-    ],
-    [
-        "STANDBY",
-        "disable_failed",
-        "FAULT"
-    ],
-    [
-        "STANDBY",
-        "off_succeeded",
-        "OFF"
-    ],
-    [
-        "STANDBY",
-        "off_failed",
-        "FAULT"
-    ],
-    [
-        "STANDBY",
-        "fatal_error",
-        "FAULT"
-    ],
-    [
-        "OFF",
-        "disable_succeeded",
-        "DISABLE"
-    ],
-    [
-        "OFF",
-        "disable_failed",
-        "FAULT"
-    ],
-    [
-        "OFF",
-        "standby_succeeded",
-        "STANDBY"
-    ],
-    [
-        "OFF",
-        "standby_failed",
-        "FAULT"
-    ],
-    [
-        "OFF",
-        "on_succeeded",
-        "ON"
-    ],
-    [
-        "OFF",
-        "on_failed",
-        "FAULT"
-    ],
-    [
-        "OFF",
-        "fatal_error",
-        "FAULT"
-    ],
-    [
-        "ON",
-        "off_succeeded",
-        "OFF"
-    ],
-    [
-        "ON",
-        "off_failed",
-        "FAULT"
-    ],
-    [
-        "ON",
-        "fatal_error",
-        "FAULT"
+{
+    "states": {
+        "UNINITIALISED": {},
+        "INIT": {},
+        "DISABLE": {},
+        "INIT_ADMIN": {},
+        "DISABLE_ADMIN": {},
+        "STANDBY": {},
+        "OFF": {},
+        "FAULT": {},
+        "FAULT_ADMIN": {},
+        "ON": {}
+    },
+    "transitions": [
+        {
+            "from": "UNINITIALISED",
+            "to": "INIT",
+            "trigger": "init_started"
+        },
+        {
+            "from": "INIT",
+            "to": "DISABLE",
+            "trigger": "init_succeeded_disable"
+        },
+        {
+            "from": "INIT_ADMIN",
+            "to": "DISABLE_ADMIN",
+            "trigger": "init_succeeded_disable"
+        },
+        {
+            "from": "INIT",
+            "to": "STANDBY",
+            "trigger": "init_succeeded_standby"
+        },
+        {
+            "from": "INIT",
+            "to": "OFF",
+            "trigger": "init_succeeded_off"
+        },
+        {
+            "from": "INIT",
+            "to": "FAULT",
+            "trigger": "init_failed"
+        },
+        {
+            "from": "INIT_ADMIN",
+            "to": "FAULT_ADMIN",
+            "trigger": "init_failed"
+        },
+        {
+            "from": "INIT",
+            "to": "FAULT",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "INIT",
+            "to": "INIT_ADMIN",
+            "trigger": "admin_on"
+        },
+        {
+            "from": "INIT",
+            "to": "INIT",
+            "trigger": "admin_off"
+        },
+        {
+            "from": "INIT_ADMIN",
+            "to": "INIT_ADMIN",
+            "trigger": "admin_on"
+        },
+        {
+            "from": "INIT_ADMIN",
+            "to": "INIT",
+            "trigger": "admin_off"
+        },
+        {
+            "from": "INIT_ADMIN",
+            "to": "FAULT_ADMIN",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT",
+            "to": "DISABLE",
+            "trigger": "reset_succeeded_disable"
+        },
+        {
+            "from": "FAULT_ADMIN",
+            "to": "DISABLE_ADMIN",
+            "trigger": "reset_succeeded_disable"
+        },
+        {
+            "from": "FAULT",
+            "to": "STANDBY",
+            "trigger": "reset_succeeded_standby"
+        },
+        {
+            "from": "FAULT",
+            "to": "OFF",
+            "trigger": "reset_succeeded_off"
+        },
+        {
+            "from": "FAULT",
+            "to": "FAULT",
+            "trigger": "reset_failed"
+        },
+        {
+            "from": "FAULT_ADMIN",
+            "to": "FAULT_ADMIN",
+            "trigger": "reset_failed"
+        },
+        {
+            "from": "FAULT",
+            "to": "FAULT",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT_ADMIN",
+            "to": "FAULT_ADMIN",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "FAULT",
+            "to": "FAULT_ADMIN",
+            "trigger": "admin_on"
+        },
+        {
+            "from": "FAULT",
+            "to": "FAULT",
+            "trigger": "admin_off"
+        },
+        {
+            "from": "FAULT_ADMIN",
+            "to": "FAULT_ADMIN",
+            "trigger": "admin_on"
+        },
+        {
+            "from": "FAULT_ADMIN",
+            "to": "FAULT",
+            "trigger": "admin_off"
+        },
+        {
+            "from": "DISABLE",
+            "to": "STANDBY",
+            "trigger": "standby_succeeded"
+        },
+        {
+            "from": "DISABLE",
+            "to": "FAULT",
+            "trigger": "standby_failed"
+        },
+        {
+            "from": "DISABLE",
+            "to": "OFF",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "DISABLE",
+            "to": "FAULT",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "DISABLE",
+            "to": "FAULT",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "DISABLE_ADMIN",
+            "to": "FAULT_ADMIN",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "DISABLE",
+            "to": "DISABLE_ADMIN",
+            "trigger": "admin_on"
+        },
+        {
+            "from": "DISABLE",
+            "to": "DISABLE",
+            "trigger": "admin_off"
+        },
+        {
+            "from": "DISABLE_ADMIN",
+            "to": "DISABLE_ADMIN",
+            "trigger": "admin_on"
+        },
+        {
+            "from": "DISABLE_ADMIN",
+            "to": "DISABLE",
+            "trigger": "admin_off"
+        },
+        {
+            "from": "STANDBY",
+            "to": "DISABLE",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "STANDBY",
+            "to": "FAULT",
+            "trigger": "disable_failed"
+        },
+        {
+            "from": "STANDBY",
+            "to": "OFF",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "STANDBY",
+            "to": "FAULT",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "STANDBY",
+            "to": "FAULT",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "OFF",
+            "to": "DISABLE",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "OFF",
+            "to": "FAULT",
+            "trigger": "disable_failed"
+        },
+        {
+            "from": "OFF",
+            "to": "STANDBY",
+            "trigger": "standby_succeeded"
+        },
+        {
+            "from": "OFF",
+            "to": "FAULT",
+            "trigger": "standby_failed"
+        },
+        {
+            "from": "OFF",
+            "to": "ON",
+            "trigger": "on_succeeded"
+        },
+        {
+            "from": "OFF",
+            "to": "FAULT",
+            "trigger": "on_failed"
+        },
+        {
+            "from": "OFF",
+            "to": "FAULT",
+            "trigger": "fatal_error"
+        },
+        {
+            "from": "ON",
+            "to": "OFF",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "ON",
+            "to": "FAULT",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "ON",
+            "to": "FAULT",
+            "trigger": "fatal_error"
+        }
     ]
-]
+}
