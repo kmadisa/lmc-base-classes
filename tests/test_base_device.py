@@ -27,7 +27,7 @@ from ska.base.base_device import (
     _PYTHON_TO_TANGO_LOGGING_LEVEL,
     LoggingUtils,
     LoggingTargetError,
-    SKABaseDeviceStateModel,
+    DeviceStateModel,
     TangoLoggingServiceHandler,
 )
 from ska.base.faults import StateModelError
@@ -326,13 +326,15 @@ class TestLoggingUtils:
 @pytest.fixture
 def device_state_model():
     """
-    Yields a new SKABaseDeviceStateModel for testing
+    Yields a new DeviceStateModel for testing
+
+    :yields: a DeviceStateModel instance to be tested
     """
-    yield SKABaseDeviceStateModel(logging.getLogger())
+    yield DeviceStateModel(logging.getLogger())
 
 
-@pytest.mark.state_machine_tester(load_data("base_device_state_machine"))
-class TestSKABaseDeviceStateModel(StateMachineTester):
+@pytest.mark.state_machine_tester(load_data("device_state_machine"))
+class TestDeviceStateModel(StateMachineTester):
     """
     This class contains the test suite for the ska.base.SKABaseDevice class.
     """
@@ -340,26 +342,33 @@ class TestSKABaseDeviceStateModel(StateMachineTester):
     def machine(self, device_state_model):
         """
         Fixture that returns the state machine under test in this class
+
+        :yields: the state machine under test
         """
         yield device_state_model
 
     state_checks = {
-        "UNINITIALISED":
-            (None, None),
-        "FAULT_ENABLED":
-            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.FAULT),
-        "FAULT_DISABLED":
-            ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.FAULT),
-        "INIT_ENABLED":
-            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.INIT),
-        "INIT_DISABLED":
-            ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.INIT),
-        "DISABLED":
-            ([AdminMode.NOT_FITTED, AdminMode.OFFLINE], DevState.DISABLE),
-        "OFF":
-            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.OFF),
-        "ON":
-            ([AdminMode.ONLINE, AdminMode.MAINTENANCE], DevState.ON),
+        "INIT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.INIT),
+        "INIT_ONLINE": (AdminMode.ONLINE, DevState.INIT),
+        "INIT_OFFLINE": (AdminMode.OFFLINE, DevState.INIT),
+        "INIT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.INIT),
+        "INIT_RESERVED": (AdminMode.RESERVED, DevState.INIT),
+        "FAULT_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.FAULT),
+        "FAULT_ONLINE": (AdminMode.ONLINE, DevState.FAULT),
+        "FAULT_OFFLINE": (AdminMode.OFFLINE, DevState.FAULT),
+        "FAULT_NOTFITTED": (AdminMode.NOT_FITTED, DevState.FAULT),
+        "FAULT_RESERVED": (AdminMode.RESERVED, DevState.FAULT),
+        "DISABLE_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.DISABLE),
+        "DISABLE_ONLINE": (AdminMode.ONLINE, DevState.DISABLE),
+        "DISABLE_OFFLINE": (AdminMode.OFFLINE, DevState.DISABLE),
+        "DISABLE_NOTFITTED": (AdminMode.NOT_FITTED, DevState.DISABLE),
+        "DISABLE_RESERVED": (AdminMode.RESERVED, DevState.DISABLE),
+        "STANDBY_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.STANDBY),
+        "STANDBY_ONLINE": (AdminMode.ONLINE, DevState.STANDBY),
+        "OFF_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.OFF),
+        "OFF_ONLINE": (AdminMode.ONLINE, DevState.OFF),
+        "ON_MAINTENANCE": (AdminMode.MAINTENANCE, DevState.ON),
+        "ON_ONLINE": (AdminMode.ONLINE, DevState.ON),
     }
 
     def assert_state(self, machine, state):
@@ -375,26 +384,34 @@ class TestSKABaseDeviceStateModel(StateMachineTester):
         :type state: str
         """
 
-        (admin_modes, op_state) = self.state_checks[state]
-        if admin_modes is None:
-            assert machine.admin_mode is None
-        else:
-            assert machine.admin_mode in admin_modes
-        if op_state is None:
-            assert machine.op_state is None
-        else:
-            assert machine.op_state == op_state
+        (admin_mode, op_state) = self.state_checks[state]
+        assert machine.admin_mode == admin_mode
+        assert machine.op_state == op_state
+
+    def is_action_allowed(self, machine, action):
+        """
+        Returns whether the state machine under state thinks an action
+        is permitted in its current state
+
+        :param machine: the state machine under test
+        :type machine: state machine object instance
+        :param action: action to be performed on the state machine
+        :type action: str
+        """
+        return machine.is_action_allowed(action)
 
     def perform_action(self, machine, action):
         """
         Perform a given action on the state machine under test.
 
+        :param machine: the state machine under test
+        :type machine: state machine object instance
         :param action: action to be performed on the state machine
         :type action: str
         """
         machine.perform_action(action)
 
-    def check_action_disallowed(self, machine, action):
+    def check_action_fails(self, machine, action):
         """
         Assert that performing a given action on the state maching under
         test fails in its current state.
@@ -417,7 +434,8 @@ class TestSKABaseDeviceStateModel(StateMachineTester):
             machine under test into
         :type target_state: str
         """
-        machine._straight_to_state(target_state)
+        (admin_mode, op_state) = self.state_checks[target_state]
+        machine._straight_to_state(op_state=op_state, admin_mode=admin_mode)
 
 
 # PROTECTED REGION END #    //  SKABaseDevice.test_SKABaseDevice_decorators
@@ -524,9 +542,31 @@ class TestSKABaseDevice(object):
         state_callback.assert_call(DevState.ON)
         status_callback.assert_call("The device is in ON state.")
 
+    def test_Disable(self, tango_context):
+        """
+        Test for Disable command
+        """
+        assert tango_context.device.state() == DevState.OFF
+        tango_context.device.Disable()
+        assert tango_context.device.state() == DevState.DISABLE
+
+        with pytest.raises(DevFailed):
+            tango_context.device.Disable()
+
+    def test_Standby(self, tango_context):
+        """
+        Test for Standby command
+        """
+        assert tango_context.device.state() == DevState.OFF
+        tango_context.device.Standby()
+        assert tango_context.device.state() == DevState.STANDBY
+
+        with pytest.raises(DevFailed):
+            tango_context.device.Standby()
+
     def test_Off(self, tango_context, tango_change_event_helper):
         """
-        Test for On command
+        Test for Off command
         """
         state_callback = tango_change_event_helper.subscribe("state")
         status_callback = tango_change_event_helper.subscribe("status")
@@ -651,10 +691,15 @@ class TestSKABaseDevice(object):
     def test_adminMode(self, tango_context, tango_change_event_helper):
         """Test for adminMode"""
         # PROTECTED REGION ID(SKABaseDevice.test_adminMode) ENABLED START #
+        tango_context.device.Disable()
         assert tango_context.device.adminMode == AdminMode.MAINTENANCE
 
         admin_mode_callback = tango_change_event_helper.subscribe("adminMode")
         admin_mode_callback.assert_call(AdminMode.MAINTENANCE)
+
+        tango_context.device.adminMode = AdminMode.OFFLINE
+        assert tango_context.device.adminMode == AdminMode.OFFLINE
+        admin_mode_callback.assert_call(AdminMode.OFFLINE)
 
         tango_context.device.adminMode = AdminMode.ONLINE
         assert tango_context.device.adminMode == AdminMode.ONLINE

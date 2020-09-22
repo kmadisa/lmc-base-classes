@@ -151,7 +151,7 @@
     ],
     [
         "ABORTED",
-        "obs_reset_started",
+        "reset_started",
         "RESETTING"
     ],
     [
@@ -166,7 +166,7 @@
     ],
     [
         "FAULT",
-        "obs_reset_started",
+        "reset_started",
         "RESETTING"
     ],
     [
@@ -181,12 +181,12 @@
     ],
     [
         "RESETTING",
-        "obs_reset_succeeded",
+        "reset_succeeded",
         "IDLE"
     ],
     [
         "RESETTING",
-        "obs_reset_failed",
+        "reset_failed",
         "FAULT"
     ],
     [

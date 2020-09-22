@@ -1,532 +1,1149 @@
 [
     [
-        "UNINITIALISED",
-        "init_started",
-        "INIT_ENABLED"
-    ],
-    [
-        "INIT_ENABLED",
-        "to_notfitted",
-        "INIT_DISABLED"
-    ],
-    [
-        "INIT_ENABLED",
+        "INIT_MAINTENANCE",
         "to_offline",
-        "INIT_DISABLED"
+        "INIT_OFFLINE"
     ],
     [
-        "INIT_ENABLED",
-        "to_online",
-        "INIT_ENABLED"
+        "INIT_MAINTENANCE",
+        "init_succeeded_disable",
+        "DISABLE_MAINTENANCE"
     ],
     [
-        "INIT_ENABLED",
-        "to_maintenance",
-        "INIT_ENABLED"
+        "INIT_MAINTENANCE",
+        "init_succeeded_standby",
+        "STANDBY_MAINTENANCE"
     ],
     [
-        "INIT_ENABLED",
-        "init_succeeded",
-        "OFF"
+        "INIT_MAINTENANCE",
+        "init_succeeded_off",
+        "OFF_MAINTENANCE"
     ],
     [
-        "INIT_ENABLED",
+        "INIT_MAINTENANCE",
         "init_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "INIT_ENABLED",
+        "INIT_MAINTENANCE",
         "fatal_error",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "INIT_DISABLED",
-        "to_notfitted",
-        "INIT_DISABLED"
-    ],
-    [
-        "INIT_DISABLED",
+        "INIT_ONLINE",
         "to_offline",
-        "INIT_DISABLED"
+        "INIT_OFFLINE"
     ],
     [
-        "INIT_DISABLED",
-        "to_online",
-        "INIT_ENABLED"
+        "INIT_ONLINE",
+        "init_succeeded_disable",
+        "DISABLE_ONLINE"
     ],
     [
-        "INIT_DISABLED",
-        "to_maintenance",
-        "INIT_ENABLED"
+        "INIT_ONLINE",
+        "init_succeeded_standby",
+        "STANDBY_ONLINE"
     ],
     [
-        "INIT_DISABLED",
-        "init_succeeded",
-        "DISABLED"
+        "INIT_ONLINE",
+        "init_succeeded_off",
+        "OFF_ONLINE"
     ],
     [
-        "INIT_DISABLED",
+        "INIT_ONLINE",
         "init_failed",
-        "FAULT_DISABLED"
+        "FAULT_ONLINE"
     ],
     [
-        "INIT_DISABLED",
+        "INIT_ONLINE",
         "fatal_error",
-        "FAULT_DISABLED"
+        "FAULT_ONLINE"
     ],
     [
-        "FAULT_DISABLED",
-        "to_notfitted",
-        "FAULT_DISABLED"
-    ],
-    [
-        "FAULT_DISABLED",
-        "to_offline",
-        "FAULT_DISABLED"
-    ],
-    [
-        "FAULT_DISABLED",
+        "INIT_OFFLINE",
         "to_online",
-        "FAULT_ENABLED"
+        "INIT_ONLINE"
     ],
     [
-        "FAULT_DISABLED",
+        "INIT_OFFLINE",
         "to_maintenance",
-        "FAULT_ENABLED"
+        "INIT_MAINTENANCE"
     ],
     [
-        "FAULT_DISABLED",
-        "reset_succeeded",
-        "DISABLED"
+        "INIT_OFFLINE",
+        "to_notfitted",
+        "INIT_NOTFITTED"
     ],
     [
-        "FAULT_DISABLED",
+        "INIT_OFFLINE",
+        "init_succeeded_disable",
+        "DISABLE_OFFLINE"
+    ],
+    [
+        "INIT_OFFLINE",
+        "init_failed",
+        "FAULT_OFFLINE"
+    ],
+    [
+        "INIT_OFFLINE",
+        "fatal_error",
+        "FAULT_OFFLINE"
+    ],
+    [
+        "INIT_NOTFITTED",
+        "to_offline",
+        "INIT_OFFLINE"
+    ],
+    [
+        "INIT_NOTFITTED",
+        "to_reserved",
+        "INIT_RESERVED"
+    ],
+    [
+        "INIT_NOTFITTED",
+        "init_succeeded_disable",
+        "DISABLE_NOTFITTED"
+    ],
+    [
+        "INIT_NOTFITTED",
+        "init_failed",
+        "FAULT_NOTFITTED"
+    ],
+    [
+        "INIT_NOTFITTED",
+        "fatal_error",
+        "FAULT_NOTFITTED"
+    ],
+    [
+        "INIT_RESERVED",
+        "to_notfitted",
+        "INIT_NOTFITTED"
+    ],
+    [
+        "INIT_RESERVED",
+        "init_succeeded_disable",
+        "DISABLE_RESERVED"
+    ],
+    [
+        "INIT_RESERVED",
+        "init_failed",
+        "FAULT_RESERVED"
+    ],
+    [
+        "INIT_RESERVED",
+        "fatal_error",
+        "FAULT_RESERVED"
+    ],
+    [
+        "FAULT_MAINTENANCE",
+        "to_offline",
+        "FAULT_OFFLINE"
+    ],
+    [
+        "FAULT_MAINTENANCE",
+        "reset_succeeded_disable",
+        "DISABLE_MAINTENANCE"
+    ],
+    [
+        "FAULT_MAINTENANCE",
+        "reset_succeeded_standby",
+        "STANDBY_MAINTENANCE"
+    ],
+    [
+        "FAULT_MAINTENANCE",
+        "reset_succeeded_off",
+        "OFF_MAINTENANCE"
+    ],
+    [
+        "FAULT_MAINTENANCE",
         "reset_failed",
-        "FAULT_DISABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "FAULT_DISABLED",
+        "FAULT_MAINTENANCE",
         "fatal_error",
-        "FAULT_DISABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "FAULT_ENABLED",
-        "to_notfitted",
-        "FAULT_DISABLED"
-    ],
-    [
-        "FAULT_ENABLED",
+        "FAULT_ONLINE",
         "to_offline",
-        "FAULT_DISABLED"
+        "FAULT_OFFLINE"
     ],
     [
-        "FAULT_ENABLED",
-        "to_online",
-        "FAULT_ENABLED"
+        "FAULT_ONLINE",
+        "reset_succeeded_disable",
+        "DISABLE_ONLINE"
     ],
     [
-        "FAULT_ENABLED",
-        "to_maintenance",
-        "FAULT_ENABLED"
+        "FAULT_ONLINE",
+        "reset_succeeded_standby",
+        "STANDBY_ONLINE"
     ],
     [
-        "FAULT_ENABLED",
-        "reset_succeeded",
-        "OFF"
+        "FAULT_ONLINE",
+        "reset_succeeded_off",
+        "OFF_ONLINE"
     ],
     [
-        "FAULT_ENABLED",
+        "FAULT_ONLINE",
         "reset_failed",
-        "FAULT_ENABLED"
+        "FAULT_ONLINE"
     ],
     [
-        "FAULT_ENABLED",
+        "FAULT_ONLINE",
         "fatal_error",
-        "FAULT_ENABLED"
+        "FAULT_ONLINE"
     ],
     [
-        "DISABLED",
-        "to_notfitted",
-        "DISABLED"
-    ],
-    [
-        "DISABLED",
-        "to_offline",
-        "DISABLED"
-    ],
-    [
-        "DISABLED",
+        "FAULT_OFFLINE",
         "to_online",
-        "OFF"
+        "FAULT_ONLINE"
     ],
     [
-        "DISABLED",
+        "FAULT_OFFLINE",
         "to_maintenance",
-        "OFF"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "DISABLED",
+        "FAULT_OFFLINE",
+        "to_notfitted",
+        "FAULT_NOTFITTED"
+    ],
+    [
+        "FAULT_OFFLINE",
+        "reset_succeeded_disable",
+        "DISABLE_OFFLINE"
+    ],
+    [
+        "FAULT_OFFLINE",
+        "reset_failed",
+        "FAULT_OFFLINE"
+    ],
+    [
+        "FAULT_OFFLINE",
         "fatal_error",
-        "FAULT_DISABLED"
+        "FAULT_OFFLINE"
     ],
     [
-        "OFF",
-        "to_notfitted",
-        "DISABLED"
-    ],
-    [
-        "OFF",
+        "FAULT_NOTFITTED",
         "to_offline",
-        "DISABLED"
+        "FAULT_OFFLINE"
     ],
     [
-        "OFF",
-        "to_online",
-        "OFF"
+        "FAULT_NOTFITTED",
+        "to_reserved",
+        "FAULT_RESERVED"
     ],
     [
-        "OFF",
+        "FAULT_NOTFITTED",
+        "reset_succeeded_disable",
+        "DISABLE_NOTFITTED"
+    ],
+    [
+        "FAULT_NOTFITTED",
+        "reset_failed",
+        "FAULT_NOTFITTED"
+    ],
+    [
+        "FAULT_NOTFITTED",
+        "fatal_error",
+        "FAULT_NOTFITTED"
+    ],
+    [
+        "FAULT_RESERVED",
+        "to_notfitted",
+        "FAULT_NOTFITTED"
+    ],
+    [
+        "FAULT_RESERVED",
+        "reset_succeeded_disable",
+        "DISABLE_RESERVED"
+    ],
+    [
+        "FAULT_RESERVED",
+        "reset_failed",
+        "FAULT_RESERVED"
+    ],
+    [
+        "FAULT_RESERVED",
+        "fatal_error",
+        "FAULT_RESERVED"
+    ],
+    [
+        "DISABLE_MAINTENANCE",
+        "to_offline",
+        "DISABLE_OFFLINE"
+    ],
+    [
+        "DISABLE_MAINTENANCE",
+        "standby_succeeded",
+        "STANDBY_MAINTENANCE"
+    ],
+    [
+        "DISABLE_MAINTENANCE",
+        "standby_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "DISABLE_MAINTENANCE",
+        "off_succeeded",
+        "OFF_MAINTENANCE"
+    ],
+    [
+        "DISABLE_MAINTENANCE",
+        "off_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "DISABLE_MAINTENANCE",
+        "fatal_error",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "DISABLE_ONLINE",
+        "to_offline",
+        "DISABLE_OFFLINE"
+    ],
+    [
+        "DISABLE_ONLINE",
+        "standby_succeeded",
+        "STANDBY_ONLINE"
+    ],
+    [
+        "DISABLE_ONLINE",
+        "standby_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "DISABLE_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "DISABLE_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "DISABLE_ONLINE",
+        "fatal_error",
+        "FAULT_ONLINE"
+    ],
+    [
+        "DISABLE_OFFLINE",
         "to_maintenance",
-        "OFF"
+        "DISABLE_MAINTENANCE"
     ],
     [
-        "OFF",
+        "DISABLE_OFFLINE",
+        "to_online",
+        "DISABLE_ONLINE"
+    ],
+    [
+        "DISABLE_OFFLINE",
+        "to_notfitted",
+        "DISABLE_NOTFITTED"
+    ],
+    [
+        "DISABLE_OFFLINE",
+        "fatal_error",
+        "FAULT_OFFLINE"
+    ],
+    [
+        "DISABLE_NOTFITTED",
+        "to_offline",
+        "DISABLE_OFFLINE"
+    ],
+    [
+        "DISABLE_NOTFITTED",
+        "to_reserved",
+        "DISABLE_RESERVED"
+    ],
+    [
+        "DISABLE_NOTFITTED",
+        "fatal_error",
+        "FAULT_NOTFITTED"
+    ],
+    [
+        "DISABLE_RESERVED",
+        "to_notfitted",
+        "DISABLE_NOTFITTED"
+    ],
+    [
+        "DISABLE_RESERVED",
+        "fatal_error",
+        "FAULT_RESERVED"
+    ],
+    [
+        "STANDBY_MAINTENANCE",
+        "disable_succeeded",
+        "DISABLE_MAINTENANCE"
+    ],
+    [
+        "STANDBY_MAINTENANCE",
+        "disable_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "STANDBY_MAINTENANCE",
+        "off_succeeded",
+        "OFF_MAINTENANCE"
+    ],
+    [
+        "STANDBY_MAINTENANCE",
+        "off_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "STANDBY_MAINTENANCE",
+        "fatal_error",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "STANDBY_ONLINE",
+        "disable_succeeded",
+        "DISABLE_ONLINE"
+    ],
+    [
+        "STANDBY_ONLINE",
+        "disable_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "STANDBY_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "STANDBY_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "STANDBY_ONLINE",
+        "fatal_error",
+        "FAULT_ONLINE"
+    ],
+    [
+        "OFF_MAINTENANCE",
+        "disable_succeeded",
+        "DISABLE_MAINTENANCE"
+    ],
+    [
+        "OFF_MAINTENANCE",
+        "disable_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "OFF_MAINTENANCE",
+        "standby_succeeded",
+        "STANDBY_MAINTENANCE"
+    ],
+    [
+        "OFF_MAINTENANCE",
+        "standby_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "OFF_MAINTENANCE",
         "on_succeeded",
-        "EMPTY"
+        "EMPTY_MAINTENANCE"
     ],
     [
-        "OFF",
+        "OFF_MAINTENANCE",
         "on_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "OFF",
+        "OFF_MAINTENANCE",
         "fatal_error",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "EMPTY",
+        "OFF_ONLINE",
+        "disable_succeeded",
+        "DISABLE_ONLINE"
+    ],
+    [
+        "OFF_ONLINE",
+        "disable_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "OFF_ONLINE",
+        "standby_succeeded",
+        "STANDBY_ONLINE"
+    ],
+    [
+        "OFF_ONLINE",
+        "standby_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "OFF_ONLINE",
+        "on_succeeded",
+        "EMPTY_ONLINE"
+    ],
+    [
+        "OFF_ONLINE",
+        "on_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "OFF_ONLINE",
+        "fatal_error",
+        "FAULT_ONLINE"
+    ],
+    [
+        "EMPTY_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "EMPTY",
+        "EMPTY_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "EMPTY",
+        "EMPTY_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "EMPTY_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "EMPTY_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "EMPTY_ONLINE",
+        "fatal_error",
+        "OBSFAULT_ONLINE"
+    ],
+    [
+        "EMPTY_ONLINE",
         "assign_started",
-        "RESOURCING"
+        "RESOURCING_ONLINE"
     ],
     [
-        "EMPTY",
-        "fatal_error",
-        "FAULT"
+        "EMPTY_MAINTENANCE",
+        "assign_started",
+        "RESOURCING_MAINTENANCE"
     ],
     [
-        "RESOURCING",
+        "RESOURCING_ONLINE",
         "off_succeeded",
-        "OFF"
+        "OFF_ONLINE"
     ],
     [
-        "RESOURCING",
+        "RESOURCING_ONLINE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_ONLINE"
     ],
     [
-        "RESOURCING",
+        "RESOURCING_ONLINE",
         "resourcing_succeeded_some_resources",
-        "IDLE"
+        "IDLE_ONLINE"
     ],
     [
-        "RESOURCING",
+        "RESOURCING_ONLINE",
         "resourcing_succeeded_no_resources",
-        "EMPTY"
+        "EMPTY_ONLINE"
     ],
     [
-        "RESOURCING",
+        "RESOURCING_ONLINE",
         "resourcing_failed",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "RESOURCING",
+        "RESOURCING_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "IDLE",
+        "RESOURCING_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "IDLE",
+        "RESOURCING_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "IDLE",
+        "RESOURCING_MAINTENANCE",
+        "resourcing_succeeded_some_resources",
+        "IDLE_MAINTENANCE"
+    ],
+    [
+        "RESOURCING_MAINTENANCE",
+        "resourcing_succeeded_no_resources",
+        "EMPTY_MAINTENANCE"
+    ],
+    [
+        "RESOURCING_MAINTENANCE",
+        "resourcing_failed",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "RESOURCING_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "IDLE_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "IDLE_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "IDLE_ONLINE",
         "assign_started",
-        "RESOURCING"
+        "RESOURCING_ONLINE"
     ],
     [
-        "IDLE",
+        "IDLE_ONLINE",
         "release_started",
-        "RESOURCING"
+        "RESOURCING_ONLINE"
     ],
     [
-        "IDLE",
+        "IDLE_ONLINE",
         "configure_started",
-        "CONFIGURING"
+        "CONFIGURING_ONLINE"
     ],
     [
-        "IDLE",
+        "IDLE_ONLINE",
         "abort_started",
-        "ABORTING"
+        "ABORTING_ONLINE"
     ],
     [
-        "IDLE",
+        "IDLE_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "CONFIGURING",
+        "IDLE_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "CONFIGURING",
+        "IDLE_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "CONFIGURING",
+        "IDLE_MAINTENANCE",
+        "assign_started",
+        "RESOURCING_MAINTENANCE"
+    ],
+    [
+        "IDLE_MAINTENANCE",
+        "release_started",
+        "RESOURCING_MAINTENANCE"
+    ],
+    [
+        "IDLE_MAINTENANCE",
+        "configure_started",
+        "CONFIGURING_MAINTENANCE"
+    ],
+    [
+        "IDLE_MAINTENANCE",
+        "abort_started",
+        "ABORTING_MAINTENANCE"
+    ],
+    [
+        "IDLE_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "CONFIGURING_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "CONFIGURING_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "CONFIGURING_ONLINE",
         "configure_succeeded",
-        "READY"
+        "READY_ONLINE"
     ],
     [
-        "CONFIGURING",
+        "CONFIGURING_ONLINE",
         "configure_failed",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "CONFIGURING",
+        "CONFIGURING_ONLINE",
         "abort_started",
-        "ABORTING"
+        "ABORTING_ONLINE"
     ],
     [
-        "CONFIGURING",
+        "CONFIGURING_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "READY",
+        "CONFIGURING_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "READY",
+        "CONFIGURING_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "READY",
+        "CONFIGURING_MAINTENANCE",
+        "configure_succeeded",
+        "READY_MAINTENANCE"
+    ],
+    [
+        "CONFIGURING_MAINTENANCE",
+        "configure_failed",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "CONFIGURING_MAINTENANCE",
+        "abort_started",
+        "ABORTING_MAINTENANCE"
+    ],
+    [
+        "CONFIGURING_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+
+
+    [
+        "READY_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "READY_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "READY_ONLINE",
         "end_succeeded",
-        "IDLE"
+        "IDLE_ONLINE"
     ],
     [
-        "READY",
+        "READY_ONLINE",
         "end_failed",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "READY",
+        "READY_ONLINE",
         "configure_started",
-        "CONFIGURING"
+        "CONFIGURING_ONLINE"
     ],
     [
-        "READY",
+        "READY_ONLINE",
         "abort_started",
-        "ABORTING"
+        "ABORTING_ONLINE"
     ],
     [
-        "READY",
+        "READY_ONLINE",
         "scan_started",
-        "SCANNING"
+        "SCANNING_ONLINE"
     ],
     [
-        "READY",
+        "READY_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "SCANNING",
+        "READY_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "SCANNING",
+        "READY_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "SCANNING",
+        "READY_MAINTENANCE",
+        "end_succeeded",
+        "IDLE_MAINTENANCE"
+    ],
+    [
+        "READY_MAINTENANCE",
+        "end_failed",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "READY_MAINTENANCE",
+        "configure_started",
+        "CONFIGURING_MAINTENANCE"
+    ],
+    [
+        "READY_MAINTENANCE",
+        "abort_started",
+        "ABORTING_MAINTENANCE"
+    ],
+    [
+        "READY_MAINTENANCE",
+        "scan_started",
+        "SCANNING_MAINTENANCE"
+    ],
+    [
+        "READY_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "SCANNING_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "SCANNING_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "SCANNING_ONLINE",
         "scan_succeeded",
-        "READY"
+        "READY_ONLINE"
     ],
     [
-        "SCANNING",
+        "SCANNING_ONLINE",
         "scan_failed",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "SCANNING",
+        "SCANNING_ONLINE",
         "end_scan_succeeded",
-        "READY"
+        "READY_ONLINE"
     ],
     [
-        "SCANNING",
+        "SCANNING_ONLINE",
         "end_scan_failed",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "SCANNING",
+        "SCANNING_ONLINE",
         "abort_started",
-        "ABORTING"
+        "ABORTING_ONLINE"
     ],
     [
-        "SCANNING",
+        "SCANNING_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "ABORTING",
+        "SCANNING_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "ABORTING",
+        "SCANNING_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "ABORTING",
+        "SCANNING_MAINTENANCE",
+        "scan_succeeded",
+        "READY_MAINTENANCE"
+    ],
+    [
+        "SCANNING_MAINTENANCE",
+        "scan_failed",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "SCANNING_MAINTENANCE",
+        "end_scan_succeeded",
+        "READY_MAINTENANCE"
+    ],
+    [
+        "SCANNING_MAINTENANCE",
+        "end_scan_failed",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "SCANNING_MAINTENANCE",
+        "abort_started",
+        "ABORTING_MAINTENANCE"
+    ],
+    [
+        "SCANNING_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "ABORTING_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "ABORTING_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "ABORTING_ONLINE",
         "abort_succeeded",
-        "ABORTED"
+        "ABORTED_ONLINE"
     ],
     [
-        "ABORTING",
+        "ABORTING_ONLINE",
         "abort_failed",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "ABORTING",
+        "ABORTING_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "ABORTED",
+        "ABORTING_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "ABORTED",
+        "ABORTING_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "ABORTED",
+        "ABORTING_MAINTENANCE",
+        "abort_succeeded",
+        "ABORTED_MAINTENANCE"
+    ],
+    [
+        "ABORTING_MAINTENANCE",
+        "abort_failed",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "ABORTING_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "ABORTED_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "ABORTED_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "ABORTED_ONLINE",
         "obs_reset_started",
-        "RESETTING"
+        "RESETTING_ONLINE"
     ],
     [
-        "ABORTED",
+        "ABORTED_ONLINE",
         "restart_started",
-        "RESTARTING"
+        "RESTARTING_ONLINE"
     ],
     [
-        "ABORTED",
+        "ABORTED_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "FAULT",
+        "ABORTED_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "FAULT",
+        "ABORTED_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "FAULT",
+        "ABORTED_MAINTENANCE",
         "obs_reset_started",
-        "RESETTING"
+        "RESETTING_MAINTENANCE"
     ],
     [
-        "FAULT",
+        "ABORTED_MAINTENANCE",
         "restart_started",
-        "RESTARTING"
+        "RESTARTING_MAINTENANCE"
     ],
     [
-        "FAULT",
+        "ABORTED_MAINTENANCE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_MAINTENANCE"
     ],
     [
-        "RESETTING",
+        "OBSFAULT_ONLINE",
         "off_succeeded",
-        "OFF"
+        "OFF_ONLINE"
     ],
     [
-        "RESETTING",
+        "OBSFAULT_ONLINE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_ONLINE"
     ],
     [
-        "RESETTING",
+        "OBSFAULT_ONLINE",
+        "obs_reset_started",
+        "RESETTING_ONLINE"
+    ],
+    [
+        "OBSFAULT_ONLINE",
+        "restart_started",
+        "RESTARTING_ONLINE"
+    ],
+    [
+        "OBSFAULT_ONLINE",
+        "fatal_error",
+        "OBSFAULT_ONLINE"
+    ],
+    [
+        "OBSFAULT_MAINTENANCE",
+        "off_succeeded",
+        "OFF_MAINTENANCE"
+    ],
+    [
+        "OBSFAULT_MAINTENANCE",
+        "off_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "OBSFAULT_MAINTENANCE",
+        "obs_reset_started",
+        "RESETTING_MAINTENANCE"
+    ],
+    [
+        "OBSFAULT_MAINTENANCE",
+        "restart_started",
+        "RESTARTING_MAINTENANCE"
+    ],
+    [
+        "OBSFAULT_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "RESETTING_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "RESETTING_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "RESETTING_ONLINE",
         "obs_reset_succeeded",
-        "IDLE"
+        "IDLE_ONLINE"
     ],
     [
-        "RESETTING",
+        "RESETTING_ONLINE",
         "obs_reset_failed",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "RESETTING",
+        "RESETTING_ONLINE",
         "abort_started",
-        "ABORTING"
+        "ABORTING_ONLINE"
     ],
     [
-        "RESETTING",
+        "RESETTING_ONLINE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_ONLINE"
     ],
     [
-        "RESTARTING",
+        "RESETTING_MAINTENANCE",
         "off_succeeded",
-        "OFF"
+        "OFF_MAINTENANCE"
     ],
     [
-        "RESTARTING",
+        "RESETTING_MAINTENANCE",
         "off_failed",
-        "FAULT_ENABLED"
+        "FAULT_MAINTENANCE"
     ],
     [
-        "RESTARTING",
-        "restart_succeeded",
-        "EMPTY"
+        "RESETTING_MAINTENANCE",
+        "obs_reset_succeeded",
+        "IDLE_MAINTENANCE"
     ],
     [
-        "RESTARTING",
-        "restart_failed",
-        "FAULT"
+        "RESETTING_MAINTENANCE",
+        "obs_reset_failed",
+        "OBSFAULT_MAINTENANCE"
     ],
     [
-        "RESTARTING",
+        "RESETTING_MAINTENANCE",
+        "abort_started",
+        "ABORTING_MAINTENANCE"
+    ],
+    [
+        "RESETTING_MAINTENANCE",
         "fatal_error",
-        "FAULT"
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "RESTARTING_ONLINE",
+        "off_succeeded",
+        "OFF_ONLINE"
+    ],
+    [
+        "RESTARTING_ONLINE",
+        "off_failed",
+        "FAULT_ONLINE"
+    ],
+    [
+        "RESTARTING_ONLINE",
+        "restart_succeeded",
+        "EMPTY_ONLINE"
+    ],
+    [
+        "RESTARTING_ONLINE",
+        "restart_failed",
+        "OBSFAULT_ONLINE"
+    ],
+    [
+        "RESTARTING_ONLINE",
+        "fatal_error",
+        "OBSFAULT_ONLINE"
+    ],
+    [
+        "RESTARTING_MAINTENANCE",
+        "off_succeeded",
+        "OFF_MAINTENANCE"
+    ],
+    [
+        "RESTARTING_MAINTENANCE",
+        "off_failed",
+        "FAULT_MAINTENANCE"
+    ],
+    [
+        "RESTARTING_MAINTENANCE",
+        "restart_succeeded",
+        "EMPTY_MAINTENANCE"
+    ],
+    [
+        "RESTARTING_MAINTENANCE",
+        "restart_failed",
+        "OBSFAULT_MAINTENANCE"
+    ],
+    [
+        "RESTARTING_MAINTENANCE",
+        "fatal_error",
+        "OBSFAULT_MAINTENANCE"
     ]
 ]
