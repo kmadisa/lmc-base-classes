@@ -421,7 +421,7 @@ class DeviceStateModel:
         "to_notfitted": ("admin_on", "to_notfitted"),
         "to_offline": ("admin_on", "to_offline"),
         "to_maintenance": ("admin_off", "to_maintenance"),
-        "to_online": ("admin_off", "to_maintenance"),
+        "to_online": ("admin_off", "to_online"),
         "init_started": ("init_started", None),
         "init_succeeded_disable": ("init_succeeded_disable", None),
         "init_succeeded_standby": ("init_succeeded_standby", None),
