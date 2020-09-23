@@ -214,6 +214,11 @@
         },
         {
             "from": "INIT_MAINTENANCE",
+            "to": "INIT_ONLINE",
+            "trigger": "to_online"
+        },
+        {
+            "from": "INIT_MAINTENANCE",
             "to": "DISABLE_MAINTENANCE",
             "trigger": "init_succeeded_disable"
         },
@@ -236,6 +241,11 @@
             "from": "INIT_MAINTENANCE",
             "to": "FAULT_MAINTENANCE",
             "trigger": "fatal_error"
+        },
+        {
+            "from": "INIT_ONLINE",
+            "to": "INIT_MAINTENANCE",
+            "trigger": "to_maintenance"
         },
         {
             "from": "INIT_ONLINE",
@@ -276,6 +286,11 @@
             "from": "INIT_OFFLINE",
             "to": "INIT_MAINTENANCE",
             "trigger": "to_maintenance"
+        },
+        {
+            "from": "INIT_OFFLINE",
+            "to": "INIT_RESERVED",
+            "trigger": "to_reserved"
         },
         {
             "from": "INIT_OFFLINE",
@@ -329,6 +344,11 @@
         },
         {
             "from": "INIT_RESERVED",
+            "to": "INIT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "INIT_RESERVED",
             "to": "DISABLE_RESERVED",
             "trigger": "init_succeeded_disable"
         },
@@ -346,6 +366,11 @@
             "from": "FAULT_MAINTENANCE",
             "to": "FAULT_OFFLINE",
             "trigger": "to_offline"
+        },
+        {
+            "from": "FAULT_MAINTENANCE",
+            "to": "FAULT_ONLINE",
+            "trigger": "to_online"
         },
         {
             "from": "FAULT_MAINTENANCE",
@@ -376,6 +401,11 @@
             "from": "FAULT_ONLINE",
             "to": "FAULT_OFFLINE",
             "trigger": "to_offline"
+        },
+        {
+            "from": "FAULT_ONLINE",
+            "to": "FAULT_MAINTENANCE",
+            "trigger": "to_maintenance"
         },
         {
             "from": "FAULT_ONLINE",
@@ -411,6 +441,11 @@
             "from": "FAULT_OFFLINE",
             "to": "FAULT_MAINTENANCE",
             "trigger": "to_maintenance"
+        },
+        {
+            "from": "FAULT_OFFLINE",
+            "to": "FAULT_RESERVED",
+            "trigger": "to_reserved"
         },
         {
             "from": "FAULT_OFFLINE",
@@ -464,6 +499,11 @@
         },
         {
             "from": "FAULT_RESERVED",
+            "to": "FAULT_OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "FAULT_RESERVED",
             "to": "DISABLE_RESERVED",
             "trigger": "reset_succeeded_disable"
         },
@@ -481,6 +521,11 @@
             "from": "DISABLE_MAINTENANCE",
             "to": "DISABLE_OFFLINE",
             "trigger": "to_offline"
+        },
+        {
+            "from": "DISABLE_MAINTENANCE",
+            "to": "DISABLE_ONLINE",
+            "trigger": "to_online"
         },
         {
             "from": "DISABLE_MAINTENANCE",
@@ -511,6 +556,11 @@
             "from": "DISABLE_ONLINE",
             "to": "DISABLE_OFFLINE",
             "trigger": "to_offline"
+        },
+        {
+            "from": "DISABLE_ONLINE",
+            "to": "DISABLE_MAINTENANCE",
+            "trigger": "to_maintenance"
         },
         {
             "from": "DISABLE_ONLINE",
@@ -551,6 +601,11 @@
             "from": "DISABLE_OFFLINE",
             "to": "DISABLE_NOTFITTED",
             "trigger": "to_notfitted"
+        },
+        {
+            "from": "DISABLE_OFFLINE",
+            "to": "DISABLE_RESERVED",
+            "trigger": "to_reserved"
         },
         {
             "from": "DISABLE_OFFLINE",
@@ -576,6 +631,11 @@
             "from": "DISABLE_RESERVED",
             "to": "DISABLE_NOTFITTED",
             "trigger": "to_notfitted"
+        },
+        {
+            "from": "DISABLE_RESERVED",
+            "to": "DISABLE_OFFLINE",
+            "trigger": "to_offline"
         },
         {
             "from": "DISABLE_RESERVED",

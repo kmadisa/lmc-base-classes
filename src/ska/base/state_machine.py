@@ -222,7 +222,7 @@ class AdminModeStateMachine(Machine):
         states = ["RESERVED", "NOT_FITTED", "OFFLINE", "MAINTENANCE", "ONLINE"]
         transitions = [
             {
-                "source": "NOT_FITTED",
+                "source": ["NOT_FITTED", "OFFLINE"],
                 "trigger": "to_reserved",
                 "dest": "RESERVED",
             },
@@ -232,17 +232,17 @@ class AdminModeStateMachine(Machine):
                 "dest": "NOT_FITTED",
             },
             {
-                "source": ["NOT_FITTED", "MAINTENANCE", "ONLINE"],
+                "source": ["RESERVED", "NOT_FITTED", "MAINTENANCE", "ONLINE"],
                 "trigger": "to_offline",
                 "dest": "OFFLINE",
             },
             {
-                "source": "OFFLINE",
+                "source": ["OFFLINE", "ONLINE"],
                 "trigger": "to_maintenance",
                 "dest": "MAINTENANCE",
             },
             {
-                "source": "OFFLINE",
+                "source": ["OFFLINE", "MAINTENANCE"],
                 "trigger": "to_online",
                 "dest": "ONLINE",
             },
