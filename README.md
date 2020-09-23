@@ -25,6 +25,11 @@ The lmc-base-classe repository contains set of eight classes as mentioned in SKA
 
 ## Version History
 
+#### 0.6.6
+- Separate adminMode state machine from opState state machine
+- Add support for STANDBY opState
+- Add Standby() and Disable() commands to SKABaseDevice
+
 #### 0.6.5
 - Fix to observation state machine: allow Abort() from RESETTING observation
   state
