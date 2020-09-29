@@ -60,15 +60,13 @@ build wheel for development: # Executed on non-tagged commit
 
 unit tests:
   stage: test
-  image: nexus.engageska-portugal.pt/ska-docker/tango-builder:latest
-  before_script:
-  - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
     - docker-executor
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - python3 -m pip install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - make test
+    - python3 setup.py test
+    - mv ./coverage.xml ./build
     - scripts/validate-metadata.sh
   artifacts:
     paths:
@@ -76,15 +74,16 @@ unit tests:
 
 linting:
   stage: linting
-  image: nexus.engageska-portugal.pt/ska-docker/tango-builder:latest
-  before_script:
-  - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
     - docker-executor
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - python3 -m pip install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - make lint
+    - python3 -m pip install -U pylint==2.4.4
+    - python3 -m pip install pylint2junit
+    - mkdir -p build/reports
+    - pylint --output-format=parseable src/ska | tee build/code_analysis.stdout
+    - pylint --output-format=pylint2junit.JunitReporter src/ska > build/reports/linting.xml
   artifacts:
     paths:
       - ./build
@@ -123,14 +122,11 @@ release docker image:
 
 pages:
   stage: pages
-  image: nexus.engageska-portugal.pt/ska-docker/tango-builder:latest
-  before_script:
-  - docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY_HOST
   tags:
     - docker-executor
   script:
     - cp -R build public
-    - mv public/lmcbaseclasses_htmlcov/* public
+    - mv public/htmlcov/* public
   artifacts:
     paths:
       - public
