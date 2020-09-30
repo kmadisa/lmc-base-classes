@@ -10,7 +10,7 @@
 
 import re
 import pytest
-from tango import DevState, DeviceProxy
+from tango import DevState
 from tango.test_context import MultiDeviceTestContext
 from ska.base.logger_device import SKALogger
 from ska.base.subarray_device import SKASubarray
@@ -154,14 +154,11 @@ class TestSKALogger(object):
         # PROTECTED REGION END #    //  SKALogger.test_testMode
 
 
-# PROTECTED REGION ID(test_SetLoggingLevel_decorators) ENABLED START #
-@pytest.mark.parametrize("logging_level", [int(tango.LogLevel.LOG_ERROR)])
-@pytest.mark.parametrize("logging_target", ["logger/target/1"])
-@pytest.mark.parametrize("logger_device", ["logger/device/1"])
-# PROTECTED REGION END #    //  test_SetLoggingLevel_decorators
-def test_SetLoggingLevel(logging_level, logging_target, logger_device):
+def test_SetLoggingLevel():
     """Test for SetLoggingLevel"""
-    # PROTECTED REGION ID(test_SetLoggingLevel) ENABLED START #
+    logging_level = int(tango.LogLevel.LOG_ERROR)
+    logging_target = "logger/target/1"
+    logger_device = "logger/device/1"
     devices_info = (
         {"class": SKALogger, "devices": [{"name": logger_device}]},
         {"class": SKASubarray, "devices": [{"name": logging_target}]},
@@ -182,5 +179,3 @@ def test_SetLoggingLevel(logging_level, logging_target, logger_device):
         device_details.append(targets)
         multi_context.get_device(logger_device).SetLoggingLevel(device_details)
         assert dev_proxy.loggingLevel == logging_level
-
-        # PROTECTED REGION END #    //  test_SetLoggingLevel
