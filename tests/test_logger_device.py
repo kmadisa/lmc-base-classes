@@ -10,7 +10,7 @@
 
 import re
 import pytest
-from tango import DevState
+from tango import DevState, DeviceProxy
 from tango.test_context import MultiDeviceTestContext
 from ska.base.logger_device import SKALogger
 from ska.base.subarray_device import SKASubarray
@@ -154,31 +154,33 @@ class TestSKALogger(object):
         # PROTECTED REGION END #    //  SKALogger.test_testMode
 
 
+# PROTECTED REGION ID(test_SetLoggingLevel_decorators) ENABLED START #
 @pytest.mark.parametrize("logging_level", [int(tango.LogLevel.LOG_ERROR)])
 @pytest.mark.parametrize("logging_target", ["logger/target/1"])
 @pytest.mark.parametrize("logger_device", ["logger/device/1"])
+# PROTECTED REGION END #    //  test_SetLoggingLevel_decorators
 def test_SetLoggingLevel(logging_level, logging_target, logger_device):
-
+    """Test for SetLoggingLevel"""
+    # PROTECTED REGION ID(test_SetLoggingLevel) ENABLED START #
     devices_info = (
         {"class": SKALogger, "devices": [{"name": logger_device}]},
         {"class": SKASubarray, "devices": [{"name": logging_target}]},
     )
 
-    dev_proxy_mock = MagicMock(name="MockDeviceProxyInstance", loggingLevel=None)
-    with patch("ska.base.logger_device.DeviceProxy", return_value=dev_proxy_mock):
-        with MultiDeviceTestContext(devices_info, process=False) as context:
-            dev_proxy = context.get_device(logging_target)
-            dev_proxy.Init()
-            dev_proxy.loggingLevel = int(tango.LogLevel.LOG_FATAL)
-            assert dev_proxy.loggingLevel != logging_level
+    with MultiDeviceTestContext(devices_info, process=False) as multi_context:
+        dev_proxy = multi_context.get_device(logging_target)
+        dev_proxy.Init()
+        dev_proxy.loggingLevel = int(tango.LogLevel.LOG_FATAL)
+        assert dev_proxy.loggingLevel != logging_level
 
-            levels = []
-            levels.append(logging_level)
-            targets = []
-            targets.append(logging_target)
-            device_details = []
-            device_details.append(levels)
-            device_details.append(targets)
-            assert not dev_proxy_mock.loggingLevel
-            context.get_device(logger_device).SetLoggingLevel(device_details)
-            assert dev_proxy_mock.loggingLevel == logging_level
+        levels = []
+        levels.append(logging_level)
+        targets = []
+        targets.append(multi_context.get_device_access(logging_target))
+        device_details = []
+        device_details.append(levels)
+        device_details.append(targets)
+        multi_context.get_device(logger_device).SetLoggingLevel(device_details)
+        assert dev_proxy.loggingLevel == logging_level
+
+        # PROTECTED REGION END #    //  test_SetLoggingLevel
