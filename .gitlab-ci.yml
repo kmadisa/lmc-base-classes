@@ -65,8 +65,7 @@ unit tests:
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - python3 -m pip install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - python3 setup.py test
-    - mv ./coverage.xml ./build
+    - make test
     - scripts/validate-metadata.sh
   artifacts:
     paths:
@@ -79,11 +78,7 @@ linting:
   script:
     - echo $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
     - python3 -m pip install -U $(ls -d ./dist/*.whl | grep $CI_COMMIT_SHORT_SHA)
-    - python3 -m pip install -U pylint==2.4.4
-    - python3 -m pip install pylint2junit
-    - mkdir -p build/reports
-    - pylint --output-format=parseable src/ska | tee build/code_analysis.stdout
-    - pylint --output-format=pylint2junit.JunitReporter src/ska > build/reports/linting.xml
+    - make lint
   artifacts:
     paths:
       - ./build
@@ -126,7 +121,8 @@ pages:
     - docker-executor
   script:
     - cp -R build public
-    - mv public/htmlcov/* public
+    - mv public/build/lmcbaseclasses_htmlcov/* public
+
   artifacts:
     paths:
       - public
