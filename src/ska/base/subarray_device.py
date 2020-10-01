@@ -103,6 +103,8 @@ class SKASubarrayStateModel(DeviceStateModel):
         # "action": ("action_on_obs_machine", "action_on_superclass"),
         "off_succeeded": ("to_EMPTY", "off_succeeded"),
         "off_failed": ("to_EMPTY", "off_failed"),
+        "on_succeeded": (None, "on_succeeded"),
+        "on_failed": ("to_EMPTY", "on_failed"),
         "assign_started": ("assign_started", None),
         "release_started": ("release_started", None),
         "resourcing_succeeded_some_resources": (

@@ -139,6 +139,16 @@
         },
         {
             "from": "DISABLE",
+            "to": "DISABLE",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "DISABLE",
+            "to": "FAULT",
+            "trigger": "disable_failed"
+        },
+        {
+            "from": "DISABLE",
             "to": "STANDBY",
             "trigger": "standby_succeeded"
         },
@@ -188,6 +198,16 @@
             "trigger": "admin_off"
         },
         {
+            "from": "DISABLE_ADMIN",
+            "to": "DISABLE_ADMIN",
+            "trigger": "disable_succeeded"
+        },
+        {
+            "from": "DISABLE_ADMIN",
+            "to": "FAULT_ADMIN",
+            "trigger": "disable_failed"
+        },
+        {
             "from": "STANDBY",
             "to": "DISABLE",
             "trigger": "disable_succeeded"
@@ -196,6 +216,16 @@
             "from": "STANDBY",
             "to": "FAULT",
             "trigger": "disable_failed"
+        },
+        {
+            "from": "STANDBY",
+            "to": "STANDBY",
+            "trigger": "standby_succeeded"
+        },
+        {
+            "from": "STANDBY",
+            "to": "FAULT",
+            "trigger": "standby_failed"
         },
         {
             "from": "STANDBY",
@@ -234,6 +264,16 @@
         },
         {
             "from": "OFF",
+            "to": "OFF",
+            "trigger": "off_succeeded"
+        },
+        {
+            "from": "OFF",
+            "to": "FAULT",
+            "trigger": "off_failed"
+        },
+        {
+            "from": "OFF",
             "to": "ON",
             "trigger": "on_succeeded"
         },
@@ -256,6 +296,16 @@
             "from": "ON",
             "to": "FAULT",
             "trigger": "off_failed"
+        },
+        {
+            "from": "ON",
+            "to": "ON",
+            "trigger": "on_succeeded"
+        },
+        {
+            "from": "ON",
+            "to": "FAULT",
+            "trigger": "on_failed"
         },
         {
             "from": "ON",

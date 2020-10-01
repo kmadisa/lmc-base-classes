@@ -9,6 +9,11 @@
     "transitions": [
         {
             "from": "NOT_FITTED",
+            "to": "NOT_FITTED",
+            "trigger": "to_notfitted"
+        },
+        {
+            "from": "NOT_FITTED",
             "to": "RESERVED",
             "trigger": "to_reserved"
         },
@@ -24,6 +29,11 @@
         },
         {
             "from": "RESERVED",
+            "to": "RESERVED",
+            "trigger": "to_reserved"
+        },
+        {
+            "from": "RESERVED",
             "to": "OFFLINE",
             "trigger": "to_offline"
         },
@@ -39,6 +49,11 @@
         },
         {
             "from": "OFFLINE",
+            "to": "OFFLINE",
+            "trigger": "to_offline"
+        },
+        {
+            "from": "OFFLINE",
             "to": "MAINTENANCE",
             "trigger": "to_maintenance"
         },
@@ -54,6 +69,11 @@
         },
         {
             "from": "MAINTENANCE",
+            "to": "MAINTENANCE",
+            "trigger": "to_maintenance"
+        },
+        {
+            "from": "MAINTENANCE",
             "to": "ONLINE",
             "trigger": "to_online"
         },
@@ -66,6 +86,11 @@
             "from": "ONLINE",
             "to": "MAINTENANCE",
             "trigger": "to_maintenance"
+        },
+        {
+            "from": "ONLINE",
+            "to": "ONLINE",
+            "trigger": "to_online"
         }
     ]
 }

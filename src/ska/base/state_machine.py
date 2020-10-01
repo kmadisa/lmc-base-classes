@@ -147,42 +147,52 @@ class OperationStateMachine(Machine):
                 "dest": "DISABLE",
             },
             {
-                "source": ["DISABLE", "OFF"],
-                "trigger": "standby_succeeded",
-                "dest": "STANDBY",
+                "source": "DISABLE_ADMIN",
+                "trigger": "disable_succeeded",
+                "dest": "DISABLE_ADMIN",
             },
             {
-                "source": ["DISABLE", "OFF"],
-                "trigger": "standby_failed",
-                "dest": "FAULT",
+                "source": "DISABLE_ADMIN",
+                "trigger": "disable_failed",
+                "dest": "FAULT_ADMIN",
             },
             {
-                "source": ["STANDBY", "OFF"],
+                "source": ["DISABLE", "STANDBY", "OFF"],
                 "trigger": "disable_succeeded",
                 "dest": "DISABLE",
             },
             {
-                "source": ["STANDBY", "OFF"],
+                "source": ["DISABLE", "STANDBY", "OFF"],
                 "trigger": "disable_failed",
                 "dest": "FAULT",
             },
             {
-                "source": ["DISABLE", "STANDBY", "ON"],
+                "source": ["DISABLE", "STANDBY", "OFF"],
+                "trigger": "standby_succeeded",
+                "dest": "STANDBY",
+            },
+            {
+                "source": ["DISABLE", "STANDBY", "OFF"],
+                "trigger": "standby_failed",
+                "dest": "FAULT",
+            },
+            {
+                "source": ["DISABLE", "STANDBY", "OFF", "ON"],
                 "trigger": "off_succeeded",
                 "dest": "OFF",
             },
             {
-                "source": ["DISABLE", "STANDBY", "ON"],
+                "source": ["DISABLE", "STANDBY", "OFF", "ON"],
                 "trigger": "off_failed",
                 "dest": "FAULT",
             },
             {
-                "source": "OFF",
+                "source": ["OFF", "ON"],
                 "trigger": "on_succeeded",
                 "dest": "ON",
             },
             {
-                "source": "OFF",
+                "source": ["OFF", "ON"],
                 "trigger": "on_failed",
                 "dest": "FAULT",
             },
@@ -222,27 +232,27 @@ class AdminModeStateMachine(Machine):
         states = ["RESERVED", "NOT_FITTED", "OFFLINE", "MAINTENANCE", "ONLINE"]
         transitions = [
             {
-                "source": ["NOT_FITTED", "OFFLINE"],
+                "source": ["NOT_FITTED", "RESERVED", "OFFLINE"],
                 "trigger": "to_reserved",
                 "dest": "RESERVED",
             },
             {
-                "source": ["RESERVED", "OFFLINE"],
+                "source": ["RESERVED", "NOT_FITTED", "OFFLINE"],
                 "trigger": "to_notfitted",
                 "dest": "NOT_FITTED",
             },
             {
-                "source": ["RESERVED", "NOT_FITTED", "MAINTENANCE", "ONLINE"],
+                "source": ["RESERVED", "NOT_FITTED", "OFFLINE", "MAINTENANCE", "ONLINE"],
                 "trigger": "to_offline",
                 "dest": "OFFLINE",
             },
             {
-                "source": ["OFFLINE", "ONLINE"],
+                "source": ["OFFLINE", "MAINTENANCE", "ONLINE"],
                 "trigger": "to_maintenance",
                 "dest": "MAINTENANCE",
             },
             {
-                "source": ["OFFLINE", "MAINTENANCE"],
+                "source": ["OFFLINE", "MAINTENANCE", "ONLINE"],
                 "trigger": "to_online",
                 "dest": "ONLINE",
             },
