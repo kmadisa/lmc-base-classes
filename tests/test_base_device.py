@@ -365,7 +365,7 @@ class TestDeviceStateModel(StateMachineTester):
 
     def is_action_allowed(self, machine, action):
         """
-        Returns whether the state machine under state thinks an action
+        Returns whether the state machine under test thinks an action
         is permitted in its current state
 
         :param machine: the state machine under test
@@ -531,6 +531,28 @@ class TestSKABaseDevice(object):
 
         # Check that we can put it on standby when it is already on standby
         tango_context.device.Standby()
+
+    def test_Disable(self, tango_context):
+        """
+        Test for Disable command
+        """
+        assert tango_context.device.state() == DevState.OFF
+        tango_context.device.Disable()
+        assert tango_context.device.state() == DevState.DISABLE
+
+        with pytest.raises(DevFailed):
+            tango_context.device.Disable()
+
+    def test_Standby(self, tango_context):
+        """
+        Test for Standby command
+        """
+        assert tango_context.device.state() == DevState.OFF
+        tango_context.device.Standby()
+        assert tango_context.device.state() == DevState.STANDBY
+
+        with pytest.raises(DevFailed):
+            tango_context.device.Standby()
 
     def test_Off(self, tango_context, tango_change_event_helper):
         """
