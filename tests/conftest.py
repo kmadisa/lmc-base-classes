@@ -39,8 +39,12 @@ def pytest_generate_tests(metafunc):
         spec = mark.args[0]
 
         states = {state: spec["states"][state] or state for state in spec["states"]}
-        triggers = set(transition["trigger"] for transition in spec["transitions"])
-        expected = defaultdict(lambda: None, (((transition["from"], transition["trigger"]), states[transition["to"]]) for transition in spec["transitions"]))
+
+        triggers = set()
+        expected = defaultdict(lambda: None)
+        for transition in spec["transitions"]:
+            triggers.add(transition["trigger"])
+            expected[(transition["from"], transition["trigger"])] = states[transition["to"]]
         test_cases = list(itertools.product(sorted(states), sorted(triggers)))
         test_ids = [f"{state}-{trigger}" for (state, trigger) in test_cases]
 
